@@ -6,217 +6,195 @@
 <title>计算机类·单招刷题</title>
 <style>
 :root{
-  --ink:#1d1d1f;--sub:#6e6e73;--mut:#86868b;
-  --pri:#0071e3;--ok:#34c759;--bad:#ff3b30;--roast:#d70015;
-  --hair:rgba(255,255,255,.65);
-  --glass:linear-gradient(135deg,rgba(255,255,255,.74),rgba(255,255,255,.46));
-  --r-card:22px;--r-opt:16px;
-  --ease:cubic-bezier(.32,.72,0,1);
+  --bg:#171717;        /* 页面背景 深石墨 */
+  --surface:#202020;   /* 内容区域 */
+  --raise:#242424;     /* 次级面（选项底） */
+  --ink:#F0EEE9;       /* 主文字 暖白 */
+  --sub:#A19F9A;       /* 次要文字 */
+  --line:#2E2E2E;      /* 分割线 */
+  --acc:#D58B68;       /* 强调 暖橙 */
+  --acc-strong:#E09A75;
+  --ok:#8FBA9E;        /* 低饱和绿 */
+  --ok-dim:#5F8D6E;
+  --bad:#CE857A;       /* 低饱和红 */
+  --bad-dim:#A85F54;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
 body{
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","HarmonyOS Sans SC","Microsoft YaHei",sans-serif;
-  background:#f5f5f7;color:var(--ink);
+  background:var(--bg);color:var(--ink);
   min-height:100vh;
-  padding-bottom:calc(96px + env(safe-area-inset-bottom));
+  padding-bottom:calc(84px + env(safe-area-inset-bottom));
   -webkit-font-smoothing:antialiased;
-  overflow-x:hidden;
 }
-/* ---- 背景光斑（liquid glass 光源层）---- */
-.blob{position:fixed;border-radius:50%;filter:blur(90px);opacity:.5;z-index:-1;pointer-events:none}
-.b1{width:420px;height:420px;background:#7aa8ff;top:-140px;left:-120px;animation:drift1 26s ease-in-out infinite alternate}
-.b2{width:380px;height:380px;background:#d9a7ff;top:30%;right:-150px;animation:drift2 32s ease-in-out infinite alternate}
-.b3{width:360px;height:360px;background:#ffc9a1;bottom:-120px;left:12%;animation:drift3 28s ease-in-out infinite alternate}
-@keyframes drift1{to{transform:translate(90px,70px) scale(1.15)}}
-@keyframes drift2{to{transform:translate(-70px,110px) scale(.9)}}
-@keyframes drift3{to{transform:translate(110px,-60px) scale(1.1)}}
-@media (prefers-reduced-motion:reduce){.blob{animation:none}}
+.wrap{max-width:640px;margin:0 auto;padding:0 20px}
 
-/* ---- 玻璃材质 ---- */
-.glass{
-  background:var(--glass);
-  -webkit-backdrop-filter:blur(28px) saturate(170%);
-  backdrop-filter:blur(28px) saturate(170%);
-  border:1px solid var(--hair);
-  box-shadow:0 8px 32px rgba(31,38,135,.08),inset 0 1px 0 rgba(255,255,255,.85);
-  position:relative;
-}
-.glass::before{ /* 折光斜高光 */
-  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-  background:linear-gradient(115deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,0) 28%);
-  opacity:.7;
-}
+/* ---- 顶栏：无卡片，标题+细分割线 ---- */
+.top{padding:26px 0 0}
+.top h1{margin:0;font-size:17px;font-weight:600;letter-spacing:.01em}
+.top .sub{margin-top:5px;font-size:12.5px;color:var(--sub);font-variant-numeric:tabular-nums}
+.prog{height:2px;background:var(--line);border-radius:1px;margin:16px 0 0;overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--acc);transition:width .4s ease}
+.hr{border:none;border-top:1px solid var(--line);margin:20px 0 0}
 
-/* ---- 顶栏 ---- */
-.top{
-  position:sticky;top:0;z-index:30;
-  margin:12px 14px 0;border-radius:20px;
-  padding:14px 18px 12px;
-}
-.top h1{margin:0;font-size:19px;font-weight:700;letter-spacing:-.02em}
-.top .sub{margin-top:3px;font-size:13px;color:var(--sub);font-variant-numeric:tabular-nums}
-.prog{height:5px;background:rgba(29,29,31,.07);border-radius:3px;margin-top:11px;overflow:hidden}
-.prog i{display:block;height:100%;width:0;border-radius:3px;
-  background:linear-gradient(90deg,#0071e3,#5e5ce6);
-  transition:width .4s var(--ease)}
-
-/* ---- 模块 chips ---- */
-.chips{display:flex;gap:8px;overflow-x:auto;padding:14px 16px 4px;scrollbar-width:none}
+/* ---- 模块筛选：文字型，选中橙下划线 ---- */
+.chips{display:flex;gap:2px;overflow-x:auto;margin-top:14px;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
 .chips button{
-  flex:0 0 auto;cursor:pointer;font-weight:500;
-  border:1px solid rgba(255,255,255,.6);border-radius:999px;
-  padding:8px 15px;font-size:13.5px;color:#3c3c43;
-  background:rgba(255,255,255,.42);
-  -webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);
-  transition:transform .18s var(--ease),background .18s,border-color .18s;
+  flex:0 0 auto;cursor:pointer;font-weight:450;
+  border:none;background:none;border-radius:6px;
+  padding:8px 12px;font-size:13.5px;color:var(--sub);
+  position:relative;transition:color .15s ease;
 }
-.chips button:active{transform:scale(.95)}
-.chips button .n{font-size:11px;opacity:.55;margin-left:3px}
-.chips button.on{
-  background:linear-gradient(135deg,#0071e3,#4d5de8);border-color:transparent;color:#fff;
-  box-shadow:0 4px 16px rgba(0,113,227,.35);
+.chips button .n{font-size:11px;opacity:.6;margin-left:3px}
+.chips button.on{color:var(--ink)}
+.chips button.on::after{
+  content:"";position:absolute;left:12px;right:12px;bottom:2px;height:2px;
+  background:var(--acc);border-radius:1px;
 }
 
-/* ---- 题卡 ---- */
-.card{border-radius:var(--r-card);margin:14px 14px 0;padding:20px 20px 8px}
-.meta{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
-.meta .no{font-size:13px;color:var(--mut);font-variant-numeric:tabular-nums}
-.tag{font-size:12px;font-weight:600;padding:4px 11px;border-radius:999px;white-space:nowrap}
-.stem{font-size:17.5px;line-height:1.62;margin:0 0 16px;font-weight:600;letter-spacing:-.01em;word-break:break-word;text-wrap:pretty}
-.opts{display:flex;flex-direction:column;gap:10px;padding-bottom:10px}
+/* ---- 题目区：单个内容面板，无阴影 ---- */
+.card{
+  background:var(--surface);border-radius:10px;
+  margin-top:18px;padding:22px 22px 4px;
+  animation:rise .22s ease;
+}
+@keyframes rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.card{animation:none}}
+.meta{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:14px}
+.meta .no{font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums}
+.tag{font-size:11px;letter-spacing:.08em;color:var(--sub);text-transform:uppercase}
+.stem{font-size:17px;line-height:1.65;margin:0 0 18px;font-weight:500;letter-spacing:.005em;word-break:break-word;text-wrap:pretty}
+.opts{display:flex;flex-direction:column;gap:2px;padding-bottom:10px}
 .opt{
-  display:flex;align-items:flex-start;gap:12px;width:100%;text-align:left;cursor:pointer;
-  border:1px solid rgba(255,255,255,.6);border-radius:var(--r-opt);
-  background:rgba(255,255,255,.5);color:var(--ink);
-  padding:14px 15px;font-size:15.5px;line-height:1.55;
-  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
-  box-shadow:0 2px 10px rgba(31,38,135,.05),inset 0 1px 0 rgba(255,255,255,.7);
-  transition:transform .18s var(--ease),background .18s,border-color .18s,box-shadow .18s;
+  display:flex;align-items:flex-start;gap:13px;width:100%;text-align:left;cursor:pointer;
+  border:none;border-radius:8px;
+  background:transparent;color:var(--ink);
+  padding:13px 12px;font-size:15px;line-height:1.55;
+  transition:background .15s ease;
 }
-.opt:active{transform:scale(.98)}
+.opt:hover{background:var(--raise)}
+.opt:active{background:#282828}
 .opt .k{
-  flex:0 0 28px;height:28px;border-radius:50%;margin-top:1px;
-  background:rgba(29,29,31,.06);color:#48484d;
-  font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;
-  transition:background .18s,color .18s;
+  flex:0 0 24px;height:24px;border-radius:5px;margin-top:1px;
+  background:var(--raise);color:var(--sub);
+  font-weight:600;font-size:12px;display:flex;align-items:center;justify-content:center;
+  transition:background .15s,color .15s;
 }
+.opt:hover .k{background:#2C2C2C}
 .opt .t{min-width:0;word-break:break-word}
-.opt.sel{border-color:var(--pri);background:rgba(0,113,227,.08)}
-.opt.sel .k{background:var(--pri);color:#fff}
-.opt.ok{border-color:rgba(52,199,89,.65);background:rgba(52,199,89,.13);animation:pop .38s var(--ease)}
-.opt.ok .k{background:var(--ok);color:#fff}
-.opt.bad{border-color:rgba(255,59,48,.55);background:rgba(255,59,48,.1);animation:shake .4s var(--ease)}
-.opt.bad .k{background:var(--bad);color:#fff}
-.opt.dim{opacity:.55}
-@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.025)}100%{transform:scale(1)}}
-@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}55%{transform:translateX(4px)}80%{transform:translateX(-2px)}}
+.opt.sel{background:var(--raise);box-shadow:inset 0 0 0 1px var(--acc)}
+.opt.sel .k{background:var(--acc);color:#171717}
+.opt.ok{background:rgba(95,141,110,.1);box-shadow:inset 0 0 0 1px var(--ok-dim)}
+.opt.ok .k{background:var(--ok-dim);color:#F0EEE9}
+.opt.bad{background:rgba(168,95,84,.1);box-shadow:inset 0 0 0 1px var(--bad-dim)}
+.opt.bad .k{background:var(--bad-dim);color:#F0EEE9}
+.opt.dim{opacity:.42}
 
-/* ---- 反馈区：横幅 → roast 气泡 → 解析 ---- */
-.after{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .36s var(--ease),opacity .3s .08s}
+/* ---- 反馈区：左竖线 + 文字，无大色块 ---- */
+.after{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .24s ease,opacity .2s ease .06s}
 .after.show{grid-template-rows:1fr;opacity:1}
 .after>div{overflow:hidden}
-.feedwrap{padding:2px 0 16px}
-.feed{border-radius:14px;padding:12px 15px;font-size:14.5px;font-weight:600;margin-bottom:10px}
-.feed.ok{background:rgba(52,199,89,.14);color:#1d7a3d;border:1px solid rgba(52,199,89,.3)}
-.feed.bad{background:rgba(255,59,48,.11);color:#c22619;border:1px solid rgba(255,59,48,.28)}
-.feed .ans{font-weight:800;font-size:16px}
+.feedwrap{padding:6px 0 18px}
+.feed{
+  border-left:2px solid var(--line);
+  padding:4px 0 4px 14px;font-size:14px;font-weight:500;margin-bottom:14px;
+}
+.feed.ok{border-left-color:var(--ok-dim);color:var(--ok)}
+.feed.bad{border-left-color:var(--bad-dim);color:var(--bad)}
+.feed .ans{font-weight:700;font-size:15px}
 .roast{
-  display:flex;gap:9px;align-items:flex-start;
-  border-radius:14px;padding:12px 14px;margin-bottom:10px;
-  background:linear-gradient(135deg,rgba(255,59,48,.14),rgba(255,59,48,.07));
-  border:1px solid rgba(255,59,48,.32);
-  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
-  animation:pop .4s var(--ease);
+  border-left:2px solid var(--acc);
+  padding:2px 0 2px 14px;margin-bottom:14px;
 }
 .roast .rk{
-  flex:0 0 auto;font-size:11px;font-weight:800;letter-spacing:.05em;
-  background:linear-gradient(135deg,#ff3b30,#d70015);color:#fff;
-  border-radius:999px;padding:3px 9px;margin-top:1px;
+  display:inline-block;font-size:11px;font-weight:600;letter-spacing:.1em;
+  color:var(--acc);margin-bottom:4px;
 }
-.roast .rt{font-size:14.5px;font-weight:600;color:#8e1b12;line-height:1.55}
+.roast .rt{font-size:14.5px;line-height:1.6;color:var(--ink);font-weight:450;word-break:break-word;text-wrap:pretty}
 .explain{
-  border-radius:14px;padding:13px 15px;
-  background:rgba(255,255,255,.42);
-  border:1px solid rgba(255,255,255,.6);
-  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+  border-top:1px solid var(--line);
+  padding:14px 0 0 0;
 }
-.explain .et{font-size:11.5px;font-weight:700;letter-spacing:.08em;color:var(--mut);margin-bottom:6px}
-.explain .ex{font-size:14.5px;line-height:1.66;color:#3a3a3f;word-break:break-word;text-wrap:pretty}
+.explain .et{font-size:11px;font-weight:600;letter-spacing:.12em;color:var(--sub);margin-bottom:7px}
+.explain .ex{font-size:14.5px;line-height:1.7;color:var(--sub);word-break:break-word;text-wrap:pretty}
+.explain .ex strong{color:var(--ink);font-weight:600}
 
 /* ---- 底部操作栏 ---- */
 .bar{
-  position:fixed;left:14px;right:14px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:30;
-  border-radius:20px;display:flex;align-items:center;gap:8px;padding:10px;
+  position:fixed;left:0;right:0;bottom:0;z-index:30;
+  background:var(--surface);border-top:1px solid var(--line);
+  padding:10px max(20px,calc((100vw - 640px)/2 + 20px)) calc(10px + env(safe-area-inset-bottom));
+  display:flex;align-items:center;gap:6px;
 }
 .bar button{
-  flex:1;cursor:pointer;font-weight:600;font-size:15px;
-  border:1px solid rgba(255,255,255,.6);border-radius:14px;
-  padding:12px 0;color:var(--ink);background:rgba(255,255,255,.5);
-  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
-  transition:transform .18s var(--ease),opacity .18s;
+  flex:1;cursor:pointer;font-weight:500;font-size:14.5px;
+  border:none;border-radius:8px;
+  padding:11px 0;color:var(--ink);background:transparent;
+  transition:background .15s ease;
 }
-.bar button:active{transform:scale(.96)}
+.bar button:hover{background:var(--raise)}
+.bar button:active{background:#282828}
 .bar button:disabled{opacity:.35}
-.bar .pos{flex:0 0 auto;font-size:13px;font-weight:600;color:var(--sub);min-width:64px;text-align:center;font-variant-numeric:tabular-nums}
-.bar #btnsheet{flex:0 0 auto;padding:12px 16px}
+.bar .pos{flex:0 0 auto;font-size:12.5px;font-weight:500;color:var(--sub);min-width:64px;text-align:center;font-variant-numeric:tabular-nums}
+.bar #btnsheet{flex:0 0 auto;padding:11px 16px}
 
 /* ---- 错题本抽屉 ---- */
 .sheet{
   position:fixed;inset:0;z-index:40;display:flex;align-items:flex-end;justify-content:center;
-  background:rgba(29,29,31,.28);
-  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
-  opacity:0;pointer-events:none;transition:opacity .3s var(--ease);
+  background:rgba(0,0,0,.55);
+  opacity:0;pointer-events:none;transition:opacity .25s ease;
 }
 .sheet.show{opacity:1;pointer-events:auto}
 .sheet .panel{
-  width:100%;max-width:680px;max-height:76vh;display:flex;flex-direction:column;
-  border-radius:26px 26px 0 0;border-bottom:none;
-  transform:translateY(60px);transition:transform .38s var(--ease);
+  width:100%;max-width:640px;max-height:74vh;display:flex;flex-direction:column;
+  background:var(--surface);border:1px solid var(--line);border-bottom:none;
+  border-radius:14px 14px 0 0;
+  transform:translateY(40px);transition:transform .3s ease;
   padding:0 0 env(safe-area-inset-bottom);
 }
 .sheet.show .panel{transform:translateY(0)}
-.sheet .grab{width:40px;height:5px;border-radius:3px;background:rgba(29,29,31,.15);margin:10px auto 2px}
-.sheet .head{display:flex;justify-content:space-between;align-items:center;padding:8px 20px 12px;border-bottom:1px solid rgba(29,29,31,.06)}
-.sheet .head h2{margin:0;font-size:17px;font-weight:700}
-.sheet .head button{border:none;background:rgba(29,29,31,.06);border-radius:50%;width:30px;height:30px;font-size:15px;cursor:pointer;color:var(--sub)}
-.sheetlist{overflow-y:auto;padding:8px 14px 20px}
-.row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 8px;border-bottom:1px solid rgba(29,29,31,.05);font-size:14px}
-.row span{color:#3a3a3f;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sheet .grab{width:36px;height:4px;border-radius:2px;background:#3A3A3A;margin:10px auto 2px}
+.sheet .head{display:flex;justify-content:space-between;align-items:center;padding:10px 22px 13px;border-bottom:1px solid var(--line)}
+.sheet .head h2{margin:0;font-size:15px;font-weight:600}
+.sheet .head button{border:none;background:transparent;border-radius:6px;width:28px;height:28px;font-size:14px;cursor:pointer;color:var(--sub)}
+.sheet .head button:hover{background:var(--raise);color:var(--ink)}
+.sheetlist{overflow-y:auto;padding:4px 14px 20px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 8px;border-bottom:1px solid var(--line);font-size:13.5px}
+.row:last-child{border-bottom:none}
+.row span{color:var(--sub);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .row button{
-  flex:0 0 auto;cursor:pointer;font-size:13px;font-weight:600;
-  border:1px solid rgba(0,113,227,.35);color:var(--pri);
-  background:rgba(0,113,227,.07);border-radius:999px;padding:6px 14px;
-  transition:transform .15s var(--ease);
+  flex:0 0 auto;cursor:pointer;font-size:12.5px;font-weight:500;
+  border:none;color:var(--acc);
+  background:transparent;border-radius:6px;padding:6px 12px;
+  transition:background .15s;
 }
-.row button:active{transform:scale(.94)}
+.row button:hover{background:rgba(213,139,104,.1)}
+.row button:active{background:rgba(213,139,104,.18)}
 
-.empty{text-align:center;padding:60px 20px;color:var(--mut)}
-.empty .em{font-size:44px;margin-bottom:10px}
-.empty p{margin:0;font-size:15px}
+.empty{text-align:center;padding:64px 20px;color:var(--sub)}
+.empty p{margin:0;font-size:14px}
 
 @media (min-width:700px){
-  .top,.card{max-width:680px;margin-left:auto;margin-right:auto}
-  .chips{max-width:680px;margin:0 auto}
-  .bar{max-width:680px;left:50%;transform:translateX(-50%)}
-  .stem{font-size:18.5px}
+  .card{margin-top:22px}
+  .stem{font-size:18px}
 }
 </style>
 </head>
 <body>
-<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+<div class="wrap">
+  <header class="top">
+    <h1>计算机类 · 单招刷题</h1>
+    <div class="sub" id="sub">—</div>
+    <div class="prog"><i id="progbar"></i></div>
+  </header>
+  <hr class="hr">
+  <nav class="chips" id="chips"></nav>
+  <main id="app"></main>
+</div>
 
-<header class="top glass">
-  <h1>计算机类 · 单招刷题</h1>
-  <div class="sub" id="sub">—</div>
-  <div class="prog"><i id="progbar"></i></div>
-</header>
-
-<nav class="chips" id="chips"></nav>
-<main id="app"></main>
-
-<div class="bar glass">
+<div class="bar">
   <button id="btnprev">上一题</button>
   <span class="pos" id="pos"></span>
   <button id="btnnext">下一题</button>
@@ -224,7 +202,7 @@ body{
 </div>
 
 <div class="sheet" id="sheet">
-  <div class="panel glass">
+  <div class="panel">
     <div class="grab"></div>
     <div class="head"><h2 id="sheettitle">错题本</h2><button id="sheetclose">✕</button></div>
     <div class="sheetlist" id="sheetlist"></div>
@@ -239,7 +217,6 @@ function save(){localStorage.setItem(LS,JSON.stringify(S));}
 var S=load();
 var filter='ALL',order=[],idx=0;
 var MODS=[['ALL','全部'],['M1','基础'],['M2','数据库'],['M3','操作系统'],['M4','网络'],['M5','Word'],['M6','Excel'],['X1','PPT'],['X2','多媒体']];
-var TAGC={M1:['#eaf3ff','#0071e3'],M2:['#e8f8ee','#1d7a3d'],M3:['#f3edff','#7d3fd1'],M4:['#fff3e5','#b05e0a'],M5:['#ffecf0','#c22548'],M6:['#e5f7f7','#0e7c86'],X1:['#f0f0f2','#6e6e73'],X2:['#f0f0f2','#6e6e73']};
 var KBD=['a','b','c','d'];
 function buildOrder(){order=BANK.map(function(q,i){return i;}).filter(function(i){return filter==='ALL'||BANK[i].m===filter;});idx=0;render();}
 function chips(){
@@ -257,12 +234,11 @@ function key(q){return q.c+'-'+q.n;}
 function esc(s){return String(s).replace(/[&<>"']/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
 function render(){
   var app=document.getElementById('app');
-  if(!order.length){app.innerHTML='<div class="empty"><div class="em">🗂️</div><p>这个模块没题</p></div>';update();return;}
+  if(!order.length){app.innerHTML='<div class="empty"><p>这个模块没题</p></div>';update();return;}
   if(idx<0)idx=0;if(idx>=order.length)idx=order.length-1;
   var q=BANK[order[idx]],k=key(q);
   var answered=!!S.done[k],userSel=S.done[k]||null,userAns=S.wrong[k]||null;
-  var tc=TAGC[q.m]||TAGC.X1;
-  var h='<div class="card glass"><div class="meta"><span class="no">第'+q.c+'章 · 第'+q.n+'题</span><span class="tag" style="background:'+tc[0]+';color:'+tc[1]+'">'+esc(q.mn)+'</span></div>';
+  var h='<div class="card"><div class="meta"><span class="no">第'+q.c+'章 · 第'+q.n+'题</span><span class="tag">'+esc(q.mn)+'</span></div>';
   h+='<div class="stem">'+esc(q.s)+'</div><div class="opts">';
   ['A','B','C','D'].forEach(function(L,i){
     var cls='opt';
@@ -275,7 +251,7 @@ function render(){
     var inner='<div class="feedwrap">';
     inner+='<div class="feed '+(ok?'ok':'bad')+'">'+(ok?'✓ 答对了':('✕ 正确答案 <span class="ans">'+q.a+'</span>'+'，你选了 '+(userSel||'—')))+'</div>';
     if(!ok&&q.roast){
-      inner+='<div class="roast"><span class="rk">老娘点评</span><span class="rt">'+esc(q.roast)+'</span></div>';
+      inner+='<div class="roast"><span class="rk">老娘点评</span><div class="rt">'+esc(q.roast)+'</div></div>';
     }
     if(q.ex){
       inner+='<div class="explain"><div class="et">解析</div><div class="ex">'+esc(q.ex)+'</div></div>';
@@ -313,7 +289,7 @@ function sheet(){
   var sh=document.getElementById('sheet'),list=document.getElementById('sheetlist');
   var wk=Object.keys(S.wrong);
   document.getElementById('sheettitle').textContent='错题本 ('+wk.length+')';
-  if(!wk.length){list.innerHTML='<div class="empty"><div class="em">🎉</div><p>暂无错题，继续保持</p></div>';}
+  if(!wk.length){list.innerHTML='<div class="empty"><p>暂无错题，继续保持</p></div>';}
   else{
     list.innerHTML='';
     wk.forEach(function(k){
