@@ -6,18 +6,19 @@
 <title>计算机类·单招刷题</title>
 <style>
 :root{
-  --bg:#171717;        /* 页面背景 深石墨 */
-  --surface:#202020;   /* 内容区域 */
-  --raise:#242424;     /* 次级面（选项底） */
-  --ink:#F0EEE9;       /* 主文字 暖白 */
-  --sub:#A19F9A;       /* 次要文字 */
-  --line:#2E2E2E;      /* 分割线 */
-  --acc:#D58B68;       /* 强调 暖橙 */
-  --acc-strong:#E09A75;
-  --ok:#8FBA9E;        /* 低饱和绿 */
-  --ok-dim:#5F8D6E;
-  --bad:#CE857A;       /* 低饱和红 */
-  --bad-dim:#A85F54;
+  /* 层次暖灰阶梯 */
+  --bg:#1C1B19; --panel:#22211F; --card:#292725; --hover:#32302D;
+  --line:#3D3935;
+  /* 文字 */
+  --ink:#F0ECE5; --sub:#A7A097; --dim:#77716A;
+  /* 强调与反馈 */
+  --acc:#D58B68; --acc-soft:rgba(213,139,104,.12); --acc-line:rgba(213,139,104,.45);
+  --ok:#8FB49A; --ok-deep:#5E7F69; --ok-soft:rgba(94,127,105,.14);
+  --bad:#C98577; --bad-deep:#96574C; --bad-soft:rgba(150,87,76,.14);
+  /* 圆角体系 */
+  --r-lg:14px; --r-md:10px; --r-sm:6px;
+  /* 动效 */
+  --ease:cubic-bezier(.3,.7,.3,1);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
@@ -25,187 +26,285 @@ body{
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","HarmonyOS Sans SC","Microsoft YaHei",sans-serif;
   background:var(--bg);color:var(--ink);
   min-height:100vh;
-  padding-bottom:calc(84px + env(safe-area-inset-bottom));
+  padding-bottom:calc(88px + env(safe-area-inset-bottom));
   -webkit-font-smoothing:antialiased;
+  font-size:15px;line-height:1.6;
 }
-.wrap{max-width:640px;margin:0 auto;padding:0 20px}
+button{font-family:inherit}
+svg{display:block}
 
-/* ---- 顶栏：无卡片，标题+细分割线 ---- */
-.top{padding:26px 0 0}
-.top h1{margin:0;font-size:17px;font-weight:600;letter-spacing:.01em}
-.top .sub{margin-top:5px;font-size:12.5px;color:var(--sub);font-variant-numeric:tabular-nums}
-.prog{height:2px;background:var(--line);border-radius:1px;margin:16px 0 0;overflow:hidden}
-.prog i{display:block;height:100%;width:0;background:var(--acc);transition:width .4s ease}
-.hr{border:none;border-top:1px solid var(--line);margin:20px 0 0}
+/* ================= 顶部 ================= */
+.top{
+  border-bottom:1px solid var(--line);
+  background:var(--panel);
+}
+.top-in{
+  max-width:960px;margin:0 auto;padding:18px 24px 0;
+}
+.brand{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.brand h1{margin:0;font-size:16.5px;font-weight:600;letter-spacing:.01em}
+.brand .mark{color:var(--acc);margin-right:8px;font-weight:700}
+.brand .sub{margin:0;font-size:12.5px;color:var(--dim);font-variant-numeric:tabular-nums}
+.prog{height:2px;background:var(--line);border-radius:1px;margin:14px 0 16px;overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--acc);border-radius:1px;transition:width .45s var(--ease)}
 
-/* ---- 模块筛选：文字型，选中橙下划线 ---- */
-.chips{display:flex;gap:2px;overflow-x:auto;margin-top:14px;scrollbar-width:none}
-.chips::-webkit-scrollbar{display:none}
-.chips button{
-  flex:0 0 auto;cursor:pointer;font-weight:450;
-  border:none;background:none;border-radius:6px;
-  padding:8px 12px;font-size:13.5px;color:var(--sub);
-  position:relative;transition:color .15s ease;
+/* ================= 模块导航 ================= */
+.tabs{
+  border-bottom:1px solid var(--line);
+  background:var(--panel);
 }
-.chips button .n{font-size:11px;opacity:.6;margin-left:3px}
-.chips button.on{color:var(--ink)}
-.chips button.on::after{
-  content:"";position:absolute;left:12px;right:12px;bottom:2px;height:2px;
-  background:var(--acc);border-radius:1px;
+.tabs-in{
+  max-width:960px;margin:0 auto;padding:0 16px 12px;
+  display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;
+}
+.tabs-in::-webkit-scrollbar{display:none}
+.tab{
+  flex:0 0 auto;cursor:pointer;border:none;border-radius:var(--r-sm);
+  padding:7px 12px;font-size:13.5px;font-weight:450;color:var(--sub);
+  background:transparent;transition:background .15s ease,color .15s ease;
+  position:relative;white-space:nowrap;
+}
+.tab:hover{background:var(--hover);color:var(--ink)}
+.tab.on{background:var(--card);color:var(--ink);font-weight:550;box-shadow:inset 0 -2px 0 var(--acc)}
+.tab .n{font-size:11px;color:var(--dim);margin-left:5px;font-variant-numeric:tabular-nums}
+.tab.on .n{color:var(--acc)}
+
+/* ================= 主布局：桌面双栏 ================= */
+.layout{
+  max-width:960px;margin:0 auto;padding:22px 24px 0;
+  display:grid;grid-template-columns:minmax(0,1fr) 264px;gap:20px;
+  align-items:start;
+}
+.side{position:sticky;top:20px;display:flex;flex-direction:column;gap:14px}
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr;padding:16px 16px 0}
+  .side{display:none}
 }
 
-/* ---- 题目区：单个内容面板，无阴影 ---- */
-.card{
-  background:var(--surface);border-radius:10px;
-  margin-top:18px;padding:22px 22px 4px;
-  animation:rise .22s ease;
+/* ================= 学习面板（侧栏） ================= */
+.panel{
+  background:var(--card);border:1px solid var(--line);
+  border-radius:var(--r-lg);padding:18px;
 }
-@keyframes rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-@media (prefers-reduced-motion:reduce){.card{animation:none}}
-.meta{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:14px}
-.meta .no{font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums}
-.tag{font-size:11px;letter-spacing:.08em;color:var(--sub);text-transform:uppercase}
-.stem{font-size:17px;line-height:1.65;margin:0 0 18px;font-weight:500;letter-spacing:.005em;word-break:break-word;text-wrap:pretty}
-.opts{display:flex;flex-direction:column;gap:2px;padding-bottom:10px}
+.panel .pt{font-size:11px;font-weight:600;letter-spacing:.12em;color:var(--dim);margin:0 0 14px}
+.ring-row{display:flex;align-items:center;gap:16px;margin-bottom:6px}
+.ring{position:relative;width:74px;height:74px;flex:0 0 74px}
+.ring svg{width:74px;height:74px;transform:rotate(-90deg)}
+.ring .track{stroke:var(--line)}
+.ring .fill{stroke:var(--acc);transition:stroke-dashoffset .5s var(--ease)}
+.ring .cv{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;line-height:1.15;
+}
+.ring .cv b{font-size:17px;font-weight:650;font-variant-numeric:tabular-nums}
+.ring .cv span{font-size:10px;color:var(--dim)}
+.stat-rows{flex:1;min-width:0}
+.srow{display:flex;justify-content:space-between;align-items:baseline;padding:3px 0;font-size:12.5px}
+.srow .k{color:var(--sub)}
+.srow .v{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.srow .v small{color:var(--dim);font-weight:450}
+.mrow{display:flex;align-items:center;gap:10px;padding:5px 0}
+.mrow .mn{flex:0 0 58px;font-size:12px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mrow .mbar{flex:1;height:3px;background:var(--line);border-radius:2px;overflow:hidden}
+.mrow .mbar i{display:block;height:100%;background:var(--acc);border-radius:2px;transition:width .4s var(--ease)}
+.mrow .mc{flex:0 0 52px;text-align:right;font-size:11px;color:var(--dim);font-variant-numeric:tabular-nums}
+
+/* ================= 题目卡 ================= */
+.qcard{
+  background:var(--card);border:1px solid var(--line);
+  border-radius:var(--r-lg);
+  padding:24px 26px 8px;
+  animation:rise .24s var(--ease);
+}
+@keyframes rise{from{transform:translateY(6px)}to{transform:none}}
+@media (prefers-reduced-motion:reduce){.qcard{animation:none}}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+.qno{font-size:12.5px;color:var(--dim);font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.qtag{
+  font-size:11.5px;font-weight:550;letter-spacing:.05em;
+  color:var(--acc);background:var(--acc-soft);
+  padding:4px 10px;border-radius:var(--r-sm);
+}
+.stem{font-size:17.5px;line-height:1.7;font-weight:550;margin:0 0 20px;letter-spacing:.005em;word-break:break-word;text-wrap:pretty}
+.opts{display:flex;flex-direction:column;gap:10px;padding-bottom:14px}
 .opt{
-  display:flex;align-items:flex-start;gap:13px;width:100%;text-align:left;cursor:pointer;
-  border:none;border-radius:8px;
+  display:flex;align-items:flex-start;gap:14px;width:100%;text-align:left;cursor:pointer;
+  border:1px solid transparent;border-radius:var(--r-md);
   background:transparent;color:var(--ink);
-  padding:13px 12px;font-size:15px;line-height:1.55;
-  transition:background .15s ease;
+  padding:14px 15px;font-size:15px;line-height:1.55;
+  transition:background .15s ease,border-color .15s ease;
 }
-.opt:hover{background:var(--raise)}
-.opt:active{background:#282828}
+.opt:hover{background:var(--hover);border-color:var(--line)}
+.opt:focus-visible{outline:2px solid var(--acc-line);outline-offset:2px}
+.opt:active{background:#383531}
 .opt .k{
-  flex:0 0 24px;height:24px;border-radius:5px;margin-top:1px;
-  background:var(--raise);color:var(--sub);
-  font-weight:600;font-size:12px;display:flex;align-items:center;justify-content:center;
-  transition:background .15s,color .15s;
+  flex:0 0 27px;height:27px;border-radius:var(--r-sm);margin-top:1px;
+  background:var(--hover);color:var(--sub);border:1px solid transparent;
+  font-weight:600;font-size:12.5px;display:flex;align-items:center;justify-content:center;
+  transition:background .15s,color .15s,border-color .15s;
 }
-.opt:hover .k{background:#2C2C2C}
-.opt .t{min-width:0;word-break:break-word}
-.opt.sel{background:var(--raise);box-shadow:inset 0 0 0 1px var(--acc)}
-.opt.sel .k{background:var(--acc);color:#171717}
-.opt.ok{background:rgba(95,141,110,.1);box-shadow:inset 0 0 0 1px var(--ok-dim)}
-.opt.ok .k{background:var(--ok-dim);color:#F0EEE9}
-.opt.bad{background:rgba(168,95,84,.1);box-shadow:inset 0 0 0 1px var(--bad-dim)}
-.opt.bad .k{background:var(--bad-dim);color:#F0EEE9}
-.opt.dim{opacity:.42}
+.opt:hover .k{border-color:var(--line)}
+.opt .t{min-width:0;word-break:break-word;padding-top:2px}
+.opt.sel{background:var(--acc-soft);border-color:var(--acc-line)}
+.opt.sel .k{background:var(--acc);color:#1C1B19;border-color:transparent}
+.opt.ok{background:var(--ok-soft);border-color:var(--ok-deep)}
+.opt.ok .k{background:var(--ok-deep);color:#F0ECE5;border-color:transparent}
+.opt.bad{background:var(--bad-soft);border-color:var(--bad-deep)}
+.opt.bad .k{background:var(--bad-deep);color:#F0ECE5;border-color:transparent}
+.opt.dim{opacity:.4}
 
-/* ---- 反馈区：左竖线 + 文字，无大色块 ---- */
-.after{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .24s ease,opacity .2s ease .06s}
+/* ================= 反馈与解析 ================= */
+.after{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .26s var(--ease),opacity .2s ease .06s}
 .after.show{grid-template-rows:1fr;opacity:1}
 .after>div{overflow:hidden}
-.feedwrap{padding:6px 0 18px}
+.feedwrap{padding:2px 0 20px}
 .feed{
-  border-left:2px solid var(--line);
-  padding:4px 0 4px 14px;font-size:14px;font-weight:500;margin-bottom:14px;
+  display:flex;align-items:center;gap:9px;
+  font-size:14px;font-weight:550;margin-bottom:14px;
 }
-.feed.ok{border-left-color:var(--ok-dim);color:var(--ok)}
-.feed.bad{border-left-color:var(--bad-dim);color:var(--bad)}
+.feed .ic{flex:0 0 18px;width:18px;height:18px}
+.feed.ok{color:var(--ok)}
+.feed.bad{color:var(--bad)}
 .feed .ans{font-weight:700;font-size:15px}
-.roast{
-  border-left:2px solid var(--acc);
-  padding:2px 0 2px 14px;margin-bottom:14px;
+.fb-panel{
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--r-md);padding:16px 18px;
 }
-.roast .rk{
-  display:inline-block;font-size:11px;font-weight:600;letter-spacing:.1em;
-  color:var(--acc);margin-bottom:4px;
-}
-.roast .rt{font-size:14.5px;line-height:1.6;color:var(--ink);font-weight:450;word-break:break-word;text-wrap:pretty}
-.explain{
-  border-top:1px solid var(--line);
-  padding:14px 0 0 0;
-}
-.explain .et{font-size:11px;font-weight:600;letter-spacing:.12em;color:var(--sub);margin-bottom:7px}
-.explain .ex{font-size:14.5px;line-height:1.7;color:var(--sub);word-break:break-word;text-wrap:pretty}
-.explain .ex strong{color:var(--ink);font-weight:600}
+.roast{padding:0 0 0 14px;border-left:2px solid var(--acc);margin-bottom:14px}
+.roast .rk{display:block;font-size:11px;font-weight:650;letter-spacing:.1em;color:var(--acc);margin-bottom:5px}
+.roast .rt{font-size:14.5px;line-height:1.65;color:var(--ink);font-weight:450;word-break:break-word;text-wrap:pretty}
+.explain{border-top:1px solid var(--line);padding-top:13px}
+.explain .et{font-size:11px;font-weight:600;letter-spacing:.12em;color:var(--dim);margin-bottom:7px}
+.explain .ex{font-size:14.5px;line-height:1.72;color:var(--sub);word-break:break-word;text-wrap:pretty}
 
-/* ---- 底部操作栏 ---- */
+/* ================= 底部操作栏 ================= */
 .bar{
   position:fixed;left:0;right:0;bottom:0;z-index:30;
-  background:var(--surface);border-top:1px solid var(--line);
-  padding:10px max(20px,calc((100vw - 640px)/2 + 20px)) calc(10px + env(safe-area-inset-bottom));
-  display:flex;align-items:center;gap:6px;
+  background:var(--panel);border-top:1px solid var(--line);
+  padding:10px max(24px,calc((100vw - 960px)/2 + 24px)) calc(10px + env(safe-area-inset-bottom));
+  display:flex;align-items:center;gap:8px;
 }
-.bar button{
-  flex:1;cursor:pointer;font-weight:500;font-size:14.5px;
-  border:none;border-radius:8px;
-  padding:11px 0;color:var(--ink);background:transparent;
-  transition:background .15s ease;
+.bbtn{
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  cursor:pointer;font-weight:500;font-size:14px;
+  border:1px solid var(--line);border-radius:var(--r-md);
+  padding:10px 18px;color:var(--ink);background:var(--card);
+  transition:background .15s ease,border-color .15s ease;
 }
-.bar button:hover{background:var(--raise)}
-.bar button:active{background:#282828}
-.bar button:disabled{opacity:.35}
-.bar .pos{flex:0 0 auto;font-size:12.5px;font-weight:500;color:var(--sub);min-width:64px;text-align:center;font-variant-numeric:tabular-nums}
-.bar #btnsheet{flex:0 0 auto;padding:11px 16px}
+.bbtn svg{width:15px;height:15px}
+.bbtn:hover{background:var(--hover);border-color:#4A453F}
+.bbtn:active{background:#383531}
+.bbtn:focus-visible{outline:2px solid var(--acc-line);outline-offset:2px}
+.bbtn:disabled{opacity:.35;pointer-events:none}
+.bbtn.primary{background:var(--acc-soft);border-color:var(--acc-line);color:var(--acc)}
+.bbtn.primary:hover{background:rgba(213,139,104,.2)}
+.bbtn.primary:active{background:rgba(213,139,104,.28)}
+.bar .pos{
+  flex:1;text-align:center;font-size:12.5px;font-weight:500;color:var(--sub);
+  font-variant-numeric:tabular-nums;letter-spacing:.03em;
+}
+.bar .pos b{color:var(--ink);font-weight:650}
 
-/* ---- 错题本抽屉 ---- */
+/* ================= 错题本抽屉 ================= */
 .sheet{
   position:fixed;inset:0;z-index:40;display:flex;align-items:flex-end;justify-content:center;
-  background:rgba(0,0,0,.55);
+  background:rgba(28,27,25,.62);
   opacity:0;pointer-events:none;transition:opacity .25s ease;
 }
 .sheet.show{opacity:1;pointer-events:auto}
-.sheet .panel{
-  width:100%;max-width:640px;max-height:74vh;display:flex;flex-direction:column;
-  background:var(--surface);border:1px solid var(--line);border-bottom:none;
-  border-radius:14px 14px 0 0;
-  transform:translateY(40px);transition:transform .3s ease;
+.sheet .spanel{
+  width:100%;max-width:680px;max-height:76vh;display:flex;flex-direction:column;
+  background:var(--panel);border:1px solid var(--line);border-bottom:none;
+  border-radius:var(--r-lg) var(--r-lg) 0 0;
+  box-shadow:0 -12px 40px rgba(0,0,0,.35);
+  transform:translateY(46px);transition:transform .32s var(--ease);
   padding:0 0 env(safe-area-inset-bottom);
 }
-.sheet.show .panel{transform:translateY(0)}
-.sheet .grab{width:36px;height:4px;border-radius:2px;background:#3A3A3A;margin:10px auto 2px}
-.sheet .head{display:flex;justify-content:space-between;align-items:center;padding:10px 22px 13px;border-bottom:1px solid var(--line)}
-.sheet .head h2{margin:0;font-size:15px;font-weight:600}
-.sheet .head button{border:none;background:transparent;border-radius:6px;width:28px;height:28px;font-size:14px;cursor:pointer;color:var(--sub)}
-.sheet .head button:hover{background:var(--raise);color:var(--ink)}
-.sheetlist{overflow-y:auto;padding:4px 14px 20px}
-.row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 8px;border-bottom:1px solid var(--line);font-size:13.5px}
-.row:last-child{border-bottom:none}
-.row span{color:var(--sub);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.row button{
-  flex:0 0 auto;cursor:pointer;font-size:12.5px;font-weight:500;
-  border:none;color:var(--acc);
-  background:transparent;border-radius:6px;padding:6px 12px;
+.sheet.show .spanel{transform:translateY(0)}
+.sgrab{width:36px;height:4px;border-radius:2px;background:var(--line);margin:10px auto 2px}
+.shead{display:flex;justify-content:space-between;align-items:center;padding:10px 22px 12px;border-bottom:1px solid var(--line)}
+.shead h2{margin:0;font-size:15px;font-weight:600}
+.shead .st{font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums}
+.shead button{border:none;background:transparent;border-radius:var(--r-sm);width:30px;height:30px;font-size:14px;cursor:pointer;color:var(--sub);display:flex;align-items:center;justify-content:center}
+.shead button:hover{background:var(--hover);color:var(--ink)}
+.slist{overflow-y:auto;padding:2px 14px 20px}
+.wrow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 10px;border-bottom:1px solid var(--line);font-size:13.5px}
+.wrow:last-child{border-bottom:none}
+.wrow .wl{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--sub)}
+.wrow .wl b{color:var(--ink);font-weight:550}
+.wrow .redo{
+  flex:0 0 auto;cursor:pointer;font-size:12.5px;font-weight:550;
+  border:1px solid var(--acc-line);color:var(--acc);
+  background:transparent;border-radius:var(--r-sm);padding:5px 13px;
   transition:background .15s;
 }
-.row button:hover{background:rgba(213,139,104,.1)}
-.row button:active{background:rgba(213,139,104,.18)}
+.wrow .redo:hover{background:var(--acc-soft)}
+.wrow .redo:active{background:rgba(213,139,104,.22)}
 
-.empty{text-align:center;padding:64px 20px;color:var(--sub)}
-.empty p{margin:0;font-size:14px}
+.empty{text-align:center;padding:72px 20px;color:var(--dim)}
+.empty svg{width:36px;height:36px;margin:0 auto 12px;opacity:.5}
+.empty p{margin:0;font-size:13.5px}
 
-@media (min-width:700px){
-  .card{margin-top:22px}
-  .stem{font-size:18px}
+@media (max-width:560px){
+  .qcard{padding:18px 16px 4px}
+  .stem{font-size:16.5px}
+  .opt{padding:12px 12px;gap:11px}
+  .top-in{padding:14px 16px 0}
+  .bar{padding-left:10px;padding-right:10px;gap:6px;padding-top:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom))}
+  .bbtn{padding:12px 14px}
+  .bbtn .bt{display:none}
+  .bbtn.primary .bt{display:inline}
 }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header class="top">
-    <h1>计算机类 · 单招刷题</h1>
-    <div class="sub" id="sub">—</div>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand">
+      <h1><span class="mark">◢</span>计算机类 · 单招刷题</h1>
+      <p class="sub" id="sub">—</p>
+    </div>
     <div class="prog"><i id="progbar"></i></div>
-  </header>
-  <hr class="hr">
-  <nav class="chips" id="chips"></nav>
-  <main id="app"></main>
+  </div>
+</header>
+
+<nav class="tabs">
+  <div class="tabs-in" id="chips"></div>
+</nav>
+
+<div class="layout">
+  <main id="app" style="min-width:0"></main>
+  <aside class="side" id="side"></aside>
 </div>
 
-<div class="bar">
-  <button id="btnprev">上一题</button>
-  <span class="pos" id="pos"></span>
-  <button id="btnnext">下一题</button>
-  <button id="btnsheet">错题本</button>
-</div>
+<footer class="bar">
+  <button class="bbtn" id="btnprev">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    <span class="bt">上一题</span>
+  </button>
+  <span class="pos" id="pos">—</span>
+  <button class="bbtn primary" id="btnnext">
+    <span class="bt">下一题</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+  </button>
+  <button class="bbtn" id="btnsheet">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    <span class="bt">错题本</span>
+  </button>
+</footer>
 
 <div class="sheet" id="sheet">
-  <div class="panel">
-    <div class="grab"></div>
-    <div class="head"><h2 id="sheettitle">错题本</h2><button id="sheetclose">✕</button></div>
-    <div class="sheetlist" id="sheetlist"></div>
+  <div class="spanel">
+    <div class="sgrab"></div>
+    <div class="shead">
+      <h2 id="sheettitle">错题本</h2>
+      <span class="st" id="sheetstat"></span>
+      <button id="sheetclose" aria-label="关闭">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="slist" id="sheetlist"></div>
   </div>
 </div>
 
@@ -218,28 +317,79 @@ var S=load();
 var filter='ALL',order=[],idx=0;
 var MODS=[['ALL','全部'],['M1','基础'],['M2','数据库'],['M3','操作系统'],['M4','网络'],['M5','Word'],['M6','Excel'],['X1','PPT'],['X2','多媒体']];
 var KBD=['a','b','c','d'];
+
+/* ---------- 统计：唯一数据源，三处展示全走这里 ---------- */
+function stats(mod){
+  var pool=mod&&mod!=='ALL'?BANK.filter(function(q){return q.m===mod;}):BANK;
+  var total=pool.length,done=0,right=0;
+  for(var i=0;i<pool.length;i++){
+    var q=pool[i],a=S.done[q.c+'-'+q.n];
+    if(a){done++;if(a===q.a)right++;}
+  }
+  return{total:total,done:done,right:right,
+    rate:done?Math.round(right/done*100):0,
+    pct:total?Math.round(done/total*1000)/10:0};
+}
+function pctText(p){return (p%1===0?p:p.toFixed(1))+'%';}
+function key(q){return q.c+'-'+q.n;}
+function esc(s){return String(s).replace(/[&<>"']/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+
+var ICONS={
+  ok:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
+  bad:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>',
+  empty:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>'
+};
+
 function buildOrder(){order=BANK.map(function(q,i){return i;}).filter(function(i){return filter==='ALL'||BANK[i].m===filter;});idx=0;render();}
+
 function chips(){
   var el=document.getElementById('chips');el.innerHTML='';
-  MODS.forEach(function(a){var k=a[0],label=a[1];
-    var n=k==='ALL'?BANK.length:BANK.filter(function(q){return q.m===k;}).length;
+  MODS.forEach(function(a){
+    var k=a[0],label=a[1],st=stats(k);
     var b=document.createElement('button');
-    b.innerHTML=label+'<span class="n">'+n+'</span>';
-    if(k===filter)b.className='on';
+    b.className='tab'+(k===filter?' on':'');
+    b.innerHTML=label+'<span class="n">'+st.done+'/'+st.total+'</span>';
     b.onclick=function(){filter=k;buildOrder();chips();render();};
     el.appendChild(b);
   });
 }
-function key(q){return q.c+'-'+q.n;}
-function esc(s){return String(s).replace(/[&<>"']/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+
+function renderSide(){
+  var el=document.getElementById('side');
+  var g=stats('ALL');
+  var C=2*Math.PI*32;
+  var h='<div class="panel"><p class="pt">学习进度</p>';
+  h+='<div class="ring-row"><div class="ring">';
+  h+='<svg viewBox="0 0 74 74"><circle class="track" cx="37" cy="37" r="32" fill="none" stroke-width="5"/><circle class="fill" cx="37" cy="37" r="32" fill="none" stroke-width="5" stroke-linecap="round" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+(C*(1-g.pct/100)).toFixed(1)+'"/></svg>';
+  h+='<div class="cv"><b>'+pctText(g.pct)+'</b><span>总进度</span></div></div>';
+  h+='<div class="stat-rows">';
+  h+='<div class="srow"><span class="k">已完成</span><span class="v">'+g.done+' <small>/ '+g.total+'</small></span></div>';
+  h+='<div class="srow"><span class="k">答对</span><span class="v">'+g.right+'</span></div>';
+  h+='<div class="srow"><span class="k">正确率</span><span class="v">'+(g.done?g.rate+'%':'—')+'</span></div>';
+  h+='</div></div></div>';
+  h+='<div class="panel"><p class="pt">分类进度</p>';
+  MODS.forEach(function(a){
+    var k=a[0];if(k==='ALL')return;
+    var st=stats(k);
+    if(!st.total)return;
+    h+='<div class="mrow"><span class="mn">'+a[1]+'</span><span class="mbar"><i style="width:'+st.pct+'%"></i></span><span class="mc">'+st.done+'/'+st.total+'</span></div>';
+  });
+  h+='</div>';
+  el.innerHTML=h;
+}
+
 function render(){
   var app=document.getElementById('app');
-  if(!order.length){app.innerHTML='<div class="empty"><p>这个模块没题</p></div>';update();return;}
+  renderSide();
+  if(!order.length){
+    app.innerHTML='<div class="empty">'+ICONS.empty+'<p>这个模块没题</p></div>';update();return;
+  }
   if(idx<0)idx=0;if(idx>=order.length)idx=order.length-1;
   var q=BANK[order[idx]],k=key(q);
   var answered=!!S.done[k],userSel=S.done[k]||null,userAns=S.wrong[k]||null;
-  var h='<div class="card"><div class="meta"><span class="no">第'+q.c+'章 · 第'+q.n+'题</span><span class="tag">'+esc(q.mn)+'</span></div>';
-  h+='<div class="stem">'+esc(q.s)+'</div><div class="opts">';
+  var h='<article class="qcard">';
+  h+='<div class="qhead"><span class="qno">第 '+q.c+' 章 · 第 '+q.n+' 题</span><span class="qtag">'+esc(q.mn)+'</span></div>';
+  h+='<h2 class="stem">'+esc(q.s)+'</h2><div class="opts">';
   ['A','B','C','D'].forEach(function(L,i){
     var cls='opt';
     if(answered){if(L===q.a)cls+=' ok';else if(L===userAns)cls+=' bad';else cls+=' dim';}
@@ -249,19 +399,20 @@ function render(){
   if(answered){
     var ok=(userSel===q.a);
     var inner='<div class="feedwrap">';
-    inner+='<div class="feed '+(ok?'ok':'bad')+'">'+(ok?'✓ 答对了':('✕ 正确答案 <span class="ans">'+q.a+'</span>'+'，你选了 '+(userSel||'—')))+'</div>';
+    inner+='<div class="feed '+(ok?'ok':'bad')+'">'+(ok?ICONS.ok+'<span>答对了</span>':(ICONS.bad+'<span>正确答案 <span class="ans">'+q.a+'</span>'+'，你选了 '+(userSel||'—')+'</span>'))+'</div>';
     if(!ok&&q.roast){
-      inner+='<div class="roast"><span class="rk">老娘点评</span><div class="rt">'+esc(q.roast)+'</div></div>';
-    }
-    if(q.ex){
-      inner+='<div class="explain"><div class="et">解析</div><div class="ex">'+esc(q.ex)+'</div></div>';
+      inner+='<div class="fb-panel"><div class="roast"><span class="rk">老娘点评</span><div class="rt">'+esc(q.roast)+'</div></div>';
+      if(q.ex)inner+='<div class="explain"><div class="et">解析</div><div class="ex">'+esc(q.ex)+'</div></div>';
+      inner+='</div>';
+    }else if(q.ex){
+      inner+='<div class="fb-panel"><div class="explain" style="border-top:none;padding-top:0"><div class="et">解析</div><div class="ex">'+esc(q.ex)+'</div></div></div>';
     }
     inner+='</div>';
     h+='<div class="after show">'+inner+'</div>';
   }else{
     h+='<div class="after"><div class="feedwrap"></div></div>';
   }
-  h+='</div>';
+  h+='</article>';
   app.innerHTML=h;
   app.querySelectorAll('.opt').forEach(function(btn){
     btn.onclick=function(){
@@ -269,33 +420,36 @@ function render(){
       var L=btn.dataset.k;
       S.done[k]=L;
       if(L!==q.a)S.wrong[k]=L;
-      save();render();
+      save();render();chips();
     };
   });
   update();
 }
+
 function update(){
-  var total=order.length;
-  var done=order.filter(function(i){return S.done[BANK[i].c+'-'+BANK[i].n];}).length;
-  var right=order.filter(function(i){var q=BANK[i];return S.done[key(q)]===q.a;}).length;
-  var pct=total?Math.round(done/total*100):0;
-  document.getElementById('progbar').style.width=pct+'%';
-  document.getElementById('sub').textContent=done+'/'+total+' 题 · 正确率 '+(done?Math.round(right/done*100):0)+'%';
-  document.getElementById('pos').textContent=(total?(idx+1):0)+' / '+total;
-  document.getElementById('btnprev').disabled=!total||idx<=0;
-  document.getElementById('btnnext').disabled=!total||idx>=order.length-1;
+  var g=stats(filter==='ALL'?'ALL':filter);
+  var all=stats('ALL');
+  document.getElementById('progbar').style.width=all.pct+'%';
+  document.getElementById('sub').textContent='已完成 '+all.done+' / '+all.total+' 题 · 正确率 '+(all.done?all.rate+'%':'—');
+  document.getElementById('pos').innerHTML='<b>'+(order.length?(idx+1):0)+'</b> / '+order.length;
+  document.getElementById('btnprev').disabled=!order.length||idx<=0;
+  document.getElementById('btnnext').disabled=!order.length||idx>=order.length-1;
 }
+
 function sheet(){
   var sh=document.getElementById('sheet'),list=document.getElementById('sheetlist');
   var wk=Object.keys(S.wrong);
-  document.getElementById('sheettitle').textContent='错题本 ('+wk.length+')';
-  if(!wk.length){list.innerHTML='<div class="empty"><p>暂无错题，继续保持</p></div>';}
-  else{
+  var all=stats('ALL');
+  document.getElementById('sheettitle').textContent='错题本';
+  document.getElementById('sheetstat').textContent=wk.length+' 道待重做 · 正确率 '+(all.done?all.rate+'%':'—');
+  if(!wk.length){
+    list.innerHTML='<div class="empty">'+ICONS.ok.replace('class="ic"','')+'<p>暂无错题，继续保持</p></div>';
+  }else{
     list.innerHTML='';
     wk.forEach(function(k){
       var q=BANK.find(function(x){return key(x)===k;});if(!q)return;
-      var row=document.createElement('div');row.className='row';
-      row.innerHTML='<span>第'+q.c+'章 第'+q.n+'题 · '+esc(q.mn)+'</span><button data-k="'+k+'">重做</button>';
+      var row=document.createElement('div');row.className='wrow';
+      row.innerHTML='<span class="wl"><b>第'+q.c+'章 · '+esc(q.mn)+'</b>　第'+q.n+'题</span><button class="redo" data-k="'+k+'">重做</button>';
       row.querySelector('button').onclick=function(){
         var bi=BANK.indexOf(q);
         var fi=order.indexOf(bi);
@@ -308,6 +462,7 @@ function sheet(){
   }
   sh.classList.add('show');
 }
+
 document.getElementById('btnprev').onclick=function(){if(idx>0){idx--;render();}};
 document.getElementById('btnnext').onclick=function(){if(idx<order.length-1){idx++;render();}};
 document.getElementById('btnsheet').onclick=sheet;
