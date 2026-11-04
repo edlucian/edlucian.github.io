@@ -1056,6 +1056,8 @@ function sheet(){
 
       row.querySelector('button').onclick=function(){
 
+        delete S.done[k];delete S.wrong[k];save();
+
         var bi=BANK.indexOf(q);
 
         var fi=order.indexOf(bi);
