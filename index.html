@@ -410,6 +410,27 @@ svg{display:block}
 
 .bar .pos b{color:var(--ink);font-weight:650}
 
+.gotonav{display:flex;align-items:center;gap:5px;flex:0 0 auto}
+.gotonav input{
+  width:56px;padding:8px 9px;font-size:13px;text-align:center;
+  border:1px solid var(--line);border-radius:var(--r-md);
+  background:var(--card);color:var(--ink);font-variant-numeric:tabular-nums;
+  outline:none;
+}
+.gotonav input:focus{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc-line)}
+.gotonav .gobtn{
+  cursor:pointer;font-size:12.5px;font-weight:600;color:var(--acc);
+  border:1px solid var(--acc-line);border-radius:var(--r-md);
+  padding:8px 11px;background:var(--acc-soft);
+  transition:background .15s ease;
+}
+.gotonav .gobtn:hover{background:rgba(213,139,104,.2)}
+
+@media (max-width:560px){
+  .gotonav input{width:46px;padding:7px 6px}
+  .gotonav .gobtn{padding:7px 8px;font-size:12px}
+}
+
 
 
 /* ================= 错题本抽屉 ================= */
@@ -646,6 +667,11 @@ svg{display:block}
   </button>
 
   <span class="pos" id="pos">—</span>
+
+  <span class="gotonav">
+    <input class="goto" id="goto" type="number" min="1" placeholder="题号" title="输入题号跳转（当前列表第几题）">
+    <button class="gobtn" id="btnjump">跳</button>
+  </span>
 
   <button class="bbtn primary" id="btnnext">
 
@@ -1173,6 +1199,18 @@ document.getElementById('sylsheet').addEventListener('click',function(e){if(e.ta
 document.getElementById('btnprev').onclick=function(){if(idx>0){idx--;render();}};
 
 document.getElementById('btnnext').onclick=function(){if(idx<order.length-1){idx++;render();}};
+
+function doJump(){
+  var inp=document.getElementById('goto'),v=parseInt(inp.value,10);
+  if(isNaN(v)||!order.length){inp.value='';return;}
+  if(v<1)v=1;if(v>order.length)v=order.length;
+  idx=v-1;render();inp.value='';
+}
+document.getElementById('btnjump').onclick=doJump;
+document.getElementById('goto').addEventListener('keydown',function(e){
+  if(e.key==='Enter'){e.preventDefault();doJump();}
+  e.stopPropagation();
+});
 
 document.getElementById('btnsheet').onclick=sheet;
 
