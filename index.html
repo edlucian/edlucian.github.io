@@ -3287,14 +3287,16 @@ function openDataSheet(){
   var HIST_LS='dshdz_ai_hist';
 
   var DEF={
-    ch:'local',
+    ch:'auto',                 /* auto = 先试本机网关，失败自动降智谱云端 */
     url:'http://127.0.0.1:8326',
     key:'vQ4tZjeYgOWxSgJWtIM9g4elIjZ0N5kzRXDFALTQyaA',
     model:'trae/deepseek-v4.1-flash',
-    effort:'off'
+    effort:'off',
+    zk:'0d577952a1ff4d718e804a21a0989b6c.6Ma0sgnpFntoPASU'   /* 内置智谱 key，手机直接用 */
   };
 
   var MODELS=[
+    ['__auto__','自动（本机优先·手机走云端）'],
     ['trae/deepseek-v4.1-flash','DS-V4.1-Flash'],
     ['loomy/qwen3.8-flash','Qwen3.8-Flash'],
     ['trae/qwen3.8-flash','Qwen3.8 (TRAE)'],
@@ -3308,7 +3310,7 @@ function openDataSheet(){
     ['minimax/MiniMax-M3.1-Flash','MiniMax-M3.1F'],
     ['raccoon/sn-glm-5-3-flash','GLM-5.3F 商汤'],
     ['our-free-model/combo:recommended-free','推荐免费组（降级链）'],
-    ['__zhipu__','智谱直连（浏览器不支持）']
+    ['__zhipu__','智谱 GLM（云端·手机可用）']
   ];
 
   var logEl=document.getElementById('ailog');
@@ -3328,24 +3330,39 @@ function openDataSheet(){
   var introEl=null;      /* 开场白 + 快捷按钮（常驻第二条） */
 
   /* ---------- 配置 ---------- */
+  var CFG_VER=3;   /* 配置结构版本：变了就把旧值重置 */
   function loadCfg(){
     var c={};for(var k in DEF)c[k]=DEF[k];
     try{
       var s=localStorage.getItem(CFG_LS);
-      if(s){var o=JSON.parse(s);for(var k2 in o){if(o[k2]!==undefined&&o[k2]!==null)c[k2]=o[k2];}}
+      if(s){
+        var o=JSON.parse(s)||{};
+        /* 旧版本（没有 v 字段或版本号更低）→ 丢掉 ch，避免沿用旧默认值 */
+        if(o.v!==CFG_VER){
+          delete o.ch;
+          o.v=CFG_VER;
+        }
+        for(var k2 in o){if(o[k2]!==undefined&&o[k2]!==null)c[k2]=o[k2];}
+      }
     }catch(e){}
+    c.v=CFG_VER;
     return c;
   }
-  function saveCfg(){try{localStorage.setItem(CFG_LS,JSON.stringify(cfg));}catch(e){}}
-  function getZpKey(){try{return localStorage.getItem(ZK_LS)||'';}catch(e){return '';}}
+  function saveCfg(){cfg.v=CFG_VER;try{localStorage.setItem(CFG_LS,JSON.stringify(cfg));}catch(e){}}
+  function getZpKey(){try{return localStorage.getItem(ZK_LS)||cfg.zk||'';}catch(e){return cfg.zk||'';}}
   function setZpKey(k){try{localStorage.setItem(ZK_LS,k);}catch(e){}}
   function isZhipu(){return cfg.ch==='zhipu';}
+  function isAuto(){return cfg.ch==='auto';}
+  /* 实际要请求哪条通道：auto 模式下由调用方决定 */
+  function isZhipuNow(){return cfg.ch==='zhipu'||(cfg.ch==='auto'&&__autoUseZhipu);}
+  var __autoUseZhipu=false;
   function endpoint(){
-    return isZhipu()
-      ? 'https://open.bigmodel.cn/api/paas/v4/chat/completions'
+    /* 智谱：末尾斜杠不能省。带斜杠的路径才回 CORS 头，否则浏览器预检直接失败 */
+    return isZhipuNow()
+      ? 'https://open.bigmodel.cn/api/paas/v4/chat/completions/'
       : cfg.url.replace(/\/+$/,'')+'/v1/chat/completions';
   }
-  function modelId(){return isZhipu()?'glm-4-flash':cfg.model;}
+  function modelId(){return isZhipuNow()?'glm-4-flash':cfg.model;}
 
   /* ---------- 取当前题目 ---------- */
   function curQ(){
@@ -3596,7 +3613,7 @@ function openDataSheet(){
       o.value=m[0];o.textContent=m[1];
       selEl.appendChild(o);
     });
-    var want=isZhipu()?'__zhipu__':cfg.model;
+    var want=isAuto()?'__auto__':(isZhipu()?'__zhipu__':cfg.model);
     var has=false;
     for(var i=0;i<selEl.options.length;i++){if(selEl.options[i].value===want)has=true;}
     if(!has){var o2=document.createElement('option');o2.value=want;o2.textContent=want;selEl.appendChild(o2);}
@@ -3605,8 +3622,9 @@ function openDataSheet(){
   if(selEl){
     selEl.onchange=function(){
       var v=selEl.value;
-      if(v==='__zhipu__'){
-        toast('智谱官方接口不支持浏览器跨域直连，此选项仅作备用');
+      if(v==='__auto__'){
+        cfg.ch='auto';
+      }else if(v==='__zhipu__'){
         if(!getZpKey()){
           var k=prompt('智谱 API Key\n\n获取地址：https://open.bigmodel.cn/usercenter/apikeys','');
           if(k===null||!k.trim()){buildSel();return;}
@@ -3621,7 +3639,7 @@ function openDataSheet(){
     };
   }
   function updateTag(){
-    if(fabEl)fabEl.title='问 AI · '+(isZhipu()?'智谱':cfg.model);
+    if(fabEl)fabEl.title='问 AI · '+(isAuto()?'自动':(isZhipu()?'智谱云端':cfg.model));
   }
 
   /* ---------- 设置 ---------- */
@@ -3673,7 +3691,7 @@ function openDataSheet(){
     var q=curQ(),st=qState(q);
     var base='你是四川高职单招计算机类考试辅导老师，学生在刷题时向你提问。\n'
       +'硬性要求：\n'
-      +'1. 总字数严格控制在 200 字以内（含标点）。超了就是不合格。\n'
+      +'1. 字数控制在 80-200 字之间（含标点）。低于 80 字说明讲得太浅，超 200 字不合格。\n'
       +'2. 直接给答案，第一句就是结论。禁止「好的」「很高兴为你解答」这类开场。\n'
       +'3. 讲具体题目时：一句话点明正确项为什么对，再用半句话扫掉关键干扰项。\n'
       +'4. 讲原理给记忆抓手，不要罗列教科书段落。\n'
@@ -3687,9 +3705,50 @@ function openDataSheet(){
   }
 
   /* ---------- 发送 ---------- */
+  async function streamOnce(headers,body,onFirst,onDelta){
+    var resp=await fetch(endpoint(),{method:'POST',headers:headers,body:JSON.stringify(body)});
+    if(!resp.ok){
+      var errTxt='';
+      try{var ej=await resp.json();errTxt=(ej.error&&ej.error.message)||ej.message||JSON.stringify(ej);}
+      catch(e){errTxt='HTTP '+resp.status;}
+      var err=new Error('接口返回 '+resp.status+'：'+String(errTxt).slice(0,200));
+      err.status=resp.status;
+      throw err;
+    }
+    var reader=resp.body.getReader();
+    var dec=new TextDecoder('utf-8');
+    var buf='',acc='',think='';
+    while(true){
+      var r=await reader.read();
+      if(r.done)break;
+      buf+=dec.decode(r.value,{stream:true});
+      var lines=buf.split('\n');
+      buf=lines.pop();
+      for(var i=0;i<lines.length;i++){
+        var ln=lines[i].trim();
+        if(!ln||ln.indexOf('data:')!==0)continue;
+        var payload=ln.slice(5).trim();
+        if(payload==='[DONE]')continue;
+        try{
+          var j=JSON.parse(payload);
+          var d=j.choices&&j.choices[0]&&j.choices[0].delta;
+          if(!d)continue;
+          if(d.reasoning_content)think+=d.reasoning_content;
+          if(d.content){
+            if(!acc)onFirst();
+            acc+=d.content;
+            onDelta(acc);
+          }
+        }catch(e){}
+      }
+    }
+    return {text:acc,think:think};
+  }
+
   async function send(text){
     if(busy)return;
-    if(isZhipu()&&!getZpKey()){
+    var zpKey=getZpKey();
+    if(cfg.ch==='zhipu'&&!zpKey){
       var k=prompt('智谱 API Key\n\n获取地址：https://open.bigmodel.cn/usercenter/apikeys','');
       if(!k||!k.trim()){toast('没有 Key 无法使用');return;}
       setZpKey(k.trim());
@@ -3704,88 +3763,94 @@ function openDataSheet(){
     saveHist();
 
     var bubble=addMsg('assistant','');
-    var acc='',think='';
     var t0=Date.now();
     if(statEl)statEl.textContent='思考中…';
 
     var ctx=currentQuestionCtx();
     var msgs=[{role:'system',content:sysPrompt()+(ctx?'\n'+ctx:'')}].concat(hist.slice(-12));
 
-    var headers={'Content-Type':'application/json'};
-    var body={model:modelId(),messages:msgs,stream:true,temperature:0.6};
-    if(isZhipu()){
-      headers['Authorization']='Bearer '+getZpKey();
+    var firstTok=0;
+    var onFirst=function(){if(!firstTok){firstTok=Date.now()-t0;if(statEl)statEl.textContent='首字 '+firstTok+'ms';}};
+    var onDelta=function(s){bubble.textContent=s;logEl.scrollTop=logEl.scrollHeight;};
+
+    /* 依次尝试的通道 */
+    var plans=[];
+    if(cfg.ch==='auto'){
+      plans.push({zhipu:false,label:'本机网关'});
+      plans.push({zhipu:true,label:'智谱云端'});
+    }else if(cfg.ch==='zhipu'){
+      plans.push({zhipu:true,label:'智谱云端'});
     }else{
-      headers['Authorization']='Bearer '+(cfg.key||'');
-      if(cfg.effort&&cfg.effort!=='default')body.reasoning_effort=cfg.effort;
+      plans.push({zhipu:false,label:'本机网关'});
     }
 
-    try{
-      var resp=await fetch(endpoint(),{method:'POST',headers:headers,body:JSON.stringify(body)});
-      if(!resp.ok){
-        var errTxt='';
-        try{var ej=await resp.json();errTxt=(ej.error&&ej.error.message)||ej.message||JSON.stringify(ej);}
-        catch(e){errTxt='HTTP '+resp.status;}
-        throw new Error('接口返回 '+resp.status+'：'+String(errTxt).slice(0,200));
+    var acc='',think='',usedLabel='',lastErr=null;
+    for(var pi=0;pi<plans.length;pi++){
+      var plan=plans[pi];
+      __autoUseZhipu=plan.zhipu;
+      if(plan.zhipu&&!zpKey)continue;
+
+      var headers={'Content-Type':'application/json'};
+      var body={model:modelId(),messages:msgs,stream:true,temperature:0.6};
+      if(plan.zhipu){
+        headers['Authorization']='Bearer '+zpKey;
+      }else{
+        headers['Authorization']='Bearer '+(cfg.key||'');
+        if(cfg.effort&&cfg.effort!=='default')body.reasoning_effort=cfg.effort;
       }
-      var reader=resp.body.getReader();
-      var dec=new TextDecoder('utf-8');
-      var buf='',firstTok=0;
-      while(true){
-        var r=await reader.read();
-        if(r.done)break;
-        buf+=dec.decode(r.value,{stream:true});
-        var lines=buf.split('\n');
-        buf=lines.pop();
-        for(var i=0;i<lines.length;i++){
-          var ln=lines[i].trim();
-          if(!ln||ln.indexOf('data:')!==0)continue;
-          var payload=ln.slice(5).trim();
-          if(payload==='[DONE]')continue;
-          try{
-            var j=JSON.parse(payload);
-            var d=j.choices&&j.choices[0]&&j.choices[0].delta;
-            if(!d)continue;
-            if(d.reasoning_content)think+=d.reasoning_content;
-            if(d.content){
-              if(!firstTok){firstTok=Date.now()-t0;if(statEl)statEl.textContent='首字 '+firstTok+'ms';}
-              acc+=d.content;
-              bubble.textContent=acc;
-              logEl.scrollTop=logEl.scrollHeight;
-            }
-          }catch(e){}
+
+      try{
+        if(plan.zhipu&&pi>0&&statEl)statEl.textContent='本机不通，切云端…';
+        var res=await streamOnce(headers,body,onFirst,onDelta);
+        acc=res.text;think=res.think;usedLabel=plan.label;
+        lastErr=null;
+        break;
+      }catch(e){
+        lastErr=e;
+        if(pi<plans.length-1){
+          /* 还有备用通道，继续试 */
+          bubble.textContent='';
+          firstTok=0;
+          continue;
         }
       }
-      if(!acc){
-        if(bubble.parentNode)bubble.parentNode.removeChild(bubble);
-        addErr('没有返回内容'+(think?'（模型只输出了思考过程）':''));
-      }else{
-        hist.push({role:'assistant',content:acc});
-        saveHist();
-        if(statEl)statEl.textContent=(firstTok?'首字 '+firstTok+'ms · ':'')+'总 '+((Date.now()-t0)/1000).toFixed(1)+'s · '+acc.length+'字';
-      }
-    }catch(err){
+    }
+    __autoUseZhipu=false;
+
+    if(lastErr){
       if(bubble.parentNode)bubble.parentNode.removeChild(bubble);
-      var m=String(err&&err.message||err);
-      if(m.indexOf('Failed to fetch')>=0||m.indexOf('NetworkError')>=0){
-        if(isZhipu()){
-          addErr('智谱官方接口不允许浏览器跨域直连（它的 OPTIONS 预检不带 CORS 头，这是智谱服务端的限制，不是本机问题）。'
-            +'请在下拉里切回任一「本地网关」模型——所有模型都走本机 127.0.0.1:8326，速度也快得多。');
+      var m=String(lastErr&&lastErr.message||lastErr);
+      if(m.indexOf('Failed to fetch')>=0||m.indexOf('NetworkError')>=0||m.indexOf('Load failed')>=0){
+        if(cfg.ch==='zhipu'){
+          addErr('连不上智谱云端。检查手机网络后重试。');
+        }else if(cfg.ch==='auto'){
+          addErr('本机网关和智谱云端都连不上。电脑开着就用 http://127.0.0.1:8326 打开；手机上确认有网。');
         }else{
-          const tip=location.protocol==='https:'
-            ? '浏览器禁止 HTTPS 页面访问 HTTP 本地端口（混合内容拦截）。改用 http://127.0.0.1:8326 打开本页，或在 Chrome 里对该地址「允许不安全内容」。'
-            : '确认 dsh 里 our-free-model 插件开着，且「本地转发」监听在 '+cfg.url+'。';
-          addErr('连不上本地网关 '+cfg.url+'。'+tip);
+          addErr('连不上本机网关 '+cfg.url+'。手机用请在下拉里选「自动」或「智谱 GLM」。');
         }
       }else{
         addErr(m);
       }
       if(statEl)statEl.textContent='失败';
-      if(m.indexOf('401')>=0)addErr('Key 可能无效，点 ⚙ 重新设置');
-    }finally{
       busy=false;sendEl.disabled=false;if(fabEl)fabEl.classList.remove('busy');
       inputEl.focus();
+      return;
     }
+
+    if(!acc){
+      if(bubble.parentNode)bubble.parentNode.removeChild(bubble);
+      addErr('没有返回内容'+(think?'（模型只输出了思考过程）':''));
+    }else{
+      hist.push({role:'assistant',content:acc});
+      saveHist();
+      if(statEl){
+        statEl.textContent=(firstTok?'首字 '+firstTok+'ms · ':'')
+          +'总 '+((Date.now()-t0)/1000).toFixed(1)+'s · '+acc.length+'字'
+          +(cfg.ch==='auto'?' · '+usedLabel:'');
+      }
+    }
+    busy=false;sendEl.disabled=false;if(fabEl)fabEl.classList.remove('busy');
+    inputEl.focus();
   }
 
   /* ---------- 事件 ---------- */
