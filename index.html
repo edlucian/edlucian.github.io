@@ -198,6 +198,12 @@ svg{display:block}
 .bbtn:focus-visible{outline:2px solid var(--acc-line);outline-offset:2px}
 .bbtn:disabled{opacity:.35;pointer-events:none}
 .bbtn#btnclear:hover{background:var(--bad-soft);border-color:var(--bad-deep);color:var(--bad)}
+/* 音效开关按钮 */
+.bbtn.sound .ic-off{display:none}
+.bbtn.sound.off .ic-on{display:none}
+.bbtn.sound.off .ic-off{display:block}
+.bbtn.sound.off{color:var(--dim);border-color:var(--line)}
+.bbtn.sound:not(.off){color:var(--acc);border-color:var(--acc-line);background:var(--acc-soft)}
 .toast{
   position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));
   transform:translate(-50%,14px);opacity:0;pointer-events:none;
@@ -457,6 +463,11 @@ svg{display:block}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>
     <span class="bt">跳未做</span>
   </button>
+  <button class="bbtn sound" id="btnsfx" title="音效开关">
+    <svg class="ic-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+    <svg class="ic-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M22 9l-6 6"/><path d="M16 9l6 6"/></svg>
+    <span class="bt">音效</span>
+  </button>
   <button class="bbtn" id="btnclear" title="清空当前科目的答题记录（不可撤销）">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
     <span class="bt">清空</span>
@@ -527,6 +538,99 @@ var _tickT=null;  /* 秒表 interval */
 var _ansMs=0;     /* 本题累计毫秒（含中途离开） */
 var _liveFrom=null;/* 本次学习会话起点 */
 
+/* ==================== 音效引擎（Web Audio 合成，零文件） ==================== */
+var SFX=(function(){
+  var ctx=null, master=null, on=true, unlocked=false;
+  try{on=localStorage.getItem('dshdz_sfx')!=='0';}catch(e){}
+  function ac(){
+    if(!ctx){
+      var AC=window.AudioContext||window.webkitAudioContext;
+      if(!AC)return null;
+      ctx=new AC();
+      master=ctx.createGain();master.gain.value=0.9;master.connect(ctx.destination);
+    }
+    return ctx;
+  }
+  /* 手机/微信里首次必须靠用户手势解锁 */
+  function unlock(){
+    var c=ac();if(!c)return;
+    if(c.state==='suspended')c.resume();
+    if(!unlocked){unlocked=true;}
+  }
+  function setOn(v){
+    on=!!v;
+    try{localStorage.setItem('dshdz_sfx',on?'1':'0');}catch(e){}
+  }
+  function isOn(){return on;}
+
+  /* 单个音符：freq 频率, t0 延迟秒, dur 时长秒, type 波形, vol 音量 */
+  function tone(freq,t0,dur,type,vol,freqEnd){
+    var c=ac();if(!c||!on)return;
+    var g=c.createGain(),o=c.createOscillator();
+    o.type=type||'sine';o.frequency.setValueAtTime(freq,c.currentTime+t0);
+    if(freqEnd)o.frequency.exponentialRampToValueAtTime(freqEnd,c.currentTime+t0+dur);
+    var v=vol==null?0.5:vol;
+    g.gain.setValueAtTime(0,c.currentTime+t0);
+    g.gain.linearRampToValueAtTime(v,c.currentTime+t0+0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+t0+dur);
+    o.connect(g);g.connect(master);
+    o.start(c.currentTime+t0);o.stop(c.currentTime+t0+dur+0.02);
+  }
+  /* 噪声：用于气泡/翻页这类非音乐感效果 */
+  function noise(t0,dur,vol,hp){
+    var c=ac();if(!c||!on)return;
+    var n=Math.floor(c.sampleRate*dur);
+    var buf=c.createBuffer(1,n,c.sampleRate),d=buf.getChannelData(0);
+    for(var i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n);
+    var src=c.createBufferSource();src.buffer=buf;
+    var g=c.createGain();g.gain.value=vol==null?0.15:vol;
+    var f=null;
+    if(hp){f=c.createBiquadFilter();f.type='highpass';f.frequency.value=hp;src.connect(f);f.connect(g);}
+    else src.connect(g);
+    g.connect(master);src.start(c.currentTime+t0);
+  }
+
+  /* ---------- 具体音色 ---------- */
+  var API={
+    /* 答对：上行两声「叮—叮」，清脆悦耳 */
+    right:function(){
+      tone(880,0,0.09,'sine',0.38);
+      tone(1318,0.085,0.14,'sine',0.34);
+    },
+    /* 答错：下行两声「噗—」，低沉不刺耳 */
+    wrong:function(){
+      tone(300,0,0.1,'triangle',0.32,220);
+      tone(196,0.09,0.18,'triangle',0.26,140);
+    },
+    /* 点选项：极轻的咔，不吵 */
+    tap:function(){
+      noise(0,0.035,0.06,1200);
+    },
+    /* 翻页：轻微滑音 */
+    page:function(){
+      tone(520,0,0.05,'sine',0.11,700);
+    },
+    /* 完成一整套/全部做完：欢快上升琶音 */
+    done:function(){
+      tone(523,0,0.1,'sine',0.32);
+      tone(659,0.1,0.1,'sine',0.32);
+      tone(784,0.2,0.1,'sine',0.32);
+      tone(1047,0.3,0.28,'sine',0.36);
+    },
+    /* 清空/删记录：低沉的「唰」 */
+    sweep:function(){
+      noise(0,0.16,0.12,600);
+      tone(420,0,0.14,'sine',0.14,120);
+    },
+    /* 跳到未做：小跳跃 */
+    hop:function(){
+      tone(700,0,0.06,'sine',0.24);
+      tone(1050,0.06,0.1,'sine',0.2);
+    },
+    unlock:unlock, setOn:setOn, isOn:isOn
+  };
+  return API;
+})();
 function pad2(n){return (n<10?'0':'')+n;}
 function fmtMS(ms){
   var s=Math.floor(ms/1000);
@@ -597,7 +701,8 @@ function stopTimer(){
 /* 页面隐藏/关闭时落盘（手机上切后台的情况） */
 document.addEventListener('visibilitychange',function(){
   if(document.hidden){stopTimer();save();}
-  else{startTimer();markQuestion();tickTimer();}
+  else{startTimer();markQuestion();
+if(typeof syncSfxBtn==='function')syncSfxBtn();tickTimer();}
 });
 var S=load();
 var filter='ALL',order=[],idx=0;
@@ -929,8 +1034,10 @@ function render(){
   /* 选项点击 */
   app.querySelectorAll('.opt').forEach(function(btn){
     btn.onclick=function(){
+      if(SFX)SFX.unlock();
       if(S.done[k])return;
       var L=btn.dataset.k;
+      if(SFX&&L!=='__show__')SFX.tap();
       if(L==='__show__'){S.done[k]='*';save();render();chips();return;}
       if(!isGraded(q)){S.done[k]='*';save();render();chips();return;}
       if(isMulti(q)){
@@ -939,7 +1046,9 @@ function render(){
         render();return;
       }
       S.done[k]=L;
-      if(!isRight(L,q.a))S.wrong[k]=L;
+      var _ok=isRight(L,q.a);
+      if(!_ok)S.wrong[k]=L;
+      if(SFX)_ok?SFX.right():SFX.wrong();
       flushTiming();
       save();render();chips();
     };
@@ -958,7 +1067,9 @@ function render(){
       }
       if(!isGraded(c))return;
       S.done[ck]=L;
-      if(!isRight(L,c.a))S.wrong[ck]=L;
+      var _ok2=isRight(L,c.a);
+      if(!_ok2)S.wrong[ck]=L;
+      if(SFX)_ok2?SFX.right():SFX.wrong();
       flushTiming();
       save();render();chips();
     };
@@ -981,7 +1092,9 @@ function render(){
     if(!p)return;
     var qq=findQ(kk);if(!qq)return;
     S.done[kk]=p;
-    if(!isRight(p,qq.a))S.wrong[kk]=p;
+    var _ok3=isRight(p,qq.a);
+    if(!_ok3)S.wrong[kk]=p;
+    if(SFX)_ok3?SFX.right():SFX.wrong();
     delete PEND[kk];flushTiming();save();render();chips();
   };
   /* 填空提交 */
@@ -992,7 +1105,9 @@ function render(){
     var vals=Array.prototype.map.call(box.querySelectorAll('.fillin'),function(x){return x.value;});
     var qq=findQ(kk);if(!qq)return;
     S.done[kk]=vals;
-    if(!fillRight(vals,qq.ak))S.wrong[kk]=vals;
+    var _ok4=fillRight(vals,qq.ak);
+    if(!_ok4)S.wrong[kk]=vals;
+    if(SFX)_ok4?SFX.right():SFX.wrong();
     delete FILLS[kk];flushTiming();save();render();chips();
   };
   /* 主观题：textarea 边写边存（不判分） */
@@ -1115,13 +1230,13 @@ document.getElementById('btnsyl').onclick=function(){
 document.getElementById('sylclose').onclick=function(){document.getElementById('sylsheet').classList.remove('show');};
 document.getElementById('sylsheet').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
 
-document.getElementById('btnprev').onclick=function(){if(idx>0){idx--;render();savePos();}};
-document.getElementById('btnnext').onclick=function(){if(idx<order.length-1){idx++;render();savePos();}};
+document.getElementById('btnprev').onclick=function(){if(idx>0){idx--;if(SFX)SFX.page();render();savePos();}};
+document.getElementById('btnnext').onclick=function(){if(idx<order.length-1){if(SFX)SFX.unlock();idx++;if(SFX)SFX.page();render();savePos();}};
 function doJump(){
   var inp=document.getElementById('goto'),v=parseInt(inp.value,10);
   if(isNaN(v)||!order.length){inp.value='';return;}
   if(v<1)v=1;if(v>order.length)v=order.length;
-  idx=v-1;render();savePos();inp.value='';
+  idx=v-1;if(SFX)SFX.page();render();savePos();inp.value='';
 }
 document.getElementById('btnjump').onclick=doJump;
 document.getElementById('goto').addEventListener('keydown',function(e){
@@ -1140,9 +1255,10 @@ document.getElementById('btnundone').onclick=function(){
   if(!order.length)return;
   var i=firstUndone();
   if(i<0){
+    if(SFX)SFX.done();
     toast('当前列表已全部做完');return;
   }
-  idx=i;render();savePos();
+  idx=i;if(SFX){SFX.unlock();SFX.hop();}render();savePos();
   toast('已跳到第 '+(i+1)+' 题（未做）');
 };
 /* ===== 清空：只清当前科目当前筛选的答题记录 ===== */
@@ -1169,9 +1285,27 @@ document.getElementById('btnclear').onclick=function(){
   });
   if(S.pos)S.pos[filter]=null;
   TQ={};_ansMs=0;                 /* 秒表也归零 */
+  if(SFX)SFX.sweep();
   save();idx=0;render();chips();renderSide();tickTimer();
   toast('已清空 '+n+' 道题的记录');
 };
+/* ===== 音效开关 ===== */
+function syncSfxBtn(){
+  var b=document.getElementById('btnsfx');
+  if(!b)return;
+  var on=SFX?SFX.isOn():false;
+  b.classList.toggle('off',!on);
+  b.title=on?'音效开（点一下关掉）':'音效关（点一下打开）';
+}
+document.getElementById('btnsfx').onclick=function(){
+  if(!SFX)return;
+  SFX.unlock();
+  SFX.setOn(!SFX.isOn());
+  syncSfxBtn();
+  if(SFX.isOn())SFX.hop();   /* 打开时给个确认音 */
+  toast(SFX.isOn()?'音效已开启':'音效已关闭');
+};
+
 /* ===== 轻提示 ===== */
 var _toastT=null;
 function toast(msg){
