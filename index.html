@@ -208,6 +208,9 @@ svg{display:block}
 .bbtn:focus-visible{outline:2px solid var(--acc-line);outline-offset:2px}
 .bbtn:disabled{opacity:.35;pointer-events:none}
 .bbtn#btnclear:hover{background:var(--bad-soft);border-color:var(--bad-deep);color:var(--bad)}
+.bbtn.resetbtn{color:var(--sub)}
+.bbtn.resetbtn:hover{background:var(--hover);border-color:#4A453F;color:var(--ink)}
+.bbtn.resetbtn svg{width:14px;height:14px}
 /* 音效开关按钮 */
 .bbtn.sound .ic-off{display:none}
 .bbtn.sound.off .ic-on{display:none}
@@ -393,13 +396,16 @@ svg{display:block}
   .bar .timer.running{padding-left:12px}
   .pos{font-size:11px;min-width:30px}
   .poswrap{gap:3px}
-  /* 极窄屏：连"跳未做/清空"文字也收掉，只留图标 */
-  .bbtn#btnundone .bt,.bbtn#btnclear .bt{display:none}
+  /* 极窄屏：所有文字收掉，只留图标 */
+  .bbtn .bt{display:none}
+  .bar .timer{font-size:10.5px;padding:4px 5px;min-width:42px;letter-spacing:0}
+  .bar .timer.running{padding-left:11px}
+  .bbtn.resetbtn{padding:8px 5px}
 }
 /* 中等屏：只隐藏工具类文字，保留翻页/跳未做/清空文字 */
 @media (min-width:561px) and (max-width:820px){
   .bbtn{padding:9px 10px;font-size:12.5px}
-  .bbtn#btnsyl .bt,.bbtn#btnsheet .bt,.bbtn#btnsfx .bt{display:none}
+  .bbtn#btnsyl .bt,.bbtn#btnsheet .bt,.bbtn#btnsfx .bt,.bbtn#btntimerreset .bt{display:none}
   .goto{width:54px}
 }
 /* ============ v2：多题型 / 材料题 / 题图 ============ */
@@ -510,6 +516,11 @@ svg{display:block}
       <svg class="ic-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M22 9l-6 6"/><path d="M16 9l6 6"/></svg>
       <span class="bt">音效</span>
     </button>
+    <button class="timer" id="timer" title="点一下开始计时">0:00</button>
+    <button class="bbtn resetbtn" id="btntimerreset" title="总计时清零">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+      <span class="bt">清零</span>
+    </button>
   </div>
 
   <!-- ===== 中间：翻页主控 ===== -->
@@ -519,7 +530,6 @@ svg{display:block}
     </button>
     <span class="poswrap">
       <span class="pos" id="pos">—</span>
-      <button class="timer" id="timer" title="点一下开始计时">0:00</button>
     </span>
     <span class="gotonav">
       <input class="goto" id="goto" type="number" min="1" placeholder="题号" title="输入题号跳转（当前列表第几题）">
@@ -1315,27 +1325,23 @@ startTimer();
 (function(){
   var tb=document.getElementById('timer');
   if(!tb)return;
-  var _holdT=null,_held=false;
   tb.onclick=function(){
     if(SFX)SFX.unlock();
-    if(_held){_held=false;return;}
     toggleStudy();
     if(SFX)SFX.tap();
   };
-  tb.oncontextmenu=function(e){e.preventDefault();};
-  /* 长按 700ms 清零 */
-  ['mousedown','touchstart'].forEach(function(ev){
-    tb.addEventListener(ev,function(){
-      _held=false;
-      _holdT=setTimeout(function(){
-        _held=true;
-        if(confirm('要把总计时清零重新开始吗？')){resetStudy();if(SFX)SFX.sweep();}
-      },700);
-    },{passive:true});
-  });
-  ['mouseup','mouseleave','touchend','touchcancel'].forEach(function(ev){
-    tb.addEventListener(ev,function(){if(_holdT){clearTimeout(_holdT);_holdT=null;}},{passive:true});
-  });
+  /* 独立清零按钮 */
+  var rb=document.getElementById('btntimerreset');
+  if(rb)rb.onclick=function(){
+    if(SFX)SFX.unlock();
+    var ms=studyMs();
+    if(ms<1000){if(SFX)SFX.tap();toast('计时还没开始');return;}
+    var mm=fmtSpent(ms);
+    if(!confirm('要把总计时清零吗？\n\n当前累计 '+mm+'，清零后从头开始。'))return;
+    resetStudy();
+    if(SFX)SFX.sweep();
+    toast('计时已清零');
+  };
 })();
 document.getElementById('btnsyl').onclick=function(){
   renderSyl();
