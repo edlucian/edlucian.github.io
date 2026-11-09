@@ -505,6 +505,30 @@ svg{display:block}
 .sheet.show .spanel{transform:translateY(0)}
 /* 隐藏的兼容按钮容器 */
 .hidden-btns{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;pointer-events:none;opacity:0}
+/* 同步状态栏 */
+.syncbox{padding:0 18px calc(18px + env(safe-area-inset-bottom))}
+.syncrow{
+  display:flex;align-items:center;gap:10px;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r-md);
+  padding:10px 13px;font-size:12.5px;
+}
+.synclb{flex:1;color:var(--sub)}
+.syncst{font-size:11.5px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--dim)}
+.syncst.ok{color:var(--ok);border-color:var(--ok-deep);background:var(--ok-soft)}
+.syncst.warn{color:var(--bad);border-color:var(--bad-deep);background:var(--bad-soft)}
+.syncbtn{
+  flex:0 0 auto;font-family:inherit;font-size:12px;cursor:pointer;
+  background:var(--acc-soft);border:1px solid var(--acc-line);border-radius:var(--r-sm);
+  color:var(--acc);padding:5px 11px;transition:background .15s;
+}
+.syncbtn:hover{background:rgba(213,139,104,.24)}
+.syncbtn.sub{background:transparent;border-color:var(--line);color:var(--dim)}
+.syncbtn.sub:hover{background:var(--hover);color:var(--sub)}
+@media (max-width:430px){
+  .syncbox{padding:0 12px calc(16px + env(safe-area-inset-bottom))}
+  .syncrow{font-size:12px;padding:9px 11px;gap:8px}
+  .syncbtn{padding:5px 9px;font-size:11.5px}
+}
 /* ===== 功能面板 ===== */
 .fnwrap{
   display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
@@ -1137,11 +1161,17 @@ svg{display:block}
         <span class="fnic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
         <span class="fnlb">计时清零</span>
       </button>
+      <button class="fnitem" data-fn="sync">
+        <span class="fnic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-9 9 9 9 0 0 1-8.5-6"/><path d="M3 12a9 9 0 0 1 9-9 9 9 0 0 1 8.5 6"/><path d="M3 4v4h4"/><path d="M21 20v-4h-4"/></svg></span>
+        <span class="fnlb">云端同步</span>
+        <span class="fnst" id="fnSyncSt">关</span>
+      </button>
       <button class="fnitem danger" data-fn="clear">
         <span class="fnic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></span>
         <span class="fnlb">清空本科</span>
       </button>
     </div>
+    <div class="syncbox" id="syncbox"></div>
   </div>
 </div>
 <input type="file" id="datafile" accept=".json,application/json" style="display:none">
@@ -3264,6 +3294,14 @@ function openDataSheet(){
       if(!fire('btntimerreset'))toast('清零按钮缺失');
       return;
     }
+    if(fn==='sync'){
+      if(window.SYNC){
+        if(!window.SYNC.cfg.enabled){ window.SYNC.setup(); }
+        else { window.SYNC.sync(false); }
+        close();
+      }else toast('同步模块未加载');
+      return;
+    }
     if(fn==='clear'){
       close();
       if(!fire('btnclear'))toast('清空按钮缺失');
@@ -3917,6 +3955,254 @@ function openDataSheet(){
     curQ:curQ,
     refresh:function(){syncCard(true);syncIntro(true);}
   };
+})();
+
+
+/* ==================== 云端进度同步（GitHub 仓库文件）==================== */
+(function(){
+  var LS='dshdz_sync_cfg';
+  var DEF={ enabled:false, owner:'edlucian', repo:'edlucian.github.io', branch:'main', token:'', auto:true };
+  var cfg=load();
+  var busy=false;
+  var lastSync=0;
+
+  function load(){
+    var c={};for(var k in DEF)c[k]=DEF[k];
+    try{
+      var s=localStorage.getItem(LS);
+      if(s){var o=JSON.parse(s)||{};for(var k2 in o){if(o[k2]!==undefined&&o[k2]!==null)c[k2]=o[k2];}}
+    }catch(e){}
+    return c;
+  }
+  function save(){try{localStorage.setItem(LS,JSON.stringify(cfg));}catch(e){}}
+  function fileFor(){return 'data/progress-'+SUBJECT+'.json';}
+  function apiUrl(){return 'https://api.github.com/repos/'+cfg.owner+'/'+cfg.repo+'/contents/'+fileFor();}
+  function headers(){
+    return {
+      'Authorization':'Bearer '+cfg.token,
+      'Accept':'application/vnd.github+json',
+      'Content-Type':'application/json'
+    };
+  }
+  function enc(s){return btoa(unescape(encodeURIComponent(s)));}
+  function dec(b){return decodeURIComponent(escape(atob(String(b).replace(/\n/g,''))));}
+  function usable(){return !!(cfg.enabled&&cfg.token);}
+
+  /* 只同步"做题进度"，不动其它状态 */
+  function snapshot(){
+    return {
+      done:S.done||{},
+      wrong:S.wrong||{},
+      wrongCnt:S.wrongCnt||{},
+      time:S.time||{},
+      study:studyState?{total:studyState().total}:(S.study||{total:0}),
+      updated:Date.now(),
+      device:navigator.userAgent.indexOf('Mobile')>=0?'mobile':'pc'
+    };
+  }
+
+  /* 合并策略：做题记录以"做过即算"为准；错误次数取较大值；用时取较大值 */
+  function merge(remote,local){
+    var out={};
+    out.done=Object.assign({},remote.done||{},local.done||{});
+    out.wrong={};out.wrongCnt={};out.time={};
+    var keys={};
+    Object.keys(remote.wrong||{}).forEach(function(k){keys[k]=1;});
+    Object.keys(local.wrong||{}).forEach(function(k){keys[k]=1;});
+    Object.keys(keys).forEach(function(k){
+      var rw=(remote.wrong||{})[k],lw=(local.wrong||{})[k];
+      if(rw!=null||lw!=null)out.wrong[k]=(rw!=null||lw!=null)?(rw!=null?rw:lw):undefined;
+      var rc=(remote.wrongCnt||{})[k]||0,lc=(local.wrongCnt||{})[k]||0;
+      if(rc||lc)out.wrongCnt[k]=Math.max(rc,lc);
+      var rt=(remote.time||{})[k]||0,lt=(local.time||{})[k]||0;
+      if(rt||lt)out.time[k]=Math.max(rt,lt);
+    });
+    out.study={total:Math.max((remote.study&&remote.study.total)||0,(local.study&&local.study.total)||0)};
+    /* 只有当"这次答的答案是正确答案"时，才把题从错题本摘掉。
+       之前错误地写成 done 有值就摘，导致答错的题被误删。 */
+    var ix=null;
+    try{ ix=bankIndex(); }catch(e){}
+    Object.keys(out.done).forEach(function(k){
+      if(out.wrong[k]==null||!ix)return;
+      var q=ix[k];
+      if(!q)return;
+      var u=out.done[k];
+      var right=false;
+      try{
+        if(q.t==='填空题'&&q.ak&&typeof fillRight==='function'){
+          right=fillRight(Array.isArray(u)?u:[u],q.ak);
+        }else if(typeof isRight==='function'){
+          right=isRight(u,q.a);
+        }
+      }catch(e){}
+      if(right){delete out.wrong[k];delete out.wrongCnt[k];}
+    });
+    out.updated=Date.now();
+    out.device=local.device;
+    return out;
+  }
+
+  function pull(){
+    return fetch(apiUrl()+'?t='+Date.now(),{headers:headers()}).then(function(r){
+      if(r.status===404)return {sha:null,data:null};
+      if(!r.ok)return r.text().then(function(x){throw new Error('读失败 '+r.status+' '+x.slice(0,120));});
+      return r.json().then(function(j){
+        var d=null;
+        try{d=JSON.parse(dec(j.content));}catch(e){}
+        return {sha:j.sha,data:d};
+      });
+    });
+  }
+  function push(sha,data){
+    var body={message:'进度同步 '+new Date().toLocaleString('zh-CN'),content:enc(JSON.stringify(data)),branch:cfg.branch};
+    if(sha)body.sha=sha;
+    return fetch(apiUrl(),{method:'PUT',headers:headers(),body:JSON.stringify(body)}).then(function(r){
+      if(r.status===409)throw new Error('CONFLICT');
+      if(!r.ok)return r.text().then(function(x){throw new Error('写失败 '+r.status+' '+x.slice(0,120));});
+      return r.json();
+    });
+  }
+
+  /* 完整同步：拉 → 合并 → 推，冲突重试 3 次 */
+  var _pending=null;
+  function sync(silent){
+    if(!usable())return Promise.resolve(false);
+    /* 正在进行：把这次请求记下，等当前跑完再补一次，不丢用户操作 */
+    if(busy){
+      if(!_pending)_pending={silent:silent};
+      return new Promise(function(res){
+        var chk=setInterval(function(){
+          if(!busy){clearInterval(chk);_pending=null;res(sync(silent));}
+        },200);
+        setTimeout(function(){clearInterval(chk);res(false);},25000);
+      });
+    }
+    busy=true;
+    var tries=0;
+    function attempt(){
+      tries++;
+      return pull().then(function(rem){
+        var local=snapshot();
+        var merged=rem.data?merge(rem.data,local):local;
+        return push(rem.sha,merged).then(function(){
+          applyMerged(merged);
+          lastSync=Date.now();
+          busy=false;
+          var st=document.getElementById('fnSyncSt');
+          if(st){st.textContent='已同步';st.style.color='var(--ok)';}
+          if(!silent)toast('同步完成');
+          updateUI();
+          return true;
+        });
+      }).catch(function(e){
+        if(String(e.message)==='CONFLICT'&&tries<3){
+          return new Promise(function(r){setTimeout(r,600*Math.random()+300);}).then(attempt);
+        }
+        busy=false;
+        if(!silent)toast('同步失败：'+String(e.message).slice(0,60));
+        updateUI();
+        return false;
+      });
+    }
+    return attempt();
+  }
+
+  /* 把合并结果落回本地 */
+  function applyMerged(m){
+    var before=Object.keys(S.done||{}).length;
+    S.done=m.done||{};
+    S.wrong=m.wrong||{};
+    S.wrongCnt=m.wrongCnt||{};
+    S.time=m.time||{};
+    if(m.study&&m.study.total&&studyState){
+      var st=studyState();
+      if(m.study.total>st.total){st.total=m.study.total;st.since=st.running?Date.now():0;}
+    }
+    _inApply=true;
+    try{ save(); } finally { _inApply=false; }
+    if(typeof syncWrongBadge==='function')syncWrongBadge();
+    if(typeof render==='function')render();
+    var after=Object.keys(S.done||{}).length;
+    if(after>before)toast('已合并 '+(after-before)+' 道新进度');
+  }
+  var _inApply=false;
+
+  /* ---------- UI ---------- */
+  function updateUI(){
+    var box=document.getElementById('syncbox');
+    if(!box)return;
+    if(!cfg.enabled){
+      box.innerHTML='<div class="syncrow"><span class="synclb">云端同步</span><button class="syncbtn" id="syncOn">开启</button></div>';
+    }else if(!cfg.token){
+      box.innerHTML='<div class="syncrow"><span class="synclb">云端同步</span><span class="syncst warn">需要 Token</span><button class="syncbtn" id="syncOn">设置</button></div>';
+    }else{
+      box.innerHTML='<div class="syncrow"><span class="synclb">云端同步</span>'
+        +'<span class="syncst ok">'+(lastSync?('刚刚同步'):'已开启')+'</span>'
+        +'<button class="syncbtn" id="syncNow">立即同步</button>'
+        +'<button class="syncbtn sub" id="syncOff">关闭</button></div>';
+    }
+    var b1=document.getElementById('syncOn');
+    if(b1)b1.onclick=setup;
+    var b2=document.getElementById('syncNow');
+    if(b2)b2.onclick=function(){sync(false);};
+    var b3=document.getElementById('syncOff');
+    if(b3)b3.onclick=function(){
+      if(!confirm('关闭云端同步？\n\n本地进度不受影响，只是不再上传。'))return;
+      cfg.enabled=false;save();updateUI();toast('已关闭云端同步');
+    };
+  }
+
+  function setup(){
+    var tk=prompt('GitHub Token（需要 repo 权限）\n\n'
+      +'生成地址：https://github.com/settings/tokens\n'
+      +'勾选 repo 即可，不要勾别的。\n\n'
+      +'Token 只存在这台设备，不会上传。',
+      cfg.token?'(已设置，留空不改)':'');
+    if(tk===null)return;
+    if(tk.trim())cfg.token=tk.trim();
+    if(!cfg.token){toast('没有 Token 无法同步');return;}
+    cfg.enabled=true;save();
+    toast('正在测试连接…');
+    sync(false).then(function(ok){
+      updateUI();
+      if(ok)toast('同步已开启');
+    });
+  }
+
+  /* 自动同步：做题后延迟 6 秒推送（防抖），切页面前也推一次 */
+  var _t=null;
+  function schedule(){
+    if(!usable()||!cfg.auto||_inApply)return;
+    if(_t)clearTimeout(_t);
+    _t=setTimeout(function(){sync(true);},6000);
+  }
+  var _origSave=window.save;
+  if(typeof window.save==='function'){
+    window.save=function(){
+      var r=_origSave.apply(this,arguments);
+      schedule();
+      return r;
+    };
+  }
+  document.addEventListener('visibilitychange',function(){
+    if(document.hidden&&usable()&&cfg.auto)sync(true);
+  });
+  window.addEventListener('pagehide',function(){
+    if(usable()&&cfg.auto)sync(true);
+  });
+
+  window.SYNC={
+    cfg:cfg,
+    sync:sync,
+    setup:setup,
+    pull:pull,
+    enable:function(){cfg.enabled=true;save();updateUI();},
+    status:function(){return {enabled:cfg.enabled,hasToken:!!cfg.token,lastSync:lastSync,busy:busy};}
+  };
+
+  updateUI();
+  /* 启动时若已开启，静默拉一次 */
+  if(usable()&&cfg.auto)setTimeout(function(){sync(true);},2500);
 })();
 
 
