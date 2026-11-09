@@ -71,6 +71,53 @@ svg{display:block}
 .tab.on .n{color:var(--acc)}
 
 /* ================= 主布局：桌面双栏 ================= */
+/* ============ 左侧悬浮计时面板（宽屏才显示） ============ */
+.lrail{
+  display:none;                       /* 默认隐藏，窄屏靠底栏 */
+  position:fixed;top:132px;z-index:20;
+  left:max(14px, calc((100vw - 960px)/2 - 132px));
+  width:120px;
+}
+.lrail-card{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:14px 12px 12px;
+  box-shadow:0 10px 30px rgba(0,0,0,.35);
+  display:flex;flex-direction:column;gap:10px;align-items:stretch;
+}
+.lrail-label{
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  font-size:11px;letter-spacing:.06em;color:var(--dim);text-transform:uppercase;
+}
+.lrail-label svg{width:12px;height:12px;flex:0 0 auto}
+.lrail-time{
+  font-family:inherit;font-variant-numeric:tabular-nums;
+  font-size:26px;font-weight:650;line-height:1;letter-spacing:-.01em;
+  color:var(--acc);background:transparent;border:none;
+  padding:2px 0;cursor:pointer;transition:color .15s;
+  text-align:center;width:100%;
+}
+.lrail-time:not(.running){color:var(--sub)}
+.lrail-time:hover{color:var(--acc)}
+.lrail-time.running{color:var(--acc);text-shadow:0 0 18px rgba(213,139,104,.25)}
+.lrail-btns{display:flex;flex-direction:column;gap:6px}
+.lrail-btn{
+  font-family:inherit;font-size:12px;font-weight:550;cursor:pointer;
+  border:1px solid var(--line);border-radius:var(--r-sm);
+  background:var(--panel);color:var(--ink);padding:7px 0;
+  transition:background .15s,border-color .15s,color .15s;
+}
+.lrail-btn:hover{background:var(--hover);border-color:#4A453F}
+.lrail-btn:active{background:#383531}
+.lrail-btn.main{background:var(--acc-soft);border-color:var(--acc-line);color:var(--acc)}
+.lrail-btn.sub{color:var(--sub);font-size:11.5px}
+.lrail-btn.sub:hover{color:var(--ink)}
+/* 够宽才显示左侧面板，同时藏掉底栏里的计时 */
+@media (min-width:1300px){
+  .lrail{display:block}
+  /* 宽屏有左栏面板，底栏的计时器和清零就藏起来 */
+  .gleft #timer,.gleft #btntimerreset{display:none}
+}
+
 .layout{
   max-width:960px;margin:0 auto;padding:22px 24px 0;
   display:grid;grid-template-columns:minmax(0,1fr) 264px;gap:20px;
@@ -495,6 +542,20 @@ svg{display:block}
   <div class="tabs-in" id="chips"></div>
 </nav>
 
+<aside class="lrail" id="lrail" aria-label="学习计时">
+  <div class="lrail-card">
+    <div class="lrail-label">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      <span>学习计时</span>
+    </div>
+    <button class="lrail-time" id="timerRail" title="点一下开始计时">0:00</button>
+    <div class="lrail-btns">
+      <button class="lrail-btn" id="railToggle">开始</button>
+      <button class="lrail-btn sub" id="railReset">清零</button>
+    </div>
+  </div>
+</aside>
+
 <div class="layout">
   <main id="app" style="min-width:0"></main>
   <aside class="side" id="side"></aside>
@@ -751,14 +812,17 @@ function settleStudy(){
   }
 }
 function tickTimer(){
-  var el=document.getElementById('timer');
-  if(!el)return;
-  el.textContent=fmtMS(studyMs());
-  var btn=document.getElementById('timer');
-  if(btn){
-    btn.classList.toggle('running',!!studyState().running);
-    btn.title=studyState().running?'计时中，点一下暂停':'已暂停，点一下开始';
-  }
+  var ms=studyMs();
+  var running=!!studyState().running;
+  ['timer','timerRail'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(!el)return;
+    el.textContent=fmtMS(ms);
+    el.classList.toggle('running',running);
+    el.title=running?'计时中，点一下暂停':'已暂停，点一下开始';
+  });
+  var rt=document.getElementById('railToggle');
+  if(rt)rt.textContent=running?'暂停':'开始';
 }
 function startStudy(){
   var st=studyState();
@@ -1329,6 +1393,29 @@ startTimer();
     if(SFX)SFX.unlock();
     toggleStudy();
     if(SFX)SFX.tap();
+  };
+  /* 左栏面板：计时要塞 + 开始/暂停 + 清零 */
+  var rt2=document.getElementById('timerRail');
+  if(rt2)rt2.onclick=function(){
+    if(SFX)SFX.unlock();
+    toggleStudy();
+    if(SFX)SFX.tap();
+  };
+  var rg=document.getElementById('railToggle');
+  if(rg)rg.onclick=function(){
+    if(SFX)SFX.unlock();
+    toggleStudy();
+    if(SFX)SFX.tap();
+  };
+  var rr=document.getElementById('railReset');
+  if(rr)rr.onclick=function(){
+    if(SFX)SFX.unlock();
+    var ms2=studyMs();
+    if(ms2<1000){if(SFX)SFX.tap();toast('计时还没开始');return;}
+    if(!confirm('要把总计时清零吗？\n\n当前累计 '+fmtSpent(ms2)+'，清零后从头开始。'))return;
+    resetStudy();
+    if(SFX)SFX.sweep();
+    toast('计时已清零');
   };
   /* 独立清零按钮 */
   var rb=document.getElementById('btntimerreset');
