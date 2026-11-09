@@ -211,6 +211,12 @@ svg{display:block}
 .bbtn.primary{background:var(--acc-soft);border-color:var(--acc-line);color:var(--acc)}
 .bbtn.primary:hover{background:rgba(213,139,104,.2)}
 .bbtn.primary:active{background:rgba(213,139,104,.28)}
+.bar .timer{
+  font-variant-numeric:tabular-nums;font-size:12.5px;font-weight:600;
+  color:var(--acc);background:var(--acc-soft);border:1px solid var(--acc-line);
+  border-radius:var(--r-sm);padding:4px 9px;letter-spacing:.3px;
+  min-width:52px;text-align:center;
+}
 .bar .pos{
   flex:1;text-align:center;font-size:12.5px;font-weight:500;color:var(--sub);
   font-variant-numeric:tabular-nums;letter-spacing:.03em;
@@ -430,6 +436,7 @@ svg{display:block}
     <span class="bt">上一题</span>
   </button>
   <span class="pos" id="pos">—</span>
+  <span class="timer" id="timer" title="本题已用时间">—</span>
   <span class="gotonav">
     <input class="goto" id="goto" type="number" min="1" placeholder="题号" title="输入题号跳转（当前列表第几题）">
     <button class="gobtn" id="btnjump">跳</button>
@@ -498,8 +505,9 @@ function load(){
     if(!raw&&SUBJECT==='computer')raw=localStorage.getItem('dshdz_v3_computer');
     var d=raw?JSON.parse(raw):{done:{},wrong:{}};
     if(!d.done)d.done={};if(!d.wrong)d.wrong={};if(!d.pos)d.pos={};
+    if(!d.time)d.time={};if(!d.resume)d.resume={};
     return d;
-  }catch(e){return{done:{},wrong:{},pos:{}}}
+  }catch(e){return{done:{},wrong:{},pos:{},time:{},resume:{}}}
 }
 var _saveT=null;
 function save(){localStorage.setItem(lsKey(),JSON.stringify(S));}
@@ -508,9 +516,89 @@ function savePos(){
   var q=BANK[order[idx]];
   if(!q)return;
   S.pos[filter]=q.id;          /* 记录当前筛选下做到哪道题 */
+  flushTiming();               /* 存题时间 + 本次学习时长 */
   if(_saveT){clearTimeout(_saveT);}
   _saveT=setTimeout(function(){save();},250);
 }
+
+/* ==================== 计时 ==================== */
+var TQ={};        /* 当前这题的作答起点 time */
+var _tickT=null;  /* 秒表 interval */
+var _ansMs=0;     /* 本题累计毫秒（含中途离开） */
+var _liveFrom=null;/* 本次学习会话起点 */
+
+function pad2(n){return (n<10?'0':'')+n;}
+function fmtMS(ms){
+  var s=Math.floor(ms/1000);
+  var h=Math.floor(s/3600),m=Math.floor((s%3600)/60),ss=s%60;
+  return (h?h+':':'')+(h?pad2(m):String(m))+':'+pad2(ss);
+}
+function fmtSpent(ms){
+  var s=Math.round(ms/1000);
+  if(s<60)return s+'秒';
+  var m=Math.floor(s/60),ss=s%60;
+  if(m<60)return m+'分'+(ss?ss+'秒':'');
+  var h=Math.floor(m/60);return h+'时'+(m%60)+'分';
+}
+function curKey(){
+  if(!order.length)return null;
+  var q=BANK[order[idx]];
+  return q?key(q):null;
+}
+/* 本题起点：首次进入时记一次，切题清掉 */
+/* 切题时：先把上一题的时间结算落账，再切到新题并恢复它的累计秒数 */
+function markQuestion(){
+  var k=curKey();
+  if(!k)return;
+  if(TQ.k!==k){
+    if(TQ.k){
+      var el=Date.now()-TQ.from;
+      if(el>0)S.time[TQ.k]=(S.time[TQ.k]||0)+el;
+    }
+    TQ={k:k,from:Date.now()};
+    _ansMs=S.time[k]||0;          /* 关键：恢复这道题以前累计的时间 */
+  }
+}
+/* 把本题耗时并入 S.time，并累计学习时长 */
+function flushTiming(){
+  if(!TQ.k)return;
+  var el=Date.now()-TQ.from;
+  if(el<0)el=0;
+  S.time[TQ.k]=(S.time[TQ.k]||0)+el;
+  TQ.from=Date.now();
+  _ansMs+=el;
+}
+/* 本次学习时长落盘 */
+function flushSession(){
+  if(_liveFrom!=null){
+    var el=Date.now()-_liveFrom;
+    if(el>0&&el<86400000)S.resume[filter]=(S.resume[filter]||0)+el;
+    _liveFrom=Date.now();
+  }
+}
+/* 秒表刷新：只更新显示，不落盘 */
+function tickTimer(){
+  var el=document.getElementById('timer');
+  if(!el)return;
+  if(!order.length){el.textContent='—';return;}
+  var k=curKey();
+  var basek=(TQ.k===k)?(Date.now()-TQ.from):0;
+  el.textContent=fmtMS(_ansMs+basek);
+}
+function startTimer(){
+  if(_tickT)clearInterval(_tickT);
+  _liveFrom=Date.now();
+  _tickT=setInterval(function(){tickTimer();flushSession();},1000);
+}
+function stopTimer(){
+  if(_tickT){clearInterval(_tickT);_tickT=null;}
+  flushTiming();flushSession();
+}
+/* 页面隐藏/关闭时落盘（手机上切后台的情况） */
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden){stopTimer();save();}
+  else{startTimer();markQuestion();tickTimer();}
+});
 var S=load();
 var filter='ALL',order=[],idx=0;
 var MODLAB={computer:{M1:'计算机基础',M2:'数据库',M3:'操作系统',M4:'网络',M5:'Word',M6:'Excel',X1:'PPT'},zh:{},math:{},en:{}};
@@ -797,6 +885,7 @@ function childBlock(q){
 }
 function render(){
   var app=document.getElementById('app');
+  markQuestion();
   renderSide();
   if(!order.length){app.innerHTML='<div class="empty">'+ICONS.empty+'<p>这个模块没题</p></div>';update();return;}
   if(idx<0)idx=0;if(idx>=order.length)idx=order.length-1;
@@ -851,6 +940,7 @@ function render(){
       }
       S.done[k]=L;
       if(!isRight(L,q.a))S.wrong[k]=L;
+      flushTiming();
       save();render();chips();
     };
   });
@@ -869,6 +959,7 @@ function render(){
       if(!isGraded(c))return;
       S.done[ck]=L;
       if(!isRight(L,c.a))S.wrong[ck]=L;
+      flushTiming();
       save();render();chips();
     };
   });
@@ -891,7 +982,7 @@ function render(){
     var qq=findQ(kk);if(!qq)return;
     S.done[kk]=p;
     if(!isRight(p,qq.a))S.wrong[kk]=p;
-    delete PEND[kk];save();render();chips();
+    delete PEND[kk];flushTiming();save();render();chips();
   };
   /* 填空提交 */
   var fgo=document.getElementById('fillgo');
@@ -902,7 +993,7 @@ function render(){
     var qq=findQ(kk);if(!qq)return;
     S.done[kk]=vals;
     if(!fillRight(vals,qq.ak))S.wrong[kk]=vals;
-    delete FILLS[kk];save();render();chips();
+    delete FILLS[kk];flushTiming();save();render();chips();
   };
   /* 主观题：textarea 边写边存（不判分） */
   app.querySelectorAll('.subjta').forEach(function(ta){
@@ -921,6 +1012,7 @@ function update(){
   document.getElementById('sub').textContent='共 '+all.total+' 题 · 已完成 '+all.done
     +' · 正确率 '+(all.right?all.rate+'%':'—');
   document.getElementById('pos').innerHTML='<b>'+(order.length?(idx+1):0)+'</b> / '+order.length;
+  tickTimer();
   document.getElementById('btnprev').disabled=!order.length||idx<=0;
   document.getElementById('btnnext').disabled=!order.length||idx>=order.length-1;
 }
@@ -1015,6 +1107,7 @@ function sylJump(mid, sample){
   document.getElementById('sylsheet').classList.remove('show');
   render();
 }
+startTimer();markQuestion();
 document.getElementById('btnsyl').onclick=function(){
   renderSyl();
   document.getElementById('sylsheet').classList.add('show');
@@ -1057,15 +1150,26 @@ document.getElementById('btnclear').onclick=function(){
   var pool=order.length?order.map(function(i){return BANK[i];}):BANK;
   var scope=(filter==='ALL')?'全部':'「'+modsFor().filter(function(a){return a[0]===filter;}).map(function(a){return a[1];})[0]+'」';
   var n=0;
-  pool.forEach(function(q){if(S.done[key(q)])n++;});
+  pool.forEach(function(q){
+    var k=key(q);
+    if(S.done[k]||(q.ch&&q.ch.length&&matDone(q)))n++;
+  });
   if(!n){toast('这里还没有做过的题');return;}
   if(!confirm('确定清空'+scope+'的 '+n+' 道答题记录？\n\n只清答题记录和错题，题目本身不动。此操作不可撤销。'))return;
   pool.forEach(function(q){
     var k=key(q);
     delete S.done[k];delete S.wrong[k];
+    if(S.time)delete S.time[k];
+    /* 材料题：父题和每个子题的 done/wrong/time 全清 */
+    if(q.ch)q.ch.forEach(function(c2){
+      var ck=k+'.'+c2.id;
+      delete S.done[ck];delete S.wrong[ck];
+      if(S.time)delete S.time[ck];
+    });
   });
   if(S.pos)S.pos[filter]=null;
-  save();idx=0;render();chips();renderSide();
+  TQ={};_ansMs=0;                 /* 秒表也归零 */
+  save();idx=0;render();chips();renderSide();tickTimer();
   toast('已清空 '+n+' 道题的记录');
 };
 /* ===== 轻提示 ===== */
