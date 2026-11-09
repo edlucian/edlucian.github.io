@@ -452,7 +452,7 @@ svg{display:block}
 /* 中等屏：只隐藏工具类文字，保留翻页/跳未做/清空文字 */
 @media (min-width:561px) and (max-width:820px){
   .bbtn{padding:9px 10px;font-size:12.5px}
-  .bbtn#btnsyl .bt,.bbtn#btnsheet .bt,.bbtn#btnsfx .bt,.bbtn#btntimerreset .bt{display:none}
+  .bbtn#btnsyl .bt,.bbtn#btnsheet .bt,.bbtn#btnsfx .bt,.bbtn#btntimerreset .bt,.bbtn#btndata .bt{display:none}
   .goto{width:54px}
 }
 /* ============ v2：多题型 / 材料题 / 题图 ============ */
@@ -610,7 +610,83 @@ svg{display:block}
   .mkmn{flex-basis:74px;font-size:12px}
   .mkpt{margin-top:12px}
 }
+/* ================= v4：错题本升级 + 进度导出导入 ================= */
+.wbtop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 22px;border-bottom:1px solid var(--line)}
+.wbstatline{flex:1 1 auto;min-width:0;font-size:12.5px;color:var(--sub);font-variant-numeric:tabular-nums;line-height:1.55}
+.wbstatline b{color:var(--ink);font-weight:650}
+.wbtop .wbgo{flex:0 0 auto;cursor:pointer;font-size:12.5px;font-weight:600;border-radius:var(--r-sm);
+  padding:7px 14px;border:1px solid var(--acc);background:var(--acc);color:#1C1B19;
+  transition:background .15s;font-family:inherit}
+.wbtop .wbgo:hover{background:#E09A78;border-color:#E09A78}
+.wbtop .wbgo:disabled{opacity:.4;pointer-events:none}
+.wbtt{font-size:11px;font-weight:600;letter-spacing:.12em;color:var(--dim);margin:14px 8px 8px}
+.wbmodrow{display:flex;align-items:center;gap:10px;padding:4px 8px;font-size:12.5px;max-width:100%}
+.wbmodn{flex:0 0 84px;min-width:0;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wbmodbar{flex:1 1 auto;min-width:0;height:8px;background:var(--line);border-radius:3px;overflow:hidden}
+.wbmodbar i{display:block;height:100%;background:var(--acc);border-radius:3px;min-width:2px;transition:width .35s var(--ease)}
+.wbmodc{flex:0 0 44px;text-align:right;color:var(--dim);font-variant-numeric:tabular-nums}
+.wblist{margin-top:8px;border-top:1px solid var(--line);padding-top:4px}
+.wrow .wmain{flex:1 1 auto;min-width:0;display:flex;align-items:baseline;gap:8px;overflow:hidden}
+.wrow .wmn{flex:0 0 auto;font-size:11.5px;color:var(--acc);background:var(--acc-soft);border-radius:var(--r-sm);
+  padding:1px 7px;white-space:nowrap;max-width:96px;overflow:hidden;text-overflow:ellipsis}
+.wrow .wstem{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--sub)}
+.wcnt{flex:0 0 auto;font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:999px;
+  padding:1px 8px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.wcnt.hot{color:var(--bad);border-color:var(--bad-deep);background:var(--bad-soft)}
+.bbtn .wbn{display:none;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;
+  min-width:16px;height:16px;padding:0 4px;border-radius:999px;line-height:1;flex:0 0 auto;
+  background:var(--bad-soft);color:var(--bad);border:1px solid var(--bad-deep);
+  font-variant-numeric:tabular-nums}
+.bbtn .wbn.on{display:inline-flex}
+.mkbar.wrun{border-color:var(--bad-deep)}
+.mkbar.wrun .mkflag{background:var(--bad-soft);color:var(--bad)}
+.mkdone.ok{color:var(--ok)}
+/* 错题练习顶栏在窄屏也要露出「还剩 N 道」（v3 的 430 规则把 .mkdone 藏了） */
+@media (max-width:430px){
+  .mkbar.wrun .mkdone{display:inline;font-size:11.5px}
+  .mkbar.wrun{gap:6px;padding:7px 10px}
+  .mkbar.wrun .mkbtn{padding:5px 10px}
+}
+.datarow{display:flex;gap:10px;padding:14px 6px 6px;flex-wrap:wrap}
+.datarow .mkgo{flex:1 1 130px;cursor:pointer;font-size:13.5px;font-weight:600;border-radius:var(--r-md);
+  padding:11px 0;border:1px solid var(--acc);background:var(--acc);color:#1C1B19;
+  transition:background .15s;font-family:inherit}
+.datarow .mkgo:hover{background:#E09A78;border-color:#E09A78}
+.datarow .mkgo.ghost{background:transparent;color:var(--sub);border-color:var(--line)}
+.datarow .mkgo.ghost:hover{background:var(--hover);color:var(--ink);border-color:#4A453F}
+.bkrow{display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid var(--line);
+  font-size:12px;color:var(--sub)}
+.bkrow:last-child{border-bottom:none}
+.bkrow .bkmeta{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-variant-numeric:tabular-nums}
+.bkrow .bkgo{flex:0 0 auto;cursor:pointer;font-size:11.5px;border-radius:var(--r-sm);padding:4px 11px;
+  border:1px solid var(--acc-line);color:var(--acc);background:transparent;font-family:inherit}
+.bkrow .bkgo:hover{background:var(--acc-soft)}
+@media (max-width:560px){
+  .wbtop{padding:9px 14px;gap:8px}
+  .wbtop .wbgo{padding:6px 10px;font-size:11.5px}
+  .wbmodn{flex-basis:88px;font-size:11px}
+  .wbmodc{flex-basis:36px;font-size:11px}
+  .wbmodrow{gap:8px;padding:4px 4px}
+  .wrow{padding:11px 4px;gap:8px}
+  .wrow .redo{padding:5px 10px;font-size:12px}
+  .wrow .wmn{max-width:72px}
+  .datarow{padding:12px 4px 4px;gap:8px}
+  .datarow .mkgo{font-size:12.5px;padding:10px 0}
+}
+@media (max-width:360px){
+  .wbmodn{flex-basis:74px;font-size:10.5px}
+  .wbmodc{flex-basis:32px;font-size:10.5px}
+  /* 极窄屏：模块名与题干各占一行，谁都不截断 */
+  .wrow .wmain{flex-direction:column;align-items:flex-start;gap:2px}
+  .wrow .wmn{max-width:100%;font-size:10.5px}
+  .wrow .wstem{width:100%}
+  .wcnt{font-size:10px;padding:1px 6px}
+  .wrow{align-items:flex-start}
+  .wrow .redo{padding:4px 9px;font-size:11.5px}
+}
 </style>
+
 </head>
 <body>
 
@@ -664,6 +740,11 @@ svg{display:block}
     <button class="bbtn" id="btnsheet" title="错题本">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
       <span class="bt">错题本</span>
+      <span class="wbn" id="wbn">0</span>
+    </button>
+    <button class="bbtn" id="btndata" title="进度导出 / 导入">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>
+      <span class="bt">进度</span>
     </button>
     <button class="bbtn sound" id="btnsfx" title="音效开关">
       <svg class="ic-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
@@ -731,9 +812,31 @@ svg{display:block}
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
     </div>
-    <div class="slist" id="sheetlist"></div>
+    <div class="wbtop" id="wbtop">
+      <div class="wbstatline" id="wbstatline">共 0 道错题</div>
+      <button class="wbgo" id="wbpractice" disabled>刷错题（0道）</button>
+    </div>
+    <div class="slist" id="sheetlist">
+      <div class="wbmods" id="wbmods"></div>
+      <div class="wblist" id="wblist"></div>
+    </div>
   </div>
 </div>
+
+<div class="sheet" id="datasheet">
+  <div class="spanel">
+    <div class="sgrab"></div>
+    <div class="shead">
+      <h2>进度导出 / 导入</h2>
+      <span class="st" id="datastat"></span>
+      <button id="dataclose" aria-label="关闭">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="slist" id="datalist"></div>
+  </div>
+</div>
+<input type="file" id="datafile" accept=".json,application/json" style="display:none">
 
 <div class="sheet" id="mocksheet">
   <div class="spanel">
@@ -764,12 +867,25 @@ function load(){
     var d=raw?JSON.parse(raw):{done:{},wrong:{}};
     if(!d.done)d.done={};if(!d.wrong)d.wrong={};if(!d.pos)d.pos={};
     if(!d.time)d.time={};if(!d.resume)d.resume={};
+    /* v4：老数据只有 wrong 没有 wrongCnt，按 1 次补齐，旧错题一道都不丢 */
+    if(!d.wrongCnt||typeof d.wrongCnt!=='object'||typeof d.wrongCnt.length==='number')d.wrongCnt={};
+    Object.keys(d.wrong).forEach(function(k){
+      var c=Math.floor(Number(d.wrongCnt[k]));
+      d.wrongCnt[k]=(c>0?c:1);
+    });
     return d;
-  }catch(e){return{done:{},wrong:{},pos:{},time:{},resume:{}}}
+  }catch(e){return{done:{},wrong:{},wrongCnt:{},pos:{},time:{},resume:{}}}
 }
 var _saveT=null;
 function save(){localStorage.setItem(lsKey(),JSON.stringify(S));}
 function savePos(){
+  if(WRUN.on&&S.wrongRun){                 /* 错题练习：位置单独存，不写 S.pos */
+    S.wrongRun.at=idx;
+    flushTiming();
+    if(_saveT){clearTimeout(_saveT);}
+    _saveT=setTimeout(function(){save();},250);
+    return;
+  }
   if(MOCK.on&&S.mock){                 /* 模拟卷：位置单独存，绝不写 S.pos */
     S.mock.at=idx;
     flushTiming();
@@ -1089,6 +1205,9 @@ var ICONS={
 };
 
 function buildOrder(keepPos){
+  if(WRUN.on&&S.wrongRun&&S.wrongRun.ids&&S.wrongRun.ids.length){   /* 错题练习：order 由错题单决定 */
+    wrunApplyOrder();render();return;
+  }
   if(MOCK.on&&S.mock&&S.mock.ids&&S.mock.ids.length){   /* 模拟卷：order 由卷子决定 */
     mockApplyOrder();render();return;
   }
@@ -1133,7 +1252,9 @@ function setSubject(k){
     if(!askSure('当前模拟卷还没交卷，切换科目会丢掉这套卷的进度。\n\n确定切换吗？'))return;
     MOCK.on=false;S.mock=null;save();
   }else if(MOCK.on){MOCK.on=false;}
+  if(WRUN.on){WRUN.on=false;if(S.wrongRun)S.wrongRun.at=idx;save();}
   SUBJECT=k;S=load();filter='ALL';idx=0;PEND={};FILLS={};BANK=BANKS[k];
+  _ixBank=null;_ixSubj=null;
   var h1=document.querySelector('.brand h1');
   if(h1)h1.innerHTML='<span class="mark">◢</span>'+SUBJ_NAME[k]+' · 单招刷题 <span class="h1n">'+SUBJ_TOTAL[k]+' 题</span>';
   var bs=document.getElementById('btnsyl');
@@ -1237,6 +1358,7 @@ function childBlock(q){
   var h='<div class="matsub"><p class="mattt">本题共 '+kids.length+' 个小问</p>';
   for(var i=0;i<kids.length;i++){
     var c=kids[i],ck=base+'.'+c.id,cs=S.done[ck];
+    var cRetry=!!(WRUN.on&&cs&&S.wrong&&S.wrong[ck]!=null);
     h+='<div class="subcard"><p class="substem"><span class="sno">'+(i+1)+'</span>'+esc(c.s||'')+'</p>';
     if(c.im&&c.im.length){
       h+='<div class="qimg">';
@@ -1244,7 +1366,7 @@ function childBlock(q){
       h+='</div>';
     }
     if(c.t==='填空题'){
-      h+=fillBlock(c,ck,!!cs,cs||null);
+      h+=fillBlock(c,ck,!!cs&&!cRetry,cRetry?null:(cs||null));
     }else if(c.t==='简答题'){
       h+=subjBlock(c,ck,!!cs);
       if(isSubjNoRef(c)){/* 无参考答案，什么都不补 */}
@@ -1254,7 +1376,7 @@ function childBlock(q){
       h+='<div class="opts'+(multi?' multi':'')+'">';
       for(var j=0;j<c.o.length;j++){
         var L=chr(j),k2='copt';
-        if(cs){
+        if(cs&&!cRetry){
           if(isGraded(c)){
             if(ansSet(c.a).indexOf(L)>=0)k2+=' ok';
             else if(ansSet(cs).indexOf(L)>=0)k2+=' bad';
@@ -1264,7 +1386,7 @@ function childBlock(q){
         h+='<button class="'+k2+'" data-k="'+ck+'" data-l="'+L+'"><span class="k">'+L+'</span><span class="t">'+esc(c.o[j])+'</span></button>';
       }
       h+='</div>';
-      if(multi&&!cs){
+      if(multi&&(!cs||cRetry)){
         var pk=ansSet(pend);
         h+='<div class="mulbar"><span class="muhint">多选'+(pk?'（已选 '+pk.split('').join(' ')+'）':'')+'</span>'
           +'<button class="gobtn subgo" data-k="'+ck+'">提交</button></div>';
@@ -1281,22 +1403,27 @@ function childBlock(q){
 function render(){
   var app=document.getElementById('app');
   markQuestion();
+  syncWrongBadge();
   renderSide();
   if(!order.length){app.innerHTML='<div class="empty">'+ICONS.empty+'<p>这个模块没题</p></div>';update();return;}
   if(idx<0)idx=0;if(idx>=order.length)idx=order.length-1;
   var q=BANK[order[idx]],k=key(q);
   var answered=!!S.done[k],userSel=S.done[k]||'';
-  var h=(MOCK.on?mockBar():'')+'<article class="qcard">';
+  var canRetry=!!(WRUN.on&&answered&&S.wrong&&S.wrong[k]!=null);  /* 错题练习：答错可再答 */
+  var h=(MOCK.on?mockBar():'')+(WRUN.on?wrunBar():'')+'<article class="qcard">';
   var tag=esc(TYPELAB[q.t]||'单选');
   if(isSubjNoRef(q))tag+=' · 不判分';
   else if(isSubjective(q))tag+=' · 参考解析';
   else if(!isGraded(q)&&!(q.ch&&q.ch.length))tag+=' · 不判分';
   h+='<div class="qhead"><span class="qno">'+esc(q.mn||'')+'</span><span class="qtag">'+tag+'</span></div>';
   h+=stemBlock(q);
-  h+=renderOpts(q,k,answered,userSel);
-  h+=subjBlock(q,k,answered);
+  h+=renderOpts(q,k,answered&&!canRetry,canRetry?null:userSel);
+  h+=subjBlock(q,k,answered&&!canRetry);
   /* 反馈区：填空题/选择题走判分，材料题父题不单独反馈，主观题不反馈 */
-  if(answered&&!(q.ch&&q.ch.length)&&q.t!=='简答题'){
+  if(canRetry){
+    h+='<div class="after show"><div class="feedwrap"><div class="feed bad">'+ICONS.bad
+      +'<span>答错了，再选一次（这题已记 '+wrongCnt(k)+' 次错误）</span></div></div></div>';
+  }else if(answered&&!(q.ch&&q.ch.length)&&q.t!=='简答题'){
     var inner='<div class="feedwrap">';
     if(!isGraded(q)){
       inner+='<div class="feed ref"><span>参考答案 '+esc(ansText(q)||'—')+'</span></div>';
@@ -1321,12 +1448,13 @@ function render(){
   h+='</article>';
   app.innerHTML=h;
   if(MOCK.on)mockBind();
+  if(WRUN.on)wrunBind();
 
   /* 选项点击 */
   app.querySelectorAll('.opt').forEach(function(btn){
     btn.onclick=function(){
       if(SFX)SFX.unlock();
-      if(S.done[k])return;
+      if(S.done[k]&&!(WRUN.on&&S.wrong&&S.wrong[k]!=null))return;
       var L=btn.dataset.k;
       if(SFX&&L!=='__show__')SFX.tap();
       if(L==='__show__'){S.done[k]='*';save();render();chips();return;}
@@ -1338,17 +1466,17 @@ function render(){
       }
       S.done[k]=L;
       var _ok=isRight(L,q.a);
-      if(!_ok)S.wrong[k]=L;
+      if(_ok)markRight(k);else markWrong(k,L);
       if(SFX)_ok?SFX.right():SFX.wrong();
       flushTiming();
-      save();render();chips();
+      save();afterAnswer(k,_ok);render();chips();
     };
   });
   /* 子题选项 */
   app.querySelectorAll('.copt').forEach(function(btn){
     btn.onclick=function(){
       var ck=btn.dataset.k,L=btn.dataset.l;
-      if(S.done[ck])return;
+      if(S.done[ck]&&!(WRUN.on&&S.wrong&&S.wrong[ck]!=null))return;
       var c=findQ(ck);
       if(!c)return;
       if(isMulti(c)){
@@ -1359,10 +1487,10 @@ function render(){
       if(!isGraded(c))return;
       S.done[ck]=L;
       var _ok2=isRight(L,c.a);
-      if(!_ok2)S.wrong[ck]=L;
+      if(_ok2)markRight(ck);else markWrong(ck,L);
       if(SFX)_ok2?SFX.right():SFX.wrong();
       flushTiming();
-      save();render();chips();
+      save();afterAnswer(ck,_ok2);render();chips();
     };
   });
   /* 子题多选提交 */
@@ -1372,8 +1500,9 @@ function render(){
       if(!p)return;
       var c=findQ(ck);if(!c)return;
       S.done[ck]=p;
-      if(!isRight(p,c.a))S.wrong[ck]=p;
-      delete PEND[ck];save();render();chips();
+      var _ok5=isRight(p,c.a);
+      if(_ok5)markRight(ck);else markWrong(ck,p);
+      delete PEND[ck];save();afterAnswer(ck,_ok5);render();chips();
     };
   });
   /* 选择题提交 */
@@ -1384,9 +1513,9 @@ function render(){
     var qq=findQ(kk);if(!qq)return;
     S.done[kk]=p;
     var _ok3=isRight(p,qq.a);
-    if(!_ok3)S.wrong[kk]=p;
+    if(_ok3)markRight(kk);else markWrong(kk,p);
     if(SFX)_ok3?SFX.right():SFX.wrong();
-    delete PEND[kk];flushTiming();save();render();chips();
+    delete PEND[kk];flushTiming();save();afterAnswer(kk,_ok3);render();chips();
   };
   /* 填空提交 */
   var fgo=document.getElementById('fillgo');
@@ -1397,9 +1526,9 @@ function render(){
     var qq=findQ(kk);if(!qq)return;
     S.done[kk]=vals;
     var _ok4=fillRight(vals,qq.ak);
-    if(!_ok4)S.wrong[kk]=vals;
+    if(_ok4)markRight(kk);else markWrong(kk,vals);
     if(SFX)_ok4?SFX.right():SFX.wrong();
-    delete FILLS[kk];flushTiming();save();render();chips();
+    delete FILLS[kk];flushTiming();save();afterAnswer(kk,_ok4);render();chips();
   };
   /* 主观题：textarea 边写边存（不判分） */
   app.querySelectorAll('.subjta').forEach(function(ta){
@@ -1414,6 +1543,7 @@ function render(){
 
 function update(){
   if(MOCK.on){mockUpdateUI();return;}
+  if(WRUN.on){wrunUpdateUI();return;}
   var all=stats('ALL');
   document.getElementById('progbar').style.width=all.pct+'%';
   document.getElementById('sub').textContent='共 '+all.total+' 题 · 已完成 '+all.done
@@ -1424,36 +1554,300 @@ function update(){
   document.getElementById('btnnext').disabled=!order.length||idx>=order.length-1;
 }
 
-function sheet(){
-  var sh=document.getElementById('sheet'),list=document.getElementById('sheetlist');
-  var wk=Object.keys(S.wrong);
-  var all=stats('ALL');
-  document.getElementById('sheettitle').textContent='错题本';
-  document.getElementById('sheetstat').textContent=wk.length+' 道待重做 · 正确率 '+(all.done?all.rate+'%':'—');
-  if(!wk.length){
-    list.innerHTML='<div class="empty">'+ICONS.ok.replace('class="ic"','')+'<p>暂无错题，继续保持</p></div>';
-  }else{
-    list.innerHTML='';
-    wk.forEach(function(k){
-      var q=findQ(k);if(!q)return;
-      var row=document.createElement('div');row.className='wrow';
-      row.innerHTML='<span class="wl"><b>'+esc(q.mn||'')+'</b>　'+esc((q.s||'').slice(0,24))+'</span><button class="redo" data-k="'+k+'">重做</button>';
-      row.querySelector('button').onclick=function(){
-        delete S.done[k];delete S.wrong[k];save();
-        var bi=BANK.indexOf(q);
-        var fi=order.indexOf(bi);
-        if(bi<0){filter='ALL';buildOrder();chips();}
-        else if(fi>=0){idx=fi;}
-        else{filter='ALL';buildOrder();idx=order.indexOf(bi);chips();}
-        sh.classList.remove('show');render();
-      };
-      list.appendChild(row);
-    });
+/* ==================== v4 错题本：错误次数 / 模块分布 / 错题专项练习 ==================== */
+var WRUN={on:false};
+
+/* 错误次数：老数据没有 wrongCnt，一律按 1 次算，旧错题一道都不丢 */
+function wrongCnt(k){
+  var c=Math.floor(Number(S.wrongCnt&&S.wrongCnt[k]));
+  return c>0?c:1;
+}
+/* 答错：记下这次答案 + 累计次数 */
+function markWrong(k,ans){
+  if(!S.wrong)S.wrong={};
+  if(!S.wrongCnt)S.wrongCnt={};
+  S.wrong[k]=ans;
+  S.wrongCnt[k]=(Math.floor(Number(S.wrongCnt[k]))||0)+1;
+}
+/* 答对：只在错题练习里把题从错题本摘掉；普通刷题答对不动错题本 */
+function markRight(k){
+  if(!WRUN.on)return;
+  if(!S.wrong||S.wrong[k]==null)return;
+  delete S.wrong[k];
+  if(S.wrongCnt)delete S.wrongCnt[k];
+}
+/* key → 题目 索引，错题本一次遍历建好，不逐题扫全库 */
+var _ixBank=null,_ixSubj=null;
+function bankIndex(){
+  if(_ixBank&&_ixSubj===SUBJECT)return _ixBank;
+  var ix={},i,j;
+  for(i=0;i<BANK.length;i++){
+    var q=BANK[i];
+    ix[key(q)]=q;
+    var chs=q.ch||[];
+    for(j=0;j<chs.length;j++)ix[key(q)+'.'+chs[j].id]=chs[j];
   }
-  sh.classList.add('show');
+  _ixBank=ix;_ixSubj=SUBJECT;
+  return ix;
+}
+/* 子题 key（"1234.5"）取父题的模块名与题干；模块名优先用短标签，窄屏才放得下 */
+function qMeta(k,ix){
+  var dot=String(k).indexOf('.');
+  var q=ix[k];
+  if(dot>0&&ix[String(k).slice(0,dot)])q=ix[String(k).slice(0,dot)];
+  if(!q)q=findQ(k);
+  if(!q)return {mn:'',stem:''};
+  var lab=(MODLAB[SUBJECT]&&MODLAB[SUBJECT][q.m])||'';
+  var mn=lab||q.mn||q.m||'';
+  return {mn:mn,stem:q.s||''};
+}
+/* 错题清单：错误次数降序 → 模块 → key */
+function wrongList(){
+  var ix=bankIndex(),out=[];
+  Object.keys(S.wrong||{}).forEach(function(k){
+    var q=ix[k];
+    if(!q)return;                    /* 题库里已没有的旧 key 不展示，也不从 S.wrong 删 */
+    var m=qMeta(k,ix);
+    out.push({k:k,q:q,c:wrongCnt(k),mn:m.mn,stem:m.stem});
+  });
+  out.sort(function(a,b){
+    if(b.c!==a.c)return b.c-a.c;
+    if(a.mn!==b.mn)return a.mn<b.mn?-1:1;
+    return a.k<b.k?-1:(a.k>b.k?1:0);
+  });
+  return out;
+}
+/* 模块分布：错题数降序 */
+function wrongByMod(list){
+  var map={},ord=[];
+  list.forEach(function(x){
+    var m=x.mn||'未分类';
+    if(!map[m]){map[m]={mn:m,n:0};ord.push(m);}
+    map[m].n++;
+  });
+  var out=ord.map(function(m){return map[m];});
+  out.sort(function(a,b){return b.n!==a.n?b.n-a.n:(a.mn<b.mn?-1:1);});
+  return out;
 }
 
-/* ---------- 考纲覆盖抽屉 ---------- */
+/* ---------- 错题专项练习 ---------- */
+/* 材料题的子题 key 归到父题，一套里一道题只出现一次 */
+function wrunIds(){
+  var ix=bankIndex(),seen={},out=[];
+  Object.keys(S.wrong||{}).forEach(function(k){
+    if(!ix[k])return;
+    var pid=k;
+    var dot=String(k).indexOf('.');
+    if(dot>0&&ix[String(k).slice(0,dot)])pid=String(k).slice(0,dot);
+    if(seen[pid])return;
+    seen[pid]=1;out.push(pid);
+  });
+  return out;
+}
+/* 父题（含它的任一子题）还在错题本里，就算没消灭 */
+function wrunActive(pid){
+  if(S.wrong&&S.wrong[pid]!=null)return true;
+  var q=bankIndex()[pid];
+  if(q&&q.ch){
+    for(var i=0;i<q.ch.length;i++){
+      if(S.wrong&&S.wrong[pid+'.'+q.ch[i].id]!=null)return true;
+    }
+  }
+  return false;
+}
+function wrunLeft(){
+  var m=S.wrongRun;
+  if(!m||!m.ids)return 0;
+  var n=0;
+  m.ids.forEach(function(k){if(wrunActive(k))n++;});
+  return n;
+}
+function wrunClearDone(pid){
+  delete S.done[pid];
+  var q=bankIndex()[pid];
+  if(q&&q.ch)q.ch.forEach(function(c){delete S.done[pid+'.'+c.id];});
+}
+function wrunApplyOrder(){
+  var m=S.wrongRun;
+  if(!m||!m.ids){order=[];idx=0;return;}
+  var bi={},i;
+  for(i=0;i<BANK.length;i++)bi[key(BANK[i])]=i;
+  order=[];
+  m.ids.forEach(function(k){if(bi[k]!=null)order.push(bi[k]);});
+  idx=Math.max(0,Math.min(m.at||0,Math.max(0,order.length-1)));
+}
+function wrunStart(){
+  if(MOCK.on){toast('先退出模拟卷，再刷错题');return;}
+  var ids=wrunIds();
+  if(!ids.length){toast('当前没有错题');return;}
+  ids.forEach(wrunClearDone);          /* 清掉旧的作答，让错题能重新答 */
+  S.wrongRun={ids:ids,at:0,subj:SUBJECT,done:false,ts:Date.now()};
+  WRUN.on=true;
+  filter='ALL';
+  var sh=document.getElementById('sheet');
+  if(sh)sh.classList.remove('show');
+  save();
+  wrunApplyOrder();chips();render();
+  if(SFX){SFX.unlock();SFX.hop();}
+  toast('错题练习开始 · 共 '+ids.length+' 道');
+}
+function wrunExit(quiet){
+  if(!WRUN.on)return;
+  if(!quiet&&wrunLeft()&&!askSure('退出错题练习？\n\n已答对的题已经从错题本移除，剩下的下次接着刷。'))return;
+  WRUN.on=false;
+  if(S.wrongRun)S.wrongRun.at=idx;
+  save();
+  filter='ALL';
+  buildOrder();chips();
+  if(!quiet)toast('已回到普通刷题');
+}
+function wrunBar(){
+  var m=S.wrongRun;
+  if(!m||!m.ids)return '';
+  var tot=m.ids.length,left=wrunLeft();
+  var h='<div class="mkbar wrun"><span class="mkflag">错题练习</span>';
+  h+='<span class="mkno"><b>'+(order.length?idx+1:0)+'</b>/'+tot+'</span>';
+  h+='<span class="mkdone'+(left?'':' ok')+'">'+(left?'还剩 '+left+' 道':'错题全部消灭')+'</span>';
+  h+='<button class="mkbtn ghost" id="wrexit">退出</button>';
+  return h+'</div>';
+}
+function wrunBind(){
+  var el=document.getElementById('wrexit');
+  if(el)el.onclick=function(){wrunExit();};
+}
+function wrunUpdateUI(){
+  var m=S.wrongRun,tot=(m&&m.ids)?m.ids.length:0,left=wrunLeft();
+  var cleared=tot-left;
+  var pb=document.getElementById('progbar');
+  if(pb)pb.style.width=(tot?Math.round(cleared/tot*1000)/10:0)+'%';
+  var sub=document.getElementById('sub');
+  if(sub)sub.textContent='错题练习 · 还剩 '+left+' 道 · 已消灭 '+cleared+'/'+tot;
+  var pos=document.getElementById('pos');
+  if(pos)pos.innerHTML='<b>'+(order.length?idx+1:0)+'</b> / '+order.length;
+  var bp=document.getElementById('btnprev');
+  if(bp)bp.disabled=!order.length||idx<=0;
+  var bn=document.getElementById('btnnext');
+  if(bn)bn.disabled=!order.length||idx>=order.length-1;
+  syncWrongBadge();
+}
+/* 每次判分后统一收尾 */
+function afterAnswer(k,ok){
+  syncWrongBadge();
+  if(!WRUN.on)return;
+  if(S.wrongRun)S.wrongRun.at=idx;
+  if(wrunLeft())return;
+  if(S.wrongRun)S.wrongRun.done=true;
+  save();
+  if(SFX)SFX.done();
+  toast('错题全部消灭');
+}
+/* 底栏错题数 */
+function syncWrongBadge(){
+  var n=Object.keys(S.wrong||{}).length;
+  var b=document.getElementById('wbn');
+  if(b){
+    b.textContent=n>999?'999+':String(n);
+    b.classList.toggle('on',n>0);
+  }
+  var bs=document.getElementById('btnsheet');
+  if(bs)bs.title=n?('错题本 · '+n+' 道'):'错题本';
+}
+
+/* ---------- 错题本抽屉 ---------- */
+function sheet(){
+  var sh=document.getElementById('sheet');
+  var list=wrongList();
+  renderWrongSheet(list);
+  syncWrongBadge();
+  if(sh)sh.classList.add('show');
+}
+function renderWrongSheet(list){
+  var all=stats('ALL');
+  var tot=list.length;
+  var c1=0,c2=0,c3=0;
+  list.forEach(function(x){
+    if(x.c>=3)c3++;
+    else if(x.c===2)c2++;
+    else c1++;
+  });
+
+  var tt=document.getElementById('sheettitle');
+  if(tt)tt.textContent='错题本';
+  var st=document.getElementById('sheetstat');
+  if(st)st.textContent=tot+' 道待重做 · 正确率 '+(all.done?all.rate+'%':'—');
+
+  var sl=document.getElementById('wbstatline');
+  if(sl){
+    sl.innerHTML='共 <b>'+tot+'</b> 道错题 · 错1次 <b>'+c1+'</b> · 错2次 <b>'+c2
+      +'</b> · 错3次以上 <b>'+c3+'</b>';
+  }
+  var go=document.getElementById('wbpractice');
+  var runN=wrunIds().length;
+  if(go){
+    go.textContent='刷错题（'+runN+'道）';
+    go.disabled=!runN;
+    go.onclick=function(){wrunStart();};
+  }
+
+  var modsEl=document.getElementById('wbmods');
+  var listEl=document.getElementById('wblist');
+  if(!listEl)return;
+  if(!tot){
+    if(modsEl)modsEl.innerHTML='';
+    listEl.innerHTML='<div class="empty">'+ICONS.ok.replace('class="ic"','')
+      +'<p>暂无错题，继续保持</p></div>';
+    return;
+  }
+
+  /* 模块分布横条：条宽按占最大模块的比例，data-pct 存真实占比 */
+  var md=wrongByMod(list);
+  var h='<p class="wbtt">模块分布</p>';
+  md.forEach(function(x){
+    var pct=Math.round(x.n/tot*1000)/10;
+    var w=Math.max(6,Math.round(x.n/md[0].n*100));
+    h+='<div class="wbmodrow" data-mod="'+esc(x.mn)+'" data-n="'+x.n+'">'
+      +'<span class="wbmodn" title="'+esc(x.mn)+'">'+esc(x.mn)+'</span>'
+      +'<span class="wbmodbar"><i style="width:'+w+'%" data-pct="'+pct+'"></i></span>'
+      +'<span class="wbmodc">'+x.n+' 道</span></div>';
+  });
+  if(modsEl)modsEl.innerHTML=h;
+
+  /* 错题清单 */
+  var lh='<p class="wbtt">错题清单</p>';
+  list.forEach(function(x){
+    var stem=String(x.stem||'').slice(0,30);
+    lh+='<div class="wrow" data-k="'+esc(x.k)+'" data-c="'+x.c+'">'
+      +'<span class="wmain"><span class="wmn" title="'+esc(x.q.mn||x.mn)+'">'+esc(x.mn)
+      +'</span><span class="wstem">'+esc(stem)+'</span></span>'
+      +'<span class="wcnt'+(x.c>=2?' hot':'')+'">错 '+x.c+' 次</span>'
+      +'<button class="redo" data-k="'+esc(x.k)+'">重做</button></div>';
+  });
+  listEl.innerHTML=lh;
+
+  /* 重做：清掉这题作答与错题记录，跳到该题 */
+  Array.prototype.forEach.call(listEl.querySelectorAll('.redo'),function(btn){
+    btn.onclick=function(){
+      var k=btn.dataset.k,q=findQ(k);
+      if(!q)return;
+      if(WRUN.on){
+        WRUN.on=false;
+        if(S.wrongRun)S.wrongRun.at=idx;
+      }
+      delete S.done[k];delete S.wrong[k];
+      if(S.wrongCnt)delete S.wrongCnt[k];
+      save();
+      var bi=BANK.indexOf(q),fi=order.indexOf(bi);
+      if(bi<0){filter='ALL';buildOrder(false);chips();}
+      else if(fi>=0){idx=fi;}
+      else{filter='ALL';buildOrder(false);idx=order.indexOf(bi);chips();}
+      syncWrongBadge();
+      var sh=document.getElementById('sheet');
+      if(sh)sh.classList.remove('show');
+      render();
+    };
+  });
+}
+
 var SMAP={M1:'M1',M2:'M2',M3:'M3',M4:'M4',M5:'M5',M6:'M6',M7:'X1'};
 var SMETA={M1:'计算机基础',M2:'数据库基础',M3:'操作系统基础',M4:'计算机网络基础',M5:'图文编辑（Word）',M6:'电子表格（Excel）',M7:'演示文稿（PPT）'};
 function courseNote(k){
@@ -1972,6 +2366,7 @@ function mockShowResult(){
 }
 
 function mockOpen(){
+  if(WRUN.on){toast('错题练习进行中，退出后再开模拟卷');return;}
   if(MOCK.on){
     if(order.length)toast('模拟卷进行中 · 第 '+(idx+1)+'/'+order.length+' 题');
     return;
@@ -2094,18 +2489,21 @@ document.getElementById('btnclear').onclick=function(){
   pool.forEach(function(q){
     var k=key(q);
     delete S.done[k];delete S.wrong[k];
+    if(S.wrongCnt)delete S.wrongCnt[k];
     if(S.time)delete S.time[k];
     /* 材料题：父题和每个子题的 done/wrong/time 全清 */
     if(q.ch)q.ch.forEach(function(c2){
       var ck=k+'.'+c2.id;
       delete S.done[ck];delete S.wrong[ck];
+      if(S.wrongCnt)delete S.wrongCnt[ck];
       if(S.time)delete S.time[ck];
     });
   });
   if(S.pos)S.pos[filter]=null;
+  if(WRUN.on||S.wrongRun){WRUN.on=false;S.wrongRun=null;}
   TQ={};_ansMs=0;                 /* 秒表也归零 */
   if(SFX)SFX.sweep();
-  save();idx=0;render();chips();renderSide();tickTimer();
+  save();idx=0;buildOrder(false);chips();renderSide();tickTimer();
   toast('已清空 '+n+' 道题的记录');
 };
 /* ===== 音效开关 ===== */
@@ -2161,6 +2559,291 @@ buildOrder();chips();
   }
   var bm=document.getElementById('btnmock');
   if(bm)bm.style.display=(SUBJECT==='computer')?'':'none';
+})();
+
+/* ==================== v4 进度导出 / 导入 ==================== */
+var DATA_V=1;
+var BK_PREFIX='dshdz_backup_';
+
+function pad4(n){n=String(n);while(n.length<4)n='0'+n;return n;}
+function stampYMD(d){
+  d=d||new Date();
+  return ''+d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate());
+}
+function stampFull(d){
+  d=d||new Date();
+  return ''+d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate())
+    +'_'+pad2(d.getHours())+pad2(d.getMinutes())+pad2(d.getSeconds());
+}
+function fmtBytes(n){
+  if(n<1024)return n+' B';
+  if(n<1048576)return (n/1024).toFixed(1)+' KB';
+  return (n/1048576).toFixed(2)+' MB';
+}
+
+/* ---------- 备份：最多保留 3 份 ---------- */
+function listBackups(){
+  var out=[];
+  try{
+    for(var i=0;i<localStorage.length;i++){
+      var k=localStorage.key(i);
+      if(!k||k.indexOf(BK_PREFIX)!==0)continue;
+      var ts=Number(k.slice(BK_PREFIX.length))||0;
+      var raw=localStorage.getItem(k)||'';
+      var n=0;
+      try{n=Object.keys((JSON.parse(raw)||{}).done||{}).length;}catch(e){n=0;}
+      out.push({key:k,ts:ts,bytes:raw.length,done:n});
+    }
+  }catch(e){}
+  out.sort(function(a,b){return b.ts-a.ts;});
+  return out;
+}
+function pruneBackups(keep){
+  var all=listBackups();
+  for(var i=keep;i<all.length;i++){
+    try{localStorage.removeItem(all[i].key);}catch(e){}
+  }
+}
+function backupNow(){
+  var key=BK_PREFIX+Date.now();
+  try{
+    localStorage.setItem(key,JSON.stringify(S));
+    pruneBackups(3);
+    return key;
+  }catch(e){
+    /* 空间满了：先删最老的一份再试一次 */
+    var all=listBackups();
+    if(all.length){try{localStorage.removeItem(all[all.length-1].key);}catch(e2){}}
+    try{localStorage.setItem(key,JSON.stringify(S));pruneBackups(3);return key;}catch(e3){}
+    return null;
+  }
+}
+
+/* ---------- 导出 ---------- */
+function buildExport(){
+  var o={};
+  Object.keys(S||{}).forEach(function(k){o[k]=S[k];});
+  o._v=DATA_V;
+  o._exportedAt=new Date().toISOString();
+  o._subj=SUBJECT;
+  o._app='单招刷题';
+  return o;
+}
+function exportProgress(){
+  var obj=buildExport();
+  var txt;
+  try{txt=JSON.stringify(obj);}catch(e){toast('导出失败：数据序列化出错');return;}
+  var bytes=0;
+  try{bytes=new Blob([txt]).size;}catch(e){bytes=txt.length;}
+  var name='单招刷题进度_'+stampYMD()+'.json';
+  var ok=false;
+  try{
+    var blob=new Blob([txt],{type:'application/json;charset=utf-8'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;a.download=name;a.rel='noopener';
+    if(a.style)a.style.display='none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){
+      try{document.body.removeChild(a);}catch(e){}
+      try{URL.revokeObjectURL(url);}catch(e){}
+    },1200);
+    ok=true;
+  }catch(e){ok=false;}
+  var stat=document.getElementById('datastat');
+  if(stat)stat.textContent='已导出 '+fmtBytes(bytes);
+  toast(ok?('已导出 '+name+' · '+fmtBytes(bytes)):('导出被浏览器拦下了，文件大小 '+fmtBytes(bytes)));
+  return {name:name,bytes:bytes,json:txt,ok:ok};
+}
+
+/* ---------- 导入 ---------- */
+function validProgress(o){
+  if(!o||typeof o!=='object'||Object.prototype.toString.call(o)==='[object Array]'){
+    return '文件内容不是一个进度对象';
+  }
+  if(!o.done||typeof o.done!=='object'||Object.prototype.toString.call(o.done)==='[object Array]'){
+    return '缺少 done（答题记录）';
+  }
+  if(!o.wrong||typeof o.wrong!=='object'||Object.prototype.toString.call(o.wrong)==='[object Array]'){
+    return '缺少 wrong（错题记录）';
+  }
+  if(o._v!=null){
+    var v=Number(o._v);
+    if(!isFinite(v))return '版本号 _v 不是数字';
+    if(v>DATA_V)return '文件版本 _v='+o._v+' 比当前程序（_v='+DATA_V+'）新，请先更新页面';
+  }
+  return '';
+}
+function applyProgress(o){
+  var n={};
+  Object.keys(o).forEach(function(k){if(k.charAt(0)!=='_')n[k]=o[k];});
+  n.done=n.done||{};n.wrong=n.wrong||{};n.pos=n.pos||{};
+  n.time=n.time||{};n.resume=n.resume||{};
+  n.wrongCnt=(n.wrongCnt&&typeof n.wrongCnt==='object'&&typeof n.wrongCnt.length!=='number')?n.wrongCnt:{};
+  Object.keys(n.wrong).forEach(function(k){
+    var c=Math.floor(Number(n.wrongCnt[k]));
+    n.wrongCnt[k]=(c>0?c:1);
+  });
+  if(n.mock&&typeof n.mock!=='object')n.mock=null;
+  if(n.study&&typeof n.study!=='object')n.study=null;
+  S=n;
+  if(typeof S.study==='undefined'||!S.study)S.study={total:0,running:false,since:0};
+  if(S.study.running){S.study.running=false;S.study.since=0;}   /* 导入的在线计时不接着跑 */
+  MOCK.on=false;
+  if(S.mock&&S.mock.ids&&S.mock.ids.length&&!S.mock.submitted)S.mock.active=!!S.mock.active;
+  WRUN.on=false;
+  if(S.wrongRun){S.wrongRun.at=0;S.wrongRun.done=false;}
+  filter='ALL';idx=0;PEND={};FILLS={};TQ={};_ansMs=0;
+  startTimer();
+  save();
+  buildOrder(false);chips();renderSubj();renderSide();tickTimer();
+  syncMockBtn();syncWrongBadge();
+  render();
+  return {done:Object.keys(S.done).length,wrong:Object.keys(S.wrong).length};
+}
+function importText(txt,fileName){
+  var obj;
+  try{obj=JSON.parse(txt);}catch(e){
+    toast('导入失败：不是合法的 JSON 文件');
+    return {ok:false,err:'JSON 解析失败'};
+  }
+  var bad=validProgress(obj);
+  if(bad){
+    toast('导入失败：'+bad);
+    return {ok:false,err:bad};
+  }
+  var ver=obj._v==null?0:Number(obj._v);
+  var warn=ver<DATA_V?'（旧版本 v'+(ver||'?')+'，会自动升级）':'';
+  if(!askSure('导入会覆盖当前进度，确定吗？\n\n文件：'+(fileName||'进度文件')
+    +'\n版本：'+(obj._v==null?'未标注':('_v='+obj._v))
+    +'\n导出时间：'+(obj._exportedAt||'未标注')
+    +'\n答题记录：'+Object.keys(obj.done).length+' 条'
+    +'\n错题：'+Object.keys(obj.wrong).length+' 道'
+    +(warn?'\n\n'+warn:''))){
+    return {ok:false,err:'用户取消',canceled:true};
+  }
+  var bk=backupNow();
+  var r=applyProgress(obj);
+  var stat=document.getElementById('datastat');
+  if(stat)stat.textContent='已导入 · 答题 '+r.done+' 条';
+  toast('导入完成 · 答题 '+r.done+' 条 · 错题 '+r.wrong+' 道'+(bk?'（已自动备份）':''));
+  renderDataSheet();
+  return {ok:true,done:r.done,wrong:r.wrong,backup:bk,ver:ver};
+}
+function importFile(file,onDone){
+  if(!file){if(onDone)onDone({ok:false,err:'没有选择文件'});return;}
+  if(typeof FileReader==='undefined'){
+    /* 无 FileReader（测试环境）：用 file.text() */
+    if(typeof file.text==='function'){
+      file.text().then(function(t){var r=importText(t,file.name);if(onDone)onDone(r);},
+        function(){toast('读取文件失败');if(onDone)onDone({ok:false,err:'读取失败'});});
+      return;
+    }
+    toast('这个浏览器不支持读取本地文件');
+    if(onDone)onDone({ok:false,err:'no FileReader'});
+    return;
+  }
+  var fr=new FileReader();
+  fr.onload=function(){var r=importText(String(fr.result||''),file.name);if(onDone)onDone(r);};
+  fr.onerror=function(){toast('读取文件失败');if(onDone)onDone({ok:false,err:'读取失败'});};
+  fr.readAsText(file,'utf-8');
+}
+function restoreBackup(key){
+  var raw=null;
+  try{raw=localStorage.getItem(key);}catch(e){}
+  if(!raw){toast('这份备份找不到了');return;}
+  var ok=askSure('用这份备份覆盖当前进度？\n\n备份时间：'+new Date(Number(key.slice(BK_PREFIX.length))).toLocaleString()
+    +'\n（覆盖前会先给当前进度再存一份备份）');
+  if(!ok)return;
+  var obj;
+  try{obj=JSON.parse(raw);}catch(e){toast('这份备份已损坏');return;}
+  var bad=validProgress(obj);
+  if(bad){toast('这份备份不可用：'+bad);return;}
+  backupNow();
+  var r=applyProgress(obj);
+  toast('已恢复备份 · 答题 '+r.done+' 条');
+  renderDataSheet();
+}
+
+/* ---------- 数据抽屉 ---------- */
+function renderDataSheet(){
+  var el=document.getElementById('datalist');
+  if(!el)return;
+  var dn=Object.keys(S.done||{}).length;
+  var wn=Object.keys(S.wrong||{}).length;
+  var mk=(S.mock&&S.mock.ids)?S.mock.ids.length:0;
+  var st=document.getElementById('datastat');
+  if(st)st.textContent=SUBJ_NAME[SUBJECT]+' · 答题 '+dn+' 条';
+  var h='<div class="mknote">进度文件是本机答题记录（done / wrong / 错题次数 / 计时 / 模拟卷）。'
+    +'换设备或者清了缓存，导进来就能接着刷。</div>';
+  h+='<p class="mkpt">当前进度</p>';
+  h+='<div class="bkrow"><span class="bkmeta">科目 '+esc(SUBJ_NAME[SUBJECT])+'（'+esc(lsKey())+'）</span></div>';
+  h+='<div class="bkrow"><span class="bkmeta">答题记录 '+dn+' 条 · 错题 '+wn+' 道 · 模拟卷 '+(mk?mk+' 题':'无')+'</span></div>';
+  h+='<div class="datarow">'
+    +'<button class="mkgo" id="dataexp">导出进度</button>'
+    +'<button class="mkgo ghost" id="dataimp">导入进度</button>'
+    +'</div>';
+  var bks=listBackups();
+  h+='<p class="mkpt">自动备份（最多 3 份）</p>';
+  if(!bks.length){
+    h+='<div class="mknote dim">还没有备份。导入进度前会自动备份当前进度。</div>';
+  }else{
+    bks.forEach(function(b){
+      h+='<div class="bkrow"><span class="bkmeta">'+esc(new Date(b.ts).toLocaleString())
+        +' · 答题 '+b.done+' 条 · '+fmtBytes(b.bytes)+'</span>'
+        +'<button class="bkgo" data-bk="'+esc(b.key)+'">恢复</button></div>';
+    });
+  }
+  el.innerHTML=h;
+  var be=document.getElementById('dataexp');
+  if(be)be.onclick=function(){if(SFX)SFX.tap();exportProgress();};
+  var bi=document.getElementById('dataimp');
+  if(bi)bi.onclick=function(){
+    if(SFX)SFX.tap();
+    var f=document.getElementById('datafile');
+    if(!f){toast('这个浏览器不支持导入');return;}
+    f.value='';
+    f.click();
+  };
+  Array.prototype.forEach.call(el.querySelectorAll('.bkgo'),function(b){
+    b.onclick=function(){restoreBackup(b.dataset.bk);};
+  });
+}
+function openDataSheet(){
+  renderDataSheet();
+  var d=document.getElementById('datasheet');
+  if(d)d.classList.add('show');
+}
+(function(){
+  var b=document.getElementById('btndata');
+  if(b)b.onclick=function(){if(SFX)SFX.unlock();if(SFX)SFX.tap();openDataSheet();};
+  var c=document.getElementById('dataclose');
+  if(c)c.onclick=function(){document.getElementById('datasheet').classList.remove('show');};
+  var d=document.getElementById('datasheet');
+  if(d)d.addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
+  var f=document.getElementById('datafile');
+  if(f)f.addEventListener('change',function(){
+    var file=f.files&&f.files[0];
+    if(!file)return;
+    importFile(file);
+    f.value='';
+  });
+  syncWrongBadge();
+})();
+
+/* 刷新后自动恢复未刷完的错题练习 */
+(function(){
+  var m=S.wrongRun;
+  var okSub=m&&m.subj?m.subj===SUBJECT:true;
+  if(m&&m.ids&&m.ids.length&&okSub&&wrunLeft()){
+    WRUN.on=true;
+    wrunApplyOrder();chips();render();
+    toast('已恢复错题练习 · 还剩 '+wrunLeft()+' 道');
+  }else{
+    if(m&&m.ids&&!wrunLeft()){S.wrongRun.done=true;save();}
+    syncWrongBadge();
+  }
 })();
 </script>
 </body>
