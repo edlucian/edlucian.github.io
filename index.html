@@ -115,7 +115,7 @@ svg{display:block}
 @media (min-width:1300px){
   .lrail{display:block}
   /* 宽屏有左栏面板，底栏的计时器和清零就藏起来 */
-  .gleft #timer,.gleft #btntimerreset{display:none}
+  .gleft #timer{display:none}
 }
 
 .layout{
@@ -503,6 +503,58 @@ svg{display:block}
   padding:0 0 env(safe-area-inset-bottom);
 }
 .sheet.show .spanel{transform:translateY(0)}
+/* 隐藏的兼容按钮容器 */
+.hidden-btns{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;pointer-events:none;opacity:0}
+/* ===== 功能面板 ===== */
+.fnwrap{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+  padding:16px 18px calc(20px + env(safe-area-inset-bottom));
+  overflow-y:auto;
+}
+.fnitem{
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  gap:7px;cursor:pointer;font-family:inherit;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r-md);
+  padding:13px 6px 11px;color:var(--ink);
+  transition:background .15s,border-color .15s,transform .1s;
+  position:relative;
+}
+.fnitem:hover{background:var(--hover);border-color:#4A453F}
+.fnitem:active{transform:scale(.965)}
+.fnitem:focus-visible{outline:2px solid var(--acc-line);outline-offset:2px}
+.fnic{display:flex;align-items:center;justify-content:center;width:22px;height:22px;color:var(--acc)}
+.fnic svg{width:22px;height:22px}
+.fnlb{font-size:11.5px;line-height:1.35;color:var(--sub);text-align:center}
+.fnn{
+  position:absolute;top:5px;right:6px;min-width:15px;height:15px;padding:0 4px;
+  border-radius:999px;background:var(--bad);color:#1C1B19;
+  font-size:9.5px;font-weight:700;line-height:15px;text-align:center;
+  display:none;
+}
+.fnn.show{display:block}
+.fnst{font-size:10px;color:var(--dim);letter-spacing:.04em}
+.fnitem.danger .fnic{color:var(--bad)}
+.fnitem.danger .fnlb{color:var(--bad)}
+.fnitem.danger:hover{background:var(--bad-soft);border-color:var(--bad-deep)}
+/* 底栏功能按钮上的小红点 */
+.fnbtn{position:relative}
+.fnbadge{
+  position:absolute;top:-5px;right:-5px;min-width:15px;height:15px;padding:0 4px;
+  border-radius:999px;background:var(--bad);color:#1C1B19;
+  font-size:9.5px;font-weight:700;line-height:15px;text-align:center;
+  display:none;
+}
+.fnbadge.show{display:block}
+@media (max-width:430px){
+  .fnwrap{grid-template-columns:repeat(4,1fr);gap:8px;padding:13px 12px calc(18px + env(safe-area-inset-bottom))}
+  .fnitem{padding:11px 4px 9px;gap:6px}
+  .fnic,.fnic svg{width:20px;height:20px}
+  .fnlb{font-size:10.5px}
+}
+@media (max-width:340px){
+  .fnwrap{gap:6px;padding:11px 8px calc(16px + env(safe-area-inset-bottom))}
+  .fnlb{font-size:10px}
+}
 .sgrab{width:36px;height:4px;border-radius:2px;background:var(--line);margin:10px auto 2px}
 .shead{display:flex;justify-content:space-between;align-items:center;padding:10px 22px 12px;border-bottom:1px solid var(--line)}
 .shead h2{margin:0;font-size:15px;font-weight:600}
@@ -577,40 +629,37 @@ svg{display:block}
   .stem{font-size:16.5px}
   .opt{padding:12px 12px;gap:11px}
   .top-in{padding:14px 16px 0}
-  .bar{padding-left:8px;padding-right:8px;gap:5px;padding-top:9px;padding-bottom:calc(9px + env(safe-area-inset-bottom))}
-  .gbar{gap:4px}
-  .bbtn{padding:9px 9px;font-size:12px;gap:0}
-  .bbtn .bt{display:none}
+  /* 底栏：只剩「功能」+计时 / 翻页，空间充裕 */
+  .bar{padding-left:12px;padding-right:12px;gap:10px;padding-top:10px;padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+  .gbar{gap:7px}
+  .bbtn{padding:10px 12px;font-size:12.5px;gap:6px}
+  .bbtn .bt{display:inline}
   .bbtn svg{width:16px;height:16px}
-  .bbtn.navbtn{padding:9px 8px}
-  .pos{font-size:11.5px;min-width:38px}
-  .bar .timer{font-size:11px;padding:3px 6px;min-width:44px}
-  .goto{width:42px;padding:6px 4px;font-size:11.5px}
-  .gobtn{padding:6px 7px;font-size:11.5px}
+  .bbtn.navbtn{padding:10px 10px}
+  .pos{font-size:12px;min-width:44px}
+  .bar .timer{font-size:12px;padding:6px 9px;min-width:52px}
+  .goto{width:46px;padding:7px 6px;font-size:12px}
+  .gobtn{padding:7px 9px;font-size:12px}
 }
 /* ===== 超窄屏（平级，不嵌套）===== */
 @media (max-width:430px){
-  /* 工具组只留图标，题号输入收起 */
+  /* 窄屏：题号输入收起，「功能」只留图标 */
   .gotonav{display:none}
-  .bar{gap:4px;padding-left:6px;padding-right:6px}
-  .gbar{gap:3px}
-  .bbtn{padding:8px 6px;font-size:11.5px}
-  .bbtn svg{width:15px;height:15px}
-  .bbtn.navbtn{padding:8px 6px}
-  .bar .timer{font-size:11px;padding:4px 6px;min-width:46px}
-  .bar .timer.running{padding-left:12px}
-  .pos{font-size:11px;min-width:30px}
-  .poswrap{gap:3px}
-  /* 极窄屏：所有文字收掉，只留图标 */
-  .bbtn .bt{display:none}
-  .bar .timer{font-size:10.5px;padding:4px 5px;min-width:42px;letter-spacing:0}
-  .bar .timer.running{padding-left:11px}
-  .bbtn.resetbtn{padding:8px 5px}
+  .bar{gap:8px;padding-left:10px;padding-right:10px}
+  .gbar{gap:6px}
+  .bbtn{padding:10px 10px;font-size:12px;gap:0}
+  .bbtn svg{width:17px;height:17px}
+  .bbtn.navbtn{padding:10px 9px}
+  .bar .timer{font-size:11.5px;padding:6px 9px;min-width:50px}
+  .bar .timer.running{padding-left:13px}
+  .pos{font-size:12px;min-width:38px}
+  .poswrap{gap:4px}
+  .bbtn.fnbtn .bt{display:none}
 }
 /* 中等屏：只隐藏工具类文字，保留翻页/跳未做/清空文字 */
 @media (min-width:561px) and (max-width:820px){
   .bbtn{padding:9px 10px;font-size:12.5px}
-  .bbtn#btnsyl .bt,.bbtn#btnsheet .bt,.bbtn#btnsfx .bt,.bbtn#btntimerreset .bt,.bbtn#btndata .bt{display:none}
+  .bbtn.fnbtn .bt{display:inline}
   .goto{width:54px}
 }
 /* ============ v2：多题型 / 材料题 / 题图 ============ */
@@ -855,27 +904,26 @@ svg{display:block}
   .datarow .mkgo{font-size:12.5px;padding:10px 0}
 }
 @media (max-width:380px){
-  .bar{gap:3px;padding-left:4px;padding-right:4px}
-  .gbar{gap:2px}
-  .bbtn{padding:8px 5px}
-  .bbtn.navbtn{padding:8px 4px}
-  .pos{font-size:10.5px;min-width:0;flex:0 1 auto;white-space:nowrap;
+  .bar{gap:6px;padding-left:8px;padding-right:8px}
+  .gbar{gap:5px}
+  .bbtn{padding:10px 9px}
+  .bbtn.navbtn{padding:10px 8px}
+  .pos{font-size:11px;min-width:0;flex:0 1 auto;white-space:nowrap;
     overflow:hidden;text-overflow:ellipsis}
-  .pos b{font-size:11px}
-  .bar .timer{font-size:10px;padding:4px 4px;min-width:38px}
-  .bbtn.resetbtn{padding:8px 4px}
+  .pos b{font-size:11.5px}
+  .bar .timer{font-size:11px;padding:6px 8px;min-width:46px}
 }
 /* 320 级小屏：底栏三组塞不下，缩到只留图标 + 极窄题号 */
 @media (max-width:340px){
-  .bar{gap:2px;padding-left:3px;padding-right:3px}
-  .gbar{gap:1px}
-  .bbtn{padding:8px 4px}
-  .bbtn svg{width:14px;height:14px}
-  .bbtn.navbtn{padding:8px 3px}
-  .bbtn.navbtn svg{width:15px;height:15px}
-  .pos{font-size:10px}
-  .pos b{font-size:10.5px}
-  .bar .timer{font-size:9.5px;padding:4px 3px;min-width:34px;letter-spacing:-.02em}
+  .bar{gap:5px;padding-left:6px;padding-right:6px}
+  .gbar{gap:4px}
+  .bbtn{padding:10px 8px}
+  .bbtn svg{width:16px;height:16px}
+  .bbtn.navbtn{padding:10px 7px}
+  .bbtn.navbtn svg{width:16px;height:16px}
+  .pos{font-size:10.5px}
+  .pos b{font-size:11px}
+  .bar .timer{font-size:10px;padding:6px 6px;min-width:42px;letter-spacing:-.02em}
 }
 @media (max-width:360px){
   .wbmodn{flex-basis:74px;font-size:10.5px}
@@ -957,31 +1005,14 @@ svg{display:block}
 <button class="aifab" id="aifab" title="问 AI 这道题">AI</button>
 
 <footer class="bar">
-  <!-- ===== 左侧工具组 ===== -->
+  <!-- ===== 左侧：功能入口（所有工具收进抽屉）===== -->
   <div class="gbar gleft">
-    <button class="bbtn" id="btnsyl" title="考纲覆盖">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-      <span class="bt">考纲</span>
-    </button>
-    <button class="bbtn" id="btnsheet" title="错题本">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-      <span class="bt">错题本</span>
-      <span class="wbn" id="wbn">0</span>
-    </button>
-    <button class="bbtn" id="btndata" title="进度导出 / 导入">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>
-      <span class="bt">进度</span>
-    </button>
-    <button class="bbtn sound" id="btnsfx" title="音效开关">
-      <svg class="ic-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
-      <svg class="ic-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M22 9l-6 6"/><path d="M16 9l6 6"/></svg>
-      <span class="bt">音效</span>
+    <button class="bbtn fnbtn" id="btnfunc" title="功能面板">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.6"/><rect x="14" y="3" width="7" height="7" rx="1.6"/><rect x="3" y="14" width="7" height="7" rx="1.6"/><rect x="14" y="14" width="7" height="7" rx="1.6"/></svg>
+      <span class="bt">功能</span>
+      <span class="fnbadge" id="fnbadge"></span>
     </button>
     <button class="timer" id="timer" title="点一下开始计时">0:00</button>
-    <button class="bbtn resetbtn" id="btntimerreset" title="总计时清零">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
-      <span class="bt">清零</span>
-    </button>
   </div>
 
   <!-- ===== 中间：翻页主控 ===== -->
@@ -1001,16 +1032,17 @@ svg{display:block}
     </button>
   </div>
 
-  <!-- ===== 右侧：跳未做 / 清空 ===== -->
-  <div class="gbar gright">
-    <button class="bbtn" id="btnundone" title="跳到当前筛选里第一道还没做的题">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>
-      <span class="bt">跳未做</span>
-    </button>
-    <button class="bbtn" id="btnclear" title="清空当前科目的答题记录（不可撤销）">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-      <span class="bt">清空</span>
-    </button>
+
+  <!-- 隐藏的兼容按钮：旧逻辑绑定这些 id，功能面板通过 .onclick() 触发 -->
+  <div class="hidden-btns" aria-hidden="true">
+    <button type="button" id="btnsyl"></button>
+    <button type="button" id="btnsheet"></button>
+    <button type="button" id="btndata"></button>
+    <button type="button" id="btnmock"></button>
+    <button type="button" id="btnundone"></button>
+    <button type="button" id="btnsfx"></button>
+    <button type="button" id="btntimerreset"></button>
+    <button type="button" id="btnclear"></button>
   </div>
 </footer>
 
@@ -1060,6 +1092,56 @@ svg{display:block}
       </button>
     </div>
     <div class="slist" id="datalist"></div>
+  </div>
+</div>
+
+<!-- ===== 功能面板 ===== -->
+<div class="sheet" id="funcsheet">
+  <div class="spanel">
+    <div class="sgrab"></div>
+    <div class="shead">
+      <h2>功能</h2>
+      <span class="st" id="funcstat"></span>
+      <button id="funcclose" aria-label="关闭">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="fnwrap" id="fnwrap">
+      <button class="fnitem" data-fn="syl">
+        <span class="fnic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
+        <span class="fnlb">考纲覆盖</span>
+      </button>
+      <button class="fnitem" data-fn="wrong">
+        <span class="fnic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>
+        <span class="fnlb">错题本</span>
+        <span class="fnn" id="fnWrongN">0</span>
+      </button>
+      <button class="fnitem" data-fn="data">
+        <span class="fnic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg></span>
+        <span class="fnlb">进度导入导出</span>
+      </button>
+      <button class="fnitem" data-fn="mock">
+        <span class="fnic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15l2 2 4-4"/></svg></span>
+        <span class="fnlb">模拟卷</span>
+      </button>
+      <button class="fnitem" data-fn="undone">
+        <span class="fnic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg></span>
+        <span class="fnlb">跳到未做</span>
+      </button>
+      <button class="fnitem" data-fn="sfx">
+        <span class="fnic"><span id="fnSfxIcon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></span></span>
+        <span class="fnlb">音效</span>
+        <span class="fnst" id="fnSfxSt">开</span>
+      </button>
+      <button class="fnitem" data-fn="timer">
+        <span class="fnic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+        <span class="fnlb">计时清零</span>
+      </button>
+      <button class="fnitem danger" data-fn="clear">
+        <span class="fnic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></span>
+        <span class="fnlb">清空本科</span>
+      </button>
+    </div>
   </div>
 </div>
 <input type="file" id="datafile" accept=".json,application/json" style="display:none">
@@ -3097,6 +3179,107 @@ function openDataSheet(){
   }
 })();
 
+/* ==================== 功能面板（底栏收纳） ==================== */
+(function(){
+  var sheet=document.getElementById('funcsheet');
+  var btn=document.getElementById('btnfunc');
+  if(!sheet||!btn)return;
+
+  function close(){sheet.classList.remove('show');}
+  function open(){refresh();sheet.classList.add('show');}
+  document.getElementById('funcclose').onclick=close;
+  sheet.addEventListener('click',function(e){if(e.target===sheet)close();});
+
+  /* 小红点：错题数 */
+  function refresh(){
+    var n=0;
+    try{
+      if(typeof S!=='undefined'&&S&&S.wrong){n=Object.keys(S.wrong).length;}
+    }catch(e){}
+    var b1=document.getElementById('fnWrongN');
+    if(b1){b1.textContent=n>99?'99+':n;b1.className='fnn'+(n?' show':'');}
+    var b2=document.getElementById('fnbadge');
+    if(b2){b2.textContent=n>99?'99+':n;b2.className='fnbadge'+(n?' show':'');}
+    var st=document.getElementById('funcstat');
+    if(st){
+      var done=0,total=0;
+      try{
+        if(typeof S!=='undefined'&&S&&S.done)done=Object.keys(S.done).length;
+        if(typeof BANK!=='undefined'&&BANK)total=BANK.length;
+      }catch(e){}
+      st.textContent=done+' / '+total+' 已做';
+    }
+    var sfxSt=document.getElementById('fnSfxSt');
+    if(sfxSt){
+      var on=true;
+      try{on=!(typeof SFX!=='undefined'&&SFX&&SFX.off);}catch(e){}
+      sfxSt.textContent=on?'开':'关';
+    }
+  }
+
+  /* 点按钮 → 触发原来的处理逻辑 */
+  function fire(id){
+    var el=document.getElementById(id);
+    if(el&&typeof el.onclick==='function'){el.onclick();return true;}
+    return false;
+  }
+
+  document.getElementById('fnwrap').addEventListener('click',function(e){
+    var item=e.target.closest('.fnitem');
+    if(!item)return;
+    var fn=item.dataset.fn;
+
+    if(fn==='syl'){
+      close();
+      if(!fire('btnsyl')){ if(typeof openSylSheet==='function')openSylSheet(); }
+      return;
+    }
+    if(fn==='wrong'){
+      close();
+      if(!fire('btnsheet'))toast('错题本打不开');
+      return;
+    }
+    if(fn==='data'){
+      close();
+      if(!fire('btndata'))toast('进度面板打不开');
+      return;
+    }
+    if(fn==='mock'){
+      close();
+      if(!fire('btnmock'))toast('模拟卷打不开');
+      return;
+    }
+    if(fn==='undone'){
+      close();
+      if(!fire('btnundone'))toast('功能按钮缺失');
+      return;
+    }
+    if(fn==='sfx'){
+      close();
+      if(!fire('btnsfx'))toast('音效按钮缺失');
+      return;
+    }
+    if(fn==='timer'){
+      close();
+      if(!fire('btntimerreset'))toast('清零按钮缺失');
+      return;
+    }
+    if(fn==='clear'){
+      close();
+      if(!fire('btnclear'))toast('清空按钮缺失');
+      return;
+    }
+  });
+
+  btn.onclick=function(){
+    if(typeof SFX!=='undefined'&&SFX&&SFX.tap)SFX.tap();
+    if(sheet.classList.contains('show'))close();else open();
+  };
+
+  refresh();
+  window.FUNCSHEET={open:open,close:close,refresh:refresh};
+})();
+
 /* ==================== AI 问答 v2（自动识别当前题目）==================== */
 (function(){
   var CFG_LS='dshdz_ai_cfg';
@@ -3125,7 +3308,7 @@ function openDataSheet(){
     ['minimax/MiniMax-M3.1-Flash','MiniMax-M3.1F'],
     ['raccoon/sn-glm-5-3-flash','GLM-5.3F 商汤'],
     ['our-free-model/combo:recommended-free','推荐免费组（降级链）'],
-    ['__zhipu__','智谱 GLM-4-Flash（官方直连）']
+    ['__zhipu__','智谱直连（浏览器不支持）']
   ];
 
   var logEl=document.getElementById('ailog');
@@ -3423,6 +3606,7 @@ function openDataSheet(){
     selEl.onchange=function(){
       var v=selEl.value;
       if(v==='__zhipu__'){
+        toast('智谱官方接口不支持浏览器跨域直连，此选项仅作备用');
         if(!getZpKey()){
           var k=prompt('智谱 API Key\n\n获取地址：https://open.bigmodel.cn/usercenter/apikeys','');
           if(k===null||!k.trim()){buildSel();return;}
@@ -3584,7 +3768,15 @@ function openDataSheet(){
       if(bubble.parentNode)bubble.parentNode.removeChild(bubble);
       var m=String(err&&err.message||err);
       if(m.indexOf('Failed to fetch')>=0||m.indexOf('NetworkError')>=0){
-        addErr('连不上本地网关。确认 dsh 里 our-free-model 插件开着，或在下拉里换成「智谱 GLM-4-Flash（官方直连）」。');
+        if(isZhipu()){
+          addErr('智谱官方接口不允许浏览器跨域直连（它的 OPTIONS 预检不带 CORS 头，这是智谱服务端的限制，不是本机问题）。'
+            +'请在下拉里切回任一「本地网关」模型——所有模型都走本机 127.0.0.1:8326，速度也快得多。');
+        }else{
+          const tip=location.protocol==='https:'
+            ? '浏览器禁止 HTTPS 页面访问 HTTP 本地端口（混合内容拦截）。改用 http://127.0.0.1:8326 打开本页，或在 Chrome 里对该地址「允许不安全内容」。'
+            : '确认 dsh 里 our-free-model 插件开着，且「本地转发」监听在 '+cfg.url+'。';
+          addErr('连不上本地网关 '+cfg.url+'。'+tip);
+        }
       }else{
         addErr(m);
       }
