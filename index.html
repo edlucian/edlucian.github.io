@@ -505,6 +505,38 @@ svg{display:block}
 .sheet.show .spanel{transform:translateY(0)}
 /* 隐藏的兼容按钮容器 */
 .hidden-btns{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;pointer-events:none;opacity:0}
+/* 打字音设置 */
+.typwrap{padding:14px 18px calc(20px + env(safe-area-inset-bottom));overflow-y:auto}
+.typrow{display:flex;align-items:center;gap:12px;margin-bottom:13px}
+.typlb{font-size:12.5px;color:var(--sub);flex:0 0 auto;min-width:38px}
+.typlb2{font-size:12.5px;color:var(--sub);margin:16px 0 9px}
+.typseg{display:flex;gap:0;border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden}
+.typseg button{
+  font-family:inherit;font-size:12px;cursor:pointer;padding:7px 13px;
+  background:var(--card);border:none;border-right:1px solid var(--line);color:var(--sub);
+  transition:background .15s,color .15s;
+}
+.typseg button:last-child{border-right:none}
+.typseg button:hover{background:var(--hover);color:var(--ink)}
+.typseg button.on{background:var(--acc);color:#1C1B19;font-weight:600}
+.typgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.typbtn{
+  font-family:inherit;font-size:11.5px;cursor:pointer;padding:9px 4px;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);
+  color:var(--sub);transition:background .15s,color .15s,border-color .15s;
+  text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.typbtn:hover{background:var(--hover);color:var(--ink)}
+.typbtn:active{transform:scale(.96)}
+.typbtn.on{background:var(--acc-soft);border-color:var(--acc-line);color:var(--acc);font-weight:600}
+.typhint{font-size:11.5px;color:var(--dim);margin-top:14px;line-height:1.6}
+.typhint b{color:var(--acc)}
+@media (max-width:430px){
+  .typwrap{padding:12px 12px calc(16px + env(safe-area-inset-bottom))}
+  .typgrid{grid-template-columns:repeat(3,1fr);gap:6px}
+  .typbtn{font-size:11px;padding:8px 3px}
+  .typseg button{padding:7px 9px;font-size:11.5px}
+}
 /* 同步状态栏 */
 .syncbox{padding:0 18px calc(18px + env(safe-area-inset-bottom))}
 .syncrow{
@@ -1119,6 +1151,41 @@ svg{display:block}
   </div>
 </div>
 
+
+<!-- ===== 打字音设置 ===== -->
+<div class="sheet" id="typsheet">
+  <div class="spanel">
+    <div class="sgrab"></div>
+    <div class="shead">
+      <h2>打字音</h2>
+      <span class="st" id="typstat"></span>
+      <button id="typclose" aria-label="关闭">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="typwrap">
+      <div class="typrow">
+        <span class="typlb">开关</span>
+        <div class="typseg" id="typOnOff">
+          <button data-v="1">开</button>
+          <button data-v="0">关</button>
+        </div>
+      </div>
+      <div class="typrow">
+        <span class="typlb">节流</span>
+        <div class="typseg" id="typThr">
+          <button data-v="1">每字</button>
+          <button data-v="2">每2字</button>
+          <button data-v="3">每3字</button>
+          <button data-v="4">每4字</button>
+        </div>
+      </div>
+      <div class="typlb2">选音色（点一下试听）</div>
+      <div class="typgrid" id="typGrid"></div>
+      <div class="typhint">当前：<b id="typCur">棉花糖</b> · 只在 AI 回复时响，做题不受影响</div>
+    </div>
+  </div>
+</div>
 <!-- ===== 功能面板 ===== -->
 <div class="sheet" id="funcsheet">
   <div class="spanel">
@@ -1165,6 +1232,11 @@ svg{display:block}
         <span class="fnic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-9 9 9 9 0 0 1-8.5-6"/><path d="M3 12a9 9 0 0 1 9-9 9 9 0 0 1 8.5 6"/><path d="M3 4v4h4"/><path d="M21 20v-4h-4"/></svg></span>
         <span class="fnlb">云端同步</span>
         <span class="fnst" id="fnSyncSt">关</span>
+      </button>
+      <button class="fnitem" data-fn="typsfx">
+        <span class="fnic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19v3"/><path d="M5 16V8a7 7 0 0 1 14 0v8"/><rect x="3" y="16" width="18" height="4" rx="2"/></svg></span>
+        <span class="fnlb">打字音</span>
+        <span class="fnst" id="fnTypeSt">棉花糖</span>
       </button>
       <button class="fnitem danger" data-fn="clear">
         <span class="fnic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></span>
@@ -1250,6 +1322,10 @@ var _liveFrom=null;/* 本次学习会话起点 */
 var SFX=(function(){
   var ctx=null, master=null, on=true, unlocked=false;
   try{on=localStorage.getItem('dshdz_sfx')!=='0';}catch(e){}
+  var _prefTypeOn=true,_prefTypeId='marsh',_prefTypeThr=2;
+  try{_prefTypeOn=localStorage.getItem('dshdz_typsfx')!=='0';}catch(e){}
+  try{_prefTypeId=localStorage.getItem('dshdz_typsfx_id')||'marsh';}catch(e){}
+  try{_prefTypeThr=parseInt(localStorage.getItem('dshdz_typsfx_thr'),10)||2;}catch(e){}
   function ac(){
     if(!ctx){
       var AC=window.AudioContext||window.webkitAudioContext;
@@ -1298,6 +1374,59 @@ var SFX=(function(){
     g.connect(master);src.start(c.currentTime+t0);
   }
 
+  /* 低通噪声（棉花糖等软音） */
+  function typeNoise(dur,vol,cutoff){
+    var c=ac();if(!c||!on)return;
+    var n=Math.max(1,Math.floor(c.sampleRate*dur));
+    var buf=c.createBuffer(1,n,c.sampleRate),d=buf.getChannelData(0);
+    for(var i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,1.6);
+    var src=c.createBufferSource();src.buffer=buf;
+    var f=c.createBiquadFilter();f.type='lowpass';f.frequency.value=cutoff||800;
+    var g=c.createGain();g.gain.value=vol==null?0.25:vol;
+    src.connect(f);f.connect(g);g.connect(master);
+    src.start(c.currentTime);
+  }
+  /* 带通噪声 */
+  function typeBand(dur,vol,freq,q){
+    var c=ac();if(!c||!on)return;
+    var n=Math.max(1,Math.floor(c.sampleRate*dur));
+    var buf=c.createBuffer(1,n,c.sampleRate),d=buf.getChannelData(0);
+    for(var i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,1.6);
+    var src=c.createBufferSource();src.buffer=buf;
+    var f=c.createBiquadFilter();f.type='bandpass';f.frequency.value=freq||2400;f.Q.value=q||4;
+    var g=c.createGain();g.gain.value=vol==null?0.2:vol;
+    src.connect(f);f.connect(g);g.connect(master);
+    src.start(c.currentTime);
+  }
+  /* 拍频双音（风铃） */
+  function typeChime(){
+    var c=ac();if(!c||!on)return;
+    var g=c.createGain();
+    g.gain.setValueAtTime(0.0001,c.currentTime);
+    g.gain.linearRampToValueAtTime(0.10,c.currentTime+0.006);
+    g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+0.050);
+    [1480,1487].forEach(function(f){
+      var o=c.createOscillator();o.type='sine';o.frequency.value=f;
+      o.connect(g);o.start(c.currentTime);o.stop(c.currentTime+0.07);
+    });
+    g.connect(master);
+  }
+  /* 扫频带通（翻书页） */
+  function typePaper(){
+    var c=ac();if(!c||!on)return;
+    var dur=0.032;
+    var n=Math.max(1,Math.floor(c.sampleRate*dur));
+    var buf=c.createBuffer(1,n,c.sampleRate),d=buf.getChannelData(0);
+    for(var i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,1.6);
+    var src=c.createBufferSource();src.buffer=buf;
+    var f=c.createBiquadFilter();f.type='bandpass';f.Q.value=1.2;
+    f.frequency.setValueAtTime(1200,c.currentTime);
+    f.frequency.exponentialRampToValueAtTime(4200,c.currentTime+dur);
+    var g=c.createGain();g.gain.value=0.20;
+    src.connect(f);f.connect(g);g.connect(master);
+    src.start(c.currentTime);
+  }
+
   /* ---------- 具体音色 ---------- */
   var API={
     /* 答对：上行两声「叮—叮」，清脆悦耳 */
@@ -1335,8 +1464,56 @@ var SFX=(function(){
       tone(700,0,0.06,'sine',0.24);
       tone(1050,0.06,0.1,'sine',0.2);
     },
+    /* ---------- AI 打字音（19 个方案）---------- */
+    _typeOn:true,
+    _typeId:'marsh',
+    _typeThr:2,
+    _typeCnt:0,
+    setTypeOn:function(v){API._typeOn=!!v;try{localStorage.setItem('dshdz_typsfx',API._typeOn?'1':'0');}catch(e){}},
+    isTypeOn:function(){return API._typeOn;},
+    setTypeId:function(id){API._typeId=id;try{localStorage.setItem('dshdz_typsfx_id',id);}catch(e){}},
+    getTypeId:function(){return API._typeId;},
+    setTypeThr:function(n){API._typeThr=Math.max(1,Math.min(5,Math.floor(n)||2));try{localStorage.setItem('dshdz_typsfx_thr',API._typeThr);}catch(e){}},
+    getTypeThr:function(){return API._typeThr;},
+    typeIds:['drop','mech','typewriter','bubble','wood','sand','beep','bell','cork','glass','marsh','radio','porcelain','beak','heart','static','chime','paper','coin'],
+    typeNames:{drop:'水滴',mech:'机械键盘',typewriter:'打字机',bubble:'气泡',wood:'木鱼',sand:'细沙',beep:'电子哔',bell:'钟琴',cork:'软木塞',glass:'玻璃弹珠',marsh:'棉花糖',radio:'老收音机',porcelain:'瓷碗',beak:'鸟喙',heart:'心跳',static:'静电',chime:'风铃',paper:'翻书页',coin:'硬币落'},
+    /* 收到一个字符就调一次，内部按节流计数 */
+    type:function(){
+      if(!API._typeOn)return;
+      API._typeCnt++;
+      if(API._typeCnt<API._typeThr)return;
+      API._typeCnt=0;
+      API.playType(API._typeId);
+    },
+    playType:function(id){
+      if(!on)return;
+      var c=ac();if(!c)return;
+      switch(id){
+        case 'drop': tone(1100,0,0.030,'sine',0.30,620); break;
+        case 'mech': noise(0,0.014,0.22,3200); tone(190,0,0.022,'triangle',0.16,130); break;
+        case 'typewriter': noise(0,0.011,0.24,4200); tone(980,0,0.018,'square',0.09,760); tone(2400,0.006,0.008,'sine',0.05); break;
+        case 'bubble': tone(560,0,0.026,'sine',0.26,1250); break;
+        case 'wood': tone(740,0,0.020,'triangle',0.28,520); noise(0,0.009,0.10,2600); break;
+        case 'sand': noise(0,0.012,0.16,4500); break;
+        case 'beep': tone(880,0,0.015,'square',0.13); break;
+        case 'bell': tone(1320,0,0.040,'sine',0.24); tone(2640,0,0.026,'sine',0.10); break;
+        case 'cork': typeNoise(0.016,0.14,1800); tone(320,0,0.018,'sine',0.10,200); break;
+        case 'glass': tone(1850,0,0.016,'sine',0.22); tone(3700,0,0.010,'sine',0.06); break;
+        case 'marsh': typeNoise(0.024,0.30,800); break;
+        case 'radio': typeBand(0.013,0.20,2400,4); tone(420,0,0.015,'triangle',0.10,300); break;
+        case 'porcelain': tone(1560,0,0.022,'triangle',0.20); tone(3120,0,0.012,'sine',0.07); break;
+        case 'beak': tone(1400,0,0.012,'sine',0.24,2300); noise(0,0.006,0.10,5000); break;
+        case 'heart': tone(68,0,0.045,'sine',0.30,48); tone(68,0.055,0.040,'sine',0.18,44); break;
+        case 'static': noise(0,0.008,0.16,6000); noise(Math.random()*0.008,0.004,0.10,7000); break;
+        case 'chime': typeChime(); break;
+        case 'paper': typePaper(); break;
+        case 'coin': tone(2200,0,0.008,'square',0.10); tone(3300,0.012,0.014,'sine',0.13,2600); break;
+        default: typeNoise(0.024,0.30,800);
+      }
+    },
     unlock:unlock, setOn:setOn, isOn:isOn
   };
+  API._typeOn=_prefTypeOn;API._typeId=_prefTypeId;API._typeThr=_prefTypeThr;
   return API;
 })();
 function pad2(n){return (n<10?'0':'')+n;}
@@ -3209,6 +3386,83 @@ function openDataSheet(){
   }
 })();
 
+/* ==================== 打字音设置面板 ==================== */
+function openTypeSfxSheet(){
+  var sh=document.getElementById('typsheet');
+  if(!sh)return;
+  renderTypeSfx();
+  sh.classList.add('show');
+}
+function renderTypeSfx(){
+  if(typeof SFX==='undefined'||!SFX||!SFX.typeIds)return;
+  var cur=SFX.getTypeId?SFX.getTypeId():'marsh';
+  var isOn=SFX.isTypeOn?SFX.isTypeOn():true;
+  var thr=SFX.getTypeThr?SFX.getTypeThr():2;
+
+  /* 开关段 */
+  var segOn=document.getElementById('typOnOff');
+  if(segOn){
+    Array.prototype.forEach.call(segOn.querySelectorAll('button'),function(b){
+      b.classList.toggle('on',(b.dataset.v==='1')===isOn);
+      b.onclick=function(){
+        SFX.setTypeOn(b.dataset.v==='1');
+        if(typeof SFX.unlock==='function')SFX.unlock();
+        renderTypeSfx();
+        toast(b.dataset.v==='1'?'打字音已开':'打字音已关');
+      };
+    });
+  }
+
+  /* 节流段 */
+  var segThr=document.getElementById('typThr');
+  if(segThr){
+    Array.prototype.forEach.call(segThr.querySelectorAll('button'),function(b){
+      b.classList.toggle('on',+b.dataset.v===thr);
+      b.onclick=function(){
+        SFX.setTypeThr(+b.dataset.v);
+        renderTypeSfx();
+      };
+    });
+  }
+
+  /* 音色网格 */
+  var grid=document.getElementById('typGrid');
+  if(grid){
+    grid.innerHTML='';
+    SFX.typeIds.forEach(function(id){
+      var b=document.createElement('button');
+      b.className='typbtn'+(id===cur?' on':'');
+      b.textContent=SFX.typeNames[id]||id;
+      b.onclick=function(){
+        SFX.setTypeId(id);
+        if(typeof SFX.unlock==='function')SFX.unlock();
+        /* 连响 3 下试听 */
+        SFX.playType(id);
+        setTimeout(function(){SFX.playType(id);},140);
+        setTimeout(function(){SFX.playType(id);},280);
+        cur=id;
+        renderTypeSfx();
+      };
+      grid.appendChild(b);
+    });
+  }
+
+  var curEl=document.getElementById('typCur');
+  if(curEl)curEl.textContent=SFX.typeNames[cur]||cur;
+  var st=document.getElementById('typstat');
+  if(st)st.textContent=isOn?('每 '+thr+' 字'):'已关闭';
+  var badge=document.getElementById('fnTypeSt');
+  if(badge){badge.textContent=isOn?(SFX.typeNames[cur]||cur):'关';badge.style.color=isOn?'var(--ok)':'';}
+}
+(function(){
+  var sh=document.getElementById('typsheet');
+  if(!sh)return;
+  var c=document.getElementById('typclose');
+  if(c)c.onclick=function(){sh.classList.remove('show');};
+  sh.addEventListener('click',function(e){if(e.target===sh)sh.classList.remove('show');});
+  renderTypeSfx();
+})();
+
 /* ==================== 功能面板（底栏收纳） ==================== */
 (function(){
   var sheet=document.getElementById('funcsheet');
@@ -3292,6 +3546,11 @@ function openDataSheet(){
     if(fn==='timer'){
       close();
       if(!fire('btntimerreset'))toast('清零按钮缺失');
+      return;
+    }
+    if(fn==='typsfx'){
+      close();
+      openTypeSfxSheet();
       return;
     }
     if(fn==='sync'){
@@ -3775,6 +4034,12 @@ function openDataSheet(){
           if(d.content){
             if(!acc)onFirst();
             acc+=d.content;
+            /* 打字音：按新增字符数触发，节流在 SFX.type 内部处理 */
+            try{
+              if(typeof SFX!=='undefined'&&SFX&&SFX.type){
+                for(var _ci=0;_ci<d.content.length;_ci++)SFX.type();
+              }
+            }catch(e){}
             onDelta(acc);
           }
         }catch(e){}
