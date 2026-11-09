@@ -344,6 +344,49 @@ svg{display:block}
 }
 .aimsg.me .aibubble{background:var(--acc-soft);border:1px solid var(--acc-line);color:var(--ink)}
 .aimsg.ai .aibubble{background:var(--card);border:1px solid var(--line);color:var(--ink)}
+/* 题目卡片 */
+.aiqcard{
+  border:1px solid var(--line);border-radius:var(--r-md);
+  background:var(--card);padding:12px 14px;
+  display:flex;flex-direction:column;gap:9px;
+  flex:0 0 auto;
+}
+.aiqhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.aiqmod{
+  font-size:11px;color:var(--dim);letter-spacing:.02em;
+  max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.aiqbadge{
+  font-size:10.5px;padding:1px 7px;border-radius:999px;
+  border:1px solid var(--line);color:var(--dim);flex:0 0 auto;
+}
+.aiqbadge.ok{color:var(--ok);border-color:var(--ok-deep);background:var(--ok-soft)}
+.aiqbadge.bad{color:var(--bad);border-color:var(--bad-deep);background:var(--bad-soft)}
+.aiqstem{font-size:13.5px;line-height:1.65;color:var(--ink);word-break:break-word}
+.aiqopts{display:flex;flex-direction:column;gap:5px}
+.aiqopt{
+  display:flex;gap:8px;align-items:flex-start;
+  font-size:12.5px;line-height:1.5;color:var(--sub);
+  padding:4px 8px;border-radius:var(--r-sm);border:1px solid transparent;
+}
+.aiqopt i{
+  font-style:normal;flex:0 0 auto;width:15px;
+  color:var(--dim);font-weight:600;
+}
+.aiqopt.right{color:var(--ok);border-color:var(--ok-deep);background:var(--ok-soft)}
+.aiqopt.right i{color:var(--ok)}
+.aiqopt.minewrong{color:var(--bad);border-color:var(--bad-deep);background:var(--bad-soft)}
+.aiqopt.minewrong i{color:var(--bad)}
+.aiqfoot{
+  display:flex;gap:12px;flex-wrap:wrap;
+  font-size:11.5px;color:var(--dim);
+  border-top:1px solid var(--line);padding-top:8px;
+}
+.aiqans{color:var(--ok);font-weight:600}
+.aiqmine{color:var(--dim)}
+/* 开场白 + 快捷问题 */
+.aiintro{display:flex;flex-direction:column;gap:9px;flex:0 0 auto}
+.aiintro-txt{font-size:13.5px;line-height:1.6;color:var(--ink)}
 .aierr{color:var(--bad);font-size:12.5px;padding:6px 0}
 /* 快捷问题按钮 */
 .aiquick{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}
@@ -3054,13 +3097,12 @@ function openDataSheet(){
   }
 })();
 
-/* ==================== AI 问答（本地网关 / 智谱 双通道）==================== */
+/* ==================== AI 问答 v2（自动识别当前题目）==================== */
 (function(){
   var CFG_LS='dshdz_ai_cfg';
   var ZK_LS='dshdz_zhipu_key';
   var HIST_LS='dshdz_ai_hist';
 
-  /* 默认走本机 our-free-model 网关（127.0.0.1:8326），不经过任何第三方 */
   var DEF={
     ch:'local',
     url:'http://127.0.0.1:8326',
@@ -3098,37 +3140,247 @@ function openDataSheet(){
   var hist=[];
   var busy=false;
   var cfg=loadCfg();
+  var lastQKey=null;     /* 上次渲染卡片对应哪道题 */
+  var cardEl=null;       /* 题目卡片（常驻第一条） */
+  var introEl=null;      /* 开场白 + 快捷按钮（常驻第二条） */
 
   /* ---------- 配置 ---------- */
   function loadCfg(){
-    var c={};
-    for(var k in DEF)c[k]=DEF[k];
+    var c={};for(var k in DEF)c[k]=DEF[k];
     try{
       var s=localStorage.getItem(CFG_LS);
       if(s){var o=JSON.parse(s);for(var k2 in o){if(o[k2]!==undefined&&o[k2]!==null)c[k2]=o[k2];}}
     }catch(e){}
     return c;
   }
-  function saveCfg(){
-    try{localStorage.setItem(CFG_LS,JSON.stringify(cfg));}catch(e){}
-  }
-  function getZpKey(){
-    try{return localStorage.getItem(ZK_LS)||'';}catch(e){return '';}
-  }
-  function setZpKey(k){
-    try{localStorage.setItem(ZK_LS,k);}catch(e){}
-  }
+  function saveCfg(){try{localStorage.setItem(CFG_LS,JSON.stringify(cfg));}catch(e){}}
+  function getZpKey(){try{return localStorage.getItem(ZK_LS)||'';}catch(e){return '';}}
+  function setZpKey(k){try{localStorage.setItem(ZK_LS,k);}catch(e){}}
   function isZhipu(){return cfg.ch==='zhipu';}
   function endpoint(){
     return isZhipu()
       ? 'https://open.bigmodel.cn/api/paas/v4/chat/completions'
       : cfg.url.replace(/\/+$/,'')+'/v1/chat/completions';
   }
-  function modelId(){
-    return isZhipu() ? 'glm-4-flash' : cfg.model;
+  function modelId(){return isZhipu()?'glm-4-flash':cfg.model;}
+
+  /* ---------- 取当前题目 ---------- */
+  function curQ(){
+    try{
+      if(typeof BANK==='undefined'||!BANK||!BANK.length)return null;
+      if(typeof order==='undefined'||!order||!order.length)return null;
+      return BANK[order[idx]]||null;
+    }catch(e){return null;}
+  }
+  function qKeyOf(q){
+    try{return q.id!=null?('id:'+q.id):((q.c||'')+'-'+(q.n||''));}catch(e){return '';}
+  }
+  /* 已作答信息：{done:bool, user:string, right:bool} */
+  function qState(q){
+    var st={done:false,user:'',right:false};
+    try{
+      if(!q||typeof S==='undefined'||!S||!S.done)return st;
+      var k=(typeof key==='function')?key(q):qKeyOf(q);
+      if(q.ch&&q.ch.length)return st;           /* 材料题父题不单独判 */
+      var u=S.done[k];
+      if(u===undefined||u===null||u==='')return st;
+      st.done=true;st.user=String(u);
+      var t=q.a||'';
+      if(q.t==='填空题'&&q.ak&&typeof fillRight==='function'){
+        st.right=fillRight(Array.isArray(u)?u:[u],q.ak);
+      }else if(typeof isRight==='function'){
+        st.right=isRight(u,t);
+      }
+      if(!st.right && S.wrong && S.wrong[k]!=null)st.wrongCnt=S.wrong[k];
+    }catch(e){}
+    return st;
+  }
+  function optsOf(q){
+    var o=q&&q.o;
+    if(!o)return [];
+    if(Array.isArray(o))return o;
+    if(typeof o==='string')return o.split('|');
+    try{return Object.keys(o).sort().map(function(k){return o[k];});}catch(e){return [];}
+  }
+  function answerText(q){
+    try{return (typeof ansText==='function')?ansText(q):String(q.a||'');}catch(e){return '';}
   }
 
-  /* ---------- 渲染 ---------- */
+  /* ---------- 题目卡片 ---------- */
+  function buildCard(){
+    var q=curQ();
+    if(!q){
+      if(cardEl){cardEl.remove();cardEl=null;}
+      return null;
+    }
+    var kk=qKeyOf(q);
+    var st=qState(q);
+
+    var wrap=document.createElement('div');
+    wrap.className='aiqcard';
+
+    var head=document.createElement('div');
+    head.className='aiqhead';
+    var mod=document.createElement('span');
+    mod.className='aiqmod';
+    mod.textContent=(q.mn||'')+' · '+(q.t||'单选');
+    head.appendChild(mod);
+    var badge=document.createElement('span');
+    badge.className='aiqbadge '+(st.done?(st.right?'ok':'bad'):'none');
+    badge.textContent=st.done?(st.right?'已答对':'已答错'):'未作答';
+    head.appendChild(badge);
+    wrap.appendChild(head);
+
+    var stem=document.createElement('div');
+    stem.className='aiqstem';
+    stem.textContent=String(q.s||'').replace(/\s+/g,' ').trim();
+    wrap.appendChild(stem);
+
+    var opts=optsOf(q);
+    if(opts.length){
+      var ol=document.createElement('div');
+      ol.className='aiqopts';
+      opts.forEach(function(t,i){
+        var row=document.createElement('div');
+        row.className='aiqopt';
+        var letter=String.fromCharCode(65+i);
+        if(st.done){
+          var isAns=String(q.a||'').toUpperCase().indexOf(letter)>=0;
+          var isMine=st.user.toUpperCase().indexOf(letter)>=0;
+          if(isAns)row.classList.add('right');
+          else if(isMine)row.classList.add('minewrong');
+        }
+        var lb=document.createElement('i');lb.textContent=letter;
+        var tx=document.createElement('span');tx.textContent=String(t);
+        row.appendChild(lb);row.appendChild(tx);
+        ol.appendChild(row);
+      });
+      wrap.appendChild(ol);
+    }
+
+    if(st.done){
+      var foot=document.createElement('div');
+      foot.className='aiqfoot';
+      var a=document.createElement('span');
+      a.className='aiqans';
+      a.textContent='正确答案 '+answerText(q);
+      foot.appendChild(a);
+      if(!st.right&&st.user){
+        var m=document.createElement('span');
+        m.className='aiqmine';
+        m.textContent='你的答案 '+st.user;
+        foot.appendChild(m);
+      }
+      if(st.wrongCnt){
+        var w=document.createElement('span');
+        w.className='aiqmine';
+        w.textContent='错过 '+st.wrongCnt+' 次';
+        foot.appendChild(w);
+      }
+      wrap.appendChild(foot);
+    }else if(q.ch&&q.ch.length){
+      var f2=document.createElement('div');
+      f2.className='aiqfoot';
+      f2.textContent='材料题 · 含 '+q.ch.length+' 个小题';
+      wrap.appendChild(f2);
+    }
+
+    /* 状态签名：题目 + 是否作答 + 学生答案 + 错误次数，任一变化就重建 */
+    var sig=kk+'|'+(st.done?'1':'0')+'|'+(st.done?st.user:'')+'|'+(st.right?'1':'0')+'|'+(st.wrongCnt||0);
+    return {el:wrap,key:kk,sig:sig,q:q,st:st};
+  }
+
+  /* 更新卡片（题目变了才重建，否则原地不动） */
+  function syncCard(force){
+    var built=buildCard();
+    if(!built){
+      if(cardEl&&cardEl.parentNode)cardEl.parentNode.removeChild(cardEl);
+      cardEl=null;lastQKey=null;
+      return false;
+    }
+    if(cardEl&&cardEl.parentNode&&!force&&lastQKey===built.sig){
+      return false;                      /* 题目和作答状态都没变，不动 */
+    }
+    if(cardEl&&cardEl.parentNode){
+      cardEl.parentNode.replaceChild(built.el,cardEl);
+    }else{
+      logEl.insertBefore(built.el,logEl.firstChild);
+    }
+    cardEl=built.el;
+    lastQKey=built.sig;
+    return true;
+  }
+
+  /* ---------- 开场白（AI 主动问）---------- */
+  function introText(q,st){
+    if(!q)return '现在没有打开的题目。有什么想问的直接说。';
+    var t=q.t||'单选';
+    if(q.ch&&q.ch.length)return '这是道材料题，一共 '+q.ch.length+' 个小题。要我帮你先理一下材料，还是逐个讲？';
+    if(st.done&&!st.right)return '这题答错了。想听正确的怎么推，还是先说说你当时怎么想的？';
+    if(st.done&&st.right)return '这题对了。要我讲透背后的考点，还是看看容易混淆的兄弟题？';
+    if(t==='判断题')return '这题还没作答。要我给个提示先自己判断，还是直接讲？';
+    return '关于这道题有什么需要讲解的？';
+  }
+  function quickList(q,st){
+    var a=[];
+    if(q&&q.ch&&q.ch.length){
+      a.push('帮我理一下这段材料说了什么');
+      a.push('这题考的是哪个考点');
+    }else if(st.done&&!st.right){
+      a.push('正确答案为什么对，其他选项错在哪');
+      a.push('我是怎么掉进坑里的');
+      a.push('这个考点还有哪些常见考法');
+    }else if(st.done&&st.right){
+      a.push('讲透这道题背后的原理');
+      a.push('这题容易混淆的地方');
+      a.push('出一道类似的题考我');
+    }else{
+      a.push('帮我讲讲这道题，先别直接给答案');
+      a.push('给我一点提示就行');
+      a.push('直接说答案和理由');
+    }
+    a.push('记忆方法');
+    return a;
+  }
+  var lastIntroSig=null;
+  function syncIntro(force){
+    var q=curQ();
+    var st=qState(q);
+    var txt=introText(q,st);
+    var qs=quickList(q,st);
+    var isig=qKeyOf(q)+'|'+(st.done?'1':'0')+'|'+(st.right?'1':'0')+'|'+txt;
+    if(!force&&introEl&&introEl.parentNode&&lastIntroSig===isig)return false;
+    lastIntroSig=isig;
+
+    if(!introEl||!introEl.parentNode){
+      introEl=document.createElement('div');
+      introEl.className='aiintro';
+      if(cardEl&&cardEl.parentNode&&cardEl.nextSibling){
+        logEl.insertBefore(introEl,cardEl.nextSibling);
+      }else{
+        logEl.insertBefore(introEl,logEl.firstChild?logEl.firstChild.nextSibling:null);
+      }
+    }
+    introEl.innerHTML='';
+    var p=document.createElement('div');
+    p.className='aiintro-txt';
+    p.textContent=txt;
+    introEl.appendChild(p);
+
+    var bar=document.createElement('div');
+    bar.className='aiquick';
+    qs.forEach(function(s){
+      var b=document.createElement('button');
+      b.textContent=s.length>14?s.slice(0,14)+'…':s;
+      b.title=s;
+      b.onclick=function(){send(s);};
+      bar.appendChild(b);
+    });
+    introEl.appendChild(bar);
+    return true;
+  }
+
+  /* ---------- 通用渲染 ---------- */
   function addMsg(role,text){
     var d=document.createElement('div');
     d.className='aimsg '+(role==='user'?'me':'ai');
@@ -3147,14 +3399,9 @@ function openDataSheet(){
     logEl.appendChild(d);
     logEl.scrollTop=logEl.scrollHeight;
   }
-  function saveHist(){
-    try{localStorage.setItem(HIST_LS,JSON.stringify(hist.slice(-40)));}catch(e){}
-  }
+  function saveHist(){try{localStorage.setItem(HIST_LS,JSON.stringify(hist.slice(-40)));}catch(e){}}
   function loadHist(){
-    try{
-      var s=localStorage.getItem(HIST_LS);
-      if(s){hist=JSON.parse(s)||[];}
-    }catch(e){hist=[];}
+    try{var s=localStorage.getItem(HIST_LS);if(s)hist=JSON.parse(s)||[];}catch(e){hist=[];}
   }
 
   /* ---------- 模型下拉 ---------- */
@@ -3169,11 +3416,7 @@ function openDataSheet(){
     var want=isZhipu()?'__zhipu__':cfg.model;
     var has=false;
     for(var i=0;i<selEl.options.length;i++){if(selEl.options[i].value===want)has=true;}
-    if(!has){
-      var o2=document.createElement('option');
-      o2.value=want;o2.textContent=want;
-      selEl.appendChild(o2);
-    }
+    if(!has){var o2=document.createElement('option');o2.value=want;o2.textContent=want;selEl.appendChild(o2);}
     selEl.value=want;
   }
   if(selEl){
@@ -3182,15 +3425,14 @@ function openDataSheet(){
       if(v==='__zhipu__'){
         if(!getZpKey()){
           var k=prompt('智谱 API Key\n\n获取地址：https://open.bigmodel.cn/usercenter/apikeys','');
-          if(k===null){buildSel();return;}
-          if(!k.trim()){buildSel();return;}
+          if(k===null||!k.trim()){buildSel();return;}
           setZpKey(k.trim());
         }
         cfg.ch='zhipu';cfg.model='glm-4-flash';
       }else{
         cfg.ch='local';cfg.model=v;
       }
-      saveCfg();updateTag();statEl.textContent='';
+      saveCfg();updateTag();if(statEl)statEl.textContent='';
       toast('已切到 '+selEl.options[selEl.selectedIndex].textContent);
     };
   }
@@ -3201,10 +3443,10 @@ function openDataSheet(){
   /* ---------- 设置 ---------- */
   function openSettings(){
     var box=prompt(
-      'AI 接口设置（每行一项，留空表示不改）\n\n'
-      +'1) 网关地址（当前 '+cfg.url+'）\n'
-      +'2) 网关 Key（当前 '+(cfg.key?cfg.key.slice(0,8)+'…':'未设置')+'）\n\n'
-      +'说明：网关地址是 your-free-model 插件本机转发的 127.0.0.1:8326',
+      'AI 接口设置\n\n'
+      +'当前网关：'+cfg.url+'\n'
+      +'当前模型：'+cfg.model+'\n\n'
+      +'你想改网关地址吗？直接填新的，留空跳过。',
       cfg.url
     );
     if(box===null)return;
@@ -3213,24 +3455,39 @@ function openDataSheet(){
     if(k2&&k2.trim()){cfg.key=k2.trim();saveCfg();toast('网关 Key 已更新');}
   }
 
-  /* ---------- 当前题目上下文 ---------- */
+  /* ---------- 给 AI 的题目上下文 ---------- */
   function currentQuestionCtx(){
-    try{
-      if(typeof BANK==='undefined'||!BANK.length)return '';
-      var q=BANK[order[idx]];
-      if(!q)return '';
-      var opts=(q.o||[]).map(function(t,i){return String.fromCharCode(65+i)+'. '+t;}).join('\n');
-      var ans=q.a||'';
-      return '当前题目：\n'+q.s+'\n'+(opts?opts+'\n':'')
-        +'题型：'+(q.t||'')+'\n'
-        +'正确答案：'+ans+'\n'
-        +(q.ex?'已有解析：'+q.ex+'\n':'');
-    }catch(e){return '';}
+    var q=curQ();
+    if(!q)return '';
+    var st=qState(q);
+    var opts=optsOf(q).map(function(t,i){return String.fromCharCode(65+i)+'. '+t;}).join('\n');
+    var s='当前题目：\n'+String(q.s||'').trim()+'\n';
+    if(opts)s+=opts+'\n';
+    s+='模块：'+(q.mn||'')+'\n题型：'+(q.t||'')+'\n';
+
+    if(q.ch&&q.ch.length){
+      s+='这是一道材料题，含 '+q.ch.length+' 个小题：\n';
+      q.ch.slice(0,8).forEach(function(c,i){
+        s+=(i+1)+') '+String(c.s||'').trim()+'\n';
+        var co=(c.o||[]);
+        if(co.length)s+='   选项：'+co.map(function(t,j){return String.fromCharCode(65+j)+'.'+t;}).join('  ')+'\n';
+        s+='   答案：'+(c.a||'')+'\n';
+      });
+    }else if(st.done){
+      s+='学生已作答：'+st.user+'（'+(st.right?'正确':'错误')+'）\n';
+      s+='正确答案：'+answerText(q)+'\n';
+      if(st.wrongCnt)s+='这题学生已经错过 '+st.wrongCnt+' 次。\n';
+    }else{
+      s+='正确答案：'+answerText(q)+'（学生尚未作答，不要直接念出答案）\n';
+    }
+    if((q.ex||'').trim())s+='题库已有解析：'+String(q.ex).slice(0,400)+'\n';
+    return s;
   }
 
-  /* ---------- 系统提示词（含硬性字数上限）---------- */
+  /* ---------- 系统提示词 ---------- */
   function sysPrompt(){
-    return '你是四川高职单招计算机类考试辅导老师，学生在刷题时向你提问。\n'
+    var q=curQ(),st=qState(q);
+    var base='你是四川高职单招计算机类考试辅导老师，学生在刷题时向你提问。\n'
       +'硬性要求：\n'
       +'1. 总字数严格控制在 200 字以内（含标点）。超了就是不合格。\n'
       +'2. 直接给答案，第一句就是结论。禁止「好的」「很高兴为你解答」这类开场。\n'
@@ -3239,13 +3496,13 @@ function openDataSheet(){
       +'5. 简体中文，可以用短句、分号、序号，不要长篇大论。\n'
       +'6. 与题目无关的问题正常回答，同样 200 字以内。\n'
       +'7. 不要使用 Markdown 加粗或标题符号。\n';
+    if(q&&!st.done&&!(q.ch&&q.ch.length)){
+      base+='8. 学生还没作答这道题。想直接要答案时再给；如果他求提示，只给方向和排除法，别报最终答案。\n';
+    }
+    return base;
   }
 
   /* ---------- 发送 ---------- */
-  async function post(url,headers,body){
-    return fetch(url,{method:'POST',headers:headers,body:JSON.stringify(body)});
-  }
-
   async function send(text){
     if(busy)return;
     if(isZhipu()&&!getZpKey()){
@@ -3262,12 +3519,10 @@ function openDataSheet(){
     hist.push({role:'user',content:text});
     saveHist();
 
-    var holder=addMsg('assistant','');
-    var bubble=holder;
-    var acc='';
-    var think='';
+    var bubble=addMsg('assistant','');
+    var acc='',think='';
     var t0=Date.now();
-    statEl.textContent='思考中…';
+    if(statEl)statEl.textContent='思考中…';
 
     var ctx=currentQuestionCtx();
     var msgs=[{role:'system',content:sysPrompt()+(ctx?'\n'+ctx:'')}].concat(hist.slice(-12));
@@ -3282,7 +3537,7 @@ function openDataSheet(){
     }
 
     try{
-      var resp=await post(endpoint(),headers,body);
+      var resp=await fetch(endpoint(),{method:'POST',headers:headers,body:JSON.stringify(body)});
       if(!resp.ok){
         var errTxt='';
         try{var ej=await resp.json();errTxt=(ej.error&&ej.error.message)||ej.message||JSON.stringify(ej);}
@@ -3291,8 +3546,7 @@ function openDataSheet(){
       }
       var reader=resp.body.getReader();
       var dec=new TextDecoder('utf-8');
-      var buf='';
-      var firstTok=0;
+      var buf='',firstTok=0;
       while(true){
         var r=await reader.read();
         if(r.done)break;
@@ -3308,9 +3562,9 @@ function openDataSheet(){
             var j=JSON.parse(payload);
             var d=j.choices&&j.choices[0]&&j.choices[0].delta;
             if(!d)continue;
-            if(d.reasoning_content){think+=d.reasoning_content;}
+            if(d.reasoning_content)think+=d.reasoning_content;
             if(d.content){
-              if(!firstTok){firstTok=Date.now()-t0;statEl.textContent='首字 '+firstTok+'ms';}
+              if(!firstTok){firstTok=Date.now()-t0;if(statEl)statEl.textContent='首字 '+firstTok+'ms';}
               acc+=d.content;
               bubble.textContent=acc;
               logEl.scrollTop=logEl.scrollHeight;
@@ -3319,23 +3573,22 @@ function openDataSheet(){
         }
       }
       if(!acc){
-        bubble.parentNode.removeChild(bubble);
+        if(bubble.parentNode)bubble.parentNode.removeChild(bubble);
         addErr('没有返回内容'+(think?'（模型只输出了思考过程）':''));
       }else{
         hist.push({role:'assistant',content:acc});
         saveHist();
-        var total=Date.now()-t0;
-        statEl.textContent=(firstTok?'首字 '+firstTok+'ms · ':'')+'总 '+(total/1000).toFixed(1)+'s · '+acc.length+'字';
+        if(statEl)statEl.textContent=(firstTok?'首字 '+firstTok+'ms · ':'')+'总 '+((Date.now()-t0)/1000).toFixed(1)+'s · '+acc.length+'字';
       }
     }catch(err){
       if(bubble.parentNode)bubble.parentNode.removeChild(bubble);
       var m=String(err&&err.message||err);
       if(m.indexOf('Failed to fetch')>=0||m.indexOf('NetworkError')>=0){
-        addErr('连不上本地网关。确认 dsh 里 our-free-model 插件的「本地转发」已开启（127.0.0.1:8326），或在下拉里换成「智谱 GLM-4-Flash（官方直连）」。');
+        addErr('连不上本地网关。确认 dsh 里 our-free-model 插件开着，或在下拉里换成「智谱 GLM-4-Flash（官方直连）」。');
       }else{
         addErr(m);
       }
-      statEl.textContent='失败';
+      if(statEl)statEl.textContent='失败';
       if(m.indexOf('401')>=0)addErr('Key 可能无效，点 ⚙ 重新设置');
     }finally{
       busy=false;sendEl.disabled=false;if(fabEl)fabEl.classList.remove('busy');
@@ -3343,50 +3596,54 @@ function openDataSheet(){
     }
   }
 
-  /* ---------- 事件绑定 ---------- */
+  /* ---------- 事件 ---------- */
   document.getElementById('aiclose').onclick=function(){
     sheetEl.classList.remove('show');
   };
   document.getElementById('aiclear').onclick=function(){
-    if(!confirm('清空当前对话记录？'))return;
-    hist=[];saveHist();logEl.innerHTML='';statEl.textContent='';
+    if(!confirm('清空当前对话记录？\n\n（题目卡片会保留，它跟着当前题目走）'))return;
+    hist=[];saveHist();
+    logEl.innerHTML='';
+    cardEl=null;introEl=null;lastQKey=null;
+    if(statEl)statEl.textContent='';
+    syncCard(true);syncIntro(true);
     toast('对话已清空');
   };
   document.getElementById('aisetup').onclick=function(){openSettings();};
-
   sendEl.onclick=function(){send(inputEl.value);};
-
   inputEl.addEventListener('keydown',function(e){
     if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send(inputEl.value);}
     e.stopPropagation();
   });
 
-  /* 打开面板 */
   fabEl.onclick=function(){
     if(typeof SFX!=='undefined'&&SFX)SFX.unlock();
     sheetEl.classList.add('show');
-    if(!hist.length&&!logEl.children.length){
-      var q=null;
-      try{q=BANK[order[idx]];}catch(e){}
-      var greet='我是刷题助手。';
-      if(isZhipu())greet+='\n\n当前走智谱官方接口。';
-      else greet+='\n\n当前走本机网关，模型 '+cfg.model+'。';
-      if(q)greet+='\n\n这道题：'+String(q.s).slice(0,50)+'\n\n想听讲解直接问，也可以点下面的快捷问题。';
-      addMsg('assistant',greet);
-      var quick=document.createElement('div');
-      quick.className='aiquick';
-      quick.innerHTML='<button data-q="讲讲这道题，正确答案为什么对，其他选项为什么错">讲这道题</button>'
-        +'<button data-q="这个考点还有哪些常见考法">考点拓展</button>'
-        +'<button data-q="给我一个记忆这个知识点的方法">记忆方法</button>';
-      quick.querySelectorAll('button').forEach(function(b){
-        b.onclick=function(){send(b.dataset.q);};
-      });
-      logEl.appendChild(quick);
-    }
+    syncCard(true);
+    syncIntro(true);
+    logEl.scrollTop=0;
     setTimeout(function(){inputEl.focus();},180);
   };
 
-  /* 恢复历史 */
+  /* ---------- 跟着题目走：挂 render ---------- */
+  try{
+    if(typeof window.render==='function'){
+      var _origRender=window.render;
+      window.render=function(){
+        var r=_origRender.apply(this,arguments);
+        try{
+          if(sheetEl&&sheetEl.classList.contains('show')){
+            syncCard(false); syncIntro(false);
+          }else{
+            lastQKey=null;   /* 面板关着，下次打开强制重建 */
+          }
+        }catch(e){}
+        return r;
+      };
+    }
+  }catch(e){}
+
+  /* ---------- 恢复历史 ---------- */
   loadHist();
   if(hist.length){
     hist.forEach(function(m){
@@ -3394,11 +3651,17 @@ function openDataSheet(){
     });
   }
 
-  buildSel();
-  updateTag();
+  buildSel();updateTag();
 
-  window.AI={open:function(t){fabEl.onclick();if(t)setTimeout(function(){send(t);},120);},send:send,cfg:cfg};
+  window.AI={
+    open:function(t){fabEl.onclick();if(t)setTimeout(function(){send(t);},120);},
+    send:send,
+    cfg:cfg,
+    curQ:curQ,
+    refresh:function(){syncCard(true);syncIntro(true);}
+  };
 })();
+
 
 </script>
 </body>
