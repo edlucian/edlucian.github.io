@@ -134,6 +134,7 @@ svg{display:block}
   background:var(--card);color:var(--ink);
   padding:14px 15px;font-size:15px;line-height:1.55;
   transition:background .15s ease,border-color .15s ease;
+  max-width:100%;box-sizing:border-box;overflow-wrap:anywhere;
 }
 .opt:hover{background:var(--hover);border-color:#4A453F}
 .opt:focus-visible{outline:2px solid var(--acc-line);outline-offset:2px}
@@ -145,7 +146,7 @@ svg{display:block}
   transition:background .15s,color .15s,border-color .15s;
 }
 .opt:hover .k{border-color:var(--line)}
-.opt .t{min-width:0;word-break:break-word;padding-top:2px}
+.opt .t{flex:1 1 auto;min-width:0;word-break:break-word;overflow-wrap:anywhere;padding-top:2px}
 .opt.sel{background:var(--acc-soft);border-color:var(--acc-line)}
 .opt.sel .k{background:var(--acc);color:#1C1B19;border-color:transparent}
 .opt.ok{background:var(--ok-soft);border-color:var(--ok-deep)}
@@ -182,16 +183,25 @@ svg{display:block}
 .bar{
   position:fixed;left:0;right:0;bottom:0;z-index:30;
   background:var(--panel);border-top:1px solid var(--line);
-  padding:10px max(24px,calc((100vw - 960px)/2 + 24px)) calc(10px + env(safe-area-inset-bottom));
-  display:flex;align-items:center;gap:8px;
+  padding:9px max(16px,calc((100vw - 960px)/2 + 20px)) calc(9px + env(safe-area-inset-bottom));
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
 }
+.gbar{display:flex;align-items:center;gap:6px;flex:0 1 auto;min-width:0}
+.gleft{justify-content:flex-start;flex:0 0 auto}
+.gmid{flex:1 1 auto;justify-content:center;min-width:0;overflow:hidden}
+.gright{justify-content:flex-end;flex:0 0 auto}
+.poswrap{display:flex;align-items:center;gap:6px;flex:0 0 auto}
 .bbtn{
-  display:flex;align-items:center;justify-content:center;gap:7px;
-  cursor:pointer;font-weight:500;font-size:14px;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  cursor:pointer;font-weight:500;font-size:13px;white-space:nowrap;
   border:1px solid var(--line);border-radius:var(--r-md);
-  padding:10px 18px;color:var(--ink);background:var(--card);
+  padding:9px 12px;color:var(--ink);background:var(--card);
   transition:background .15s ease,border-color .15s ease;
+  flex:0 0 auto;
 }
+/* 翻页箭头按钮：正方形，无文字 */
+.bbtn.navbtn{padding:9px 11px}
+.bbtn.navbtn svg{width:17px;height:17px}
 .bbtn svg{width:15px;height:15px}
 .bbtn:hover{background:var(--hover);border-color:#4A453F}
 .bbtn:active{background:#383531}
@@ -217,12 +227,33 @@ svg{display:block}
 .bbtn.primary{background:var(--acc-soft);border-color:var(--acc-line);color:var(--acc)}
 .bbtn.primary:hover{background:rgba(213,139,104,.2)}
 .bbtn.primary:active{background:rgba(213,139,104,.28)}
+/* 总学习计时按钮 */
 .bar .timer{
-  font-variant-numeric:tabular-nums;font-size:12.5px;font-weight:600;
+  font-family:inherit;font-variant-numeric:tabular-nums;
+  font-size:12.5px;font-weight:650;letter-spacing:.3px;
   color:var(--acc);background:var(--acc-soft);border:1px solid var(--acc-line);
-  border-radius:var(--r-sm);padding:4px 9px;letter-spacing:.3px;
-  min-width:52px;text-align:center;
+  border-radius:var(--r-sm);padding:5px 10px;min-width:58px;text-align:center;
+  cursor:pointer;transition:background .15s,border-color .15s,color .15s;
+  position:relative;
 }
+.bar .timer:hover{background:rgba(213,139,104,.2)}
+.bar .timer:active{background:rgba(213,139,104,.28)}
+.bar .timer:focus-visible{outline:2px solid var(--acc-line);outline-offset:2px}
+/* 未在跑：灰暗，提示"点我开始" */
+.bar .timer:not(.running){
+  color:var(--sub);background:var(--card);border-color:var(--line);
+}
+.bar .timer:not(.running):hover{
+  color:var(--acc);background:var(--acc-soft);border-color:var(--acc-line);
+}
+/* 计时中：小圆点呼吸 */
+.bar .timer.running::before{
+  content:'';position:absolute;left:5px;top:50%;transform:translateY(-50%);
+  width:5px;height:5px;border-radius:50%;background:var(--acc);
+  animation:tdot 1.6s ease-in-out infinite;
+}
+@keyframes tdot{0%,100%{opacity:1}50%{opacity:.25}}
+.bar .timer.running{padding-left:16px}
 .bar .pos{
   flex:1;text-align:center;font-size:12.5px;font-weight:500;color:var(--sub);
   font-variant-numeric:tabular-nums;letter-spacing:.03em;
@@ -338,10 +369,38 @@ svg{display:block}
   .stem{font-size:16.5px}
   .opt{padding:12px 12px;gap:11px}
   .top-in{padding:14px 16px 0}
-  .bar{padding-left:10px;padding-right:10px;gap:6px;padding-top:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom))}
-  .bbtn{padding:12px 14px}
+  .bar{padding-left:8px;padding-right:8px;gap:5px;padding-top:9px;padding-bottom:calc(9px + env(safe-area-inset-bottom))}
+  .gbar{gap:4px}
+  .bbtn{padding:9px 9px;font-size:12px;gap:0}
   .bbtn .bt{display:none}
-  .bbtn.primary .bt{display:inline}
+  .bbtn svg{width:16px;height:16px}
+  .bbtn.navbtn{padding:9px 8px}
+  .pos{font-size:11.5px;min-width:38px}
+  .bar .timer{font-size:11px;padding:3px 6px;min-width:44px}
+  .goto{width:42px;padding:6px 4px;font-size:11.5px}
+  .gobtn{padding:6px 7px;font-size:11.5px}
+}
+/* ===== 超窄屏（平级，不嵌套）===== */
+@media (max-width:430px){
+  /* 工具组只留图标，题号输入收起 */
+  .gotonav{display:none}
+  .bar{gap:4px;padding-left:6px;padding-right:6px}
+  .gbar{gap:3px}
+  .bbtn{padding:8px 6px;font-size:11.5px}
+  .bbtn svg{width:15px;height:15px}
+  .bbtn.navbtn{padding:8px 6px}
+  .bar .timer{font-size:11px;padding:4px 6px;min-width:46px}
+  .bar .timer.running{padding-left:12px}
+  .pos{font-size:11px;min-width:30px}
+  .poswrap{gap:3px}
+  /* 极窄屏：连"跳未做/清空"文字也收掉，只留图标 */
+  .bbtn#btnundone .bt,.bbtn#btnclear .bt{display:none}
+}
+/* 中等屏：只隐藏工具类文字，保留翻页/跳未做/清空文字 */
+@media (min-width:561px) and (max-width:820px){
+  .bbtn{padding:9px 10px;font-size:12.5px}
+  .bbtn#btnsyl .bt,.bbtn#btnsheet .bt,.bbtn#btnsfx .bt{display:none}
+  .goto{width:54px}
 }
 /* ============ v2：多题型 / 材料题 / 题图 ============ */
 .h1n{font-size:11.5px;font-weight:550;color:var(--acc);margin-left:8px;
@@ -423,7 +482,6 @@ svg{display:block}
     </div>
     <nav class="subj"><div class="subj-in" id="subjbar"></div></nav>
     <div class="prog"><i id="progbar"></i></div>
-    <div id="courseNote"></div>
   </div>
 </header>
 
@@ -437,41 +495,52 @@ svg{display:block}
 </div>
 
 <footer class="bar">
-  <button class="bbtn" id="btnprev">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-    <span class="bt">上一题</span>
-  </button>
-  <span class="pos" id="pos">—</span>
-  <span class="timer" id="timer" title="本题已用时间">—</span>
-  <span class="gotonav">
-    <input class="goto" id="goto" type="number" min="1" placeholder="题号" title="输入题号跳转（当前列表第几题）">
-    <button class="gobtn" id="btnjump">跳</button>
-  </span>
-  <button class="bbtn primary" id="btnnext">
-    <span class="bt">下一题</span>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-  </button>
-  <button class="bbtn" id="btnsyl">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-    <span class="bt">考纲</span>
-  </button>
-  <button class="bbtn" id="btnsheet">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-    <span class="bt">错题本</span>
-  </button>
-  <button class="bbtn" id="btnundone" title="跳到当前筛选里第一道还没做的题">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>
-    <span class="bt">跳未做</span>
-  </button>
-  <button class="bbtn sound" id="btnsfx" title="音效开关">
-    <svg class="ic-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
-    <svg class="ic-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M22 9l-6 6"/><path d="M16 9l6 6"/></svg>
-    <span class="bt">音效</span>
-  </button>
-  <button class="bbtn" id="btnclear" title="清空当前科目的答题记录（不可撤销）">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-    <span class="bt">清空</span>
-  </button>
+  <!-- ===== 左侧工具组 ===== -->
+  <div class="gbar gleft">
+    <button class="bbtn" id="btnsyl" title="考纲覆盖">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span class="bt">考纲</span>
+    </button>
+    <button class="bbtn" id="btnsheet" title="错题本">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <span class="bt">错题本</span>
+    </button>
+    <button class="bbtn sound" id="btnsfx" title="音效开关">
+      <svg class="ic-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+      <svg class="ic-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M22 9l-6 6"/><path d="M16 9l6 6"/></svg>
+      <span class="bt">音效</span>
+    </button>
+  </div>
+
+  <!-- ===== 中间：翻页主控 ===== -->
+  <div class="gbar gmid">
+    <button class="bbtn navbtn" id="btnprev" title="上一题">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <span class="poswrap">
+      <span class="pos" id="pos">—</span>
+      <button class="timer" id="timer" title="点一下开始计时">0:00</button>
+    </span>
+    <span class="gotonav">
+      <input class="goto" id="goto" type="number" min="1" placeholder="题号" title="输入题号跳转（当前列表第几题）">
+      <button class="gobtn" id="btnjump">跳</button>
+    </span>
+    <button class="bbtn primary navbtn" id="btnnext" title="下一题">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+  </div>
+
+  <!-- ===== 右侧：跳未做 / 清空 ===== -->
+  <div class="gbar gright">
+    <button class="bbtn" id="btnundone" title="跳到当前筛选里第一道还没做的题">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>
+      <span class="bt">跳未做</span>
+    </button>
+    <button class="bbtn" id="btnclear" title="清空当前科目的答题记录（不可撤销）">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+      <span class="bt">清空</span>
+    </button>
+  </div>
 </footer>
 
 <div class="sheet" id="sylsheet">
@@ -649,61 +718,83 @@ function curKey(){
   var q=BANK[order[idx]];
   return q?key(q):null;
 }
-/* 本题起点：首次进入时记一次，切题清掉 */
-/* 切题时：先把上一题的时间结算落账，再切到新题并恢复它的累计秒数 */
-function markQuestion(){
-  var k=curKey();
-  if(!k)return;
-  if(TQ.k!==k){
-    if(TQ.k){
-      var el=Date.now()-TQ.from;
-      if(el>0)S.time[TQ.k]=(S.time[TQ.k]||0)+el;
-    }
-    TQ={k:k,from:Date.now()};
-    _ansMs=S.time[k]||0;          /* 关键：恢复这道题以前累计的时间 */
+/* ==================== 总学习计时（手动开始/暂停） ==================== */
+/* S.study = { total: 累计毫秒, running: bool, since: 起跑时间戳 } */
+var _tickT=null;
+
+function studyState(){
+  if(!S.study)S.study={total:0,running:false,since:0};
+  return S.study;
+}
+function studyMs(){
+  var st=studyState();
+  var base=st.total||0;
+  if(st.running&&st.since){base+=Math.max(0,Date.now()-st.since);}
+  return base;
+}
+function settleStudy(){
+  var st=studyState();
+  if(st.running&&st.since){
+    var el=Date.now()-st.since;
+    if(el>0)st.total=(st.total||0)+el;
+    st.since=Date.now();
   }
 }
-/* 把本题耗时并入 S.time，并累计学习时长 */
-function flushTiming(){
-  if(!TQ.k)return;
-  var el=Date.now()-TQ.from;
-  if(el<0)el=0;
-  S.time[TQ.k]=(S.time[TQ.k]||0)+el;
-  TQ.from=Date.now();
-  _ansMs+=el;
-}
-/* 本次学习时长落盘 */
-function flushSession(){
-  if(_liveFrom!=null){
-    var el=Date.now()-_liveFrom;
-    if(el>0&&el<86400000)S.resume[filter]=(S.resume[filter]||0)+el;
-    _liveFrom=Date.now();
-  }
-}
-/* 秒表刷新：只更新显示，不落盘 */
 function tickTimer(){
   var el=document.getElementById('timer');
   if(!el)return;
-  if(!order.length){el.textContent='—';return;}
-  var k=curKey();
-  var basek=(TQ.k===k)?(Date.now()-TQ.from):0;
-  el.textContent=fmtMS(_ansMs+basek);
+  el.textContent=fmtMS(studyMs());
+  var btn=document.getElementById('timer');
+  if(btn){
+    btn.classList.toggle('running',!!studyState().running);
+    btn.title=studyState().running?'计时中，点一下暂停':'已暂停，点一下开始';
+  }
 }
-function startTimer(){
+function startStudy(){
+  var st=studyState();
+  if(st.running)return;
+  st.running=true;st.since=Date.now();
   if(_tickT)clearInterval(_tickT);
-  _liveFrom=Date.now();
-  _tickT=setInterval(function(){tickTimer();flushSession();},1000);
+  _tickT=setInterval(function(){tickTimer();},1000);
+  save();tickTimer();
 }
-function stopTimer(){
+function pauseStudy(){
+  var st=studyState();
+  if(!st.running)return;
+  settleStudy();st.running=false;
   if(_tickT){clearInterval(_tickT);_tickT=null;}
-  flushTiming();flushSession();
+  save();tickTimer();
 }
-/* 页面隐藏/关闭时落盘（手机上切后台的情况） */
+function toggleStudy(){
+  if(studyState().running)pauseStudy();else startStudy();
+}
+function resetStudy(){
+  var st=studyState();
+  st.total=0;st.running=false;st.since=0;
+  if(_tickT){clearInterval(_tickT);_tickT=null;}
+  save();tickTimer();
+}
+/* 旧接口兼容（别处仍在调用） */
+function markQuestion(){}
+function flushTiming(){settleStudy();}
+function flushSession(){settleStudy();}
+function startTimer(){
+  var st=studyState();
+  if(st.running){
+    st.since=Date.now();
+    if(_tickT)clearInterval(_tickT);
+    _tickT=setInterval(function(){tickTimer();},1000);
+  }
+  tickTimer();
+}
+function stopTimer(){settleStudy();if(_tickT){clearInterval(_tickT);_tickT=null;}save();}
+
+/* 切后台：结算落盘但不停表（回来继续累计） */
 document.addEventListener('visibilitychange',function(){
-  if(document.hidden){stopTimer();save();}
-  else{startTimer();markQuestion();
-if(typeof syncSfxBtn==='function')syncSfxBtn();tickTimer();}
+  if(document.hidden){settleStudy();save();}
+  else{var st=studyState();if(st.running)st.since=Date.now();tickTimer();}
 });
+
 var S=load();
 var filter='ALL',order=[],idx=0;
 var MODLAB={computer:{M1:'计算机基础',M2:'数据库',M3:'操作系统',M4:'网络',M5:'Word',M6:'Excel',X1:'PPT'},zh:{},math:{},en:{}};
@@ -849,8 +940,6 @@ function setSubject(k){
   if(h1)h1.innerHTML='<span class="mark">◢</span>'+SUBJ_NAME[k]+' · 单招刷题 <span class="h1n">'+SUBJ_TOTAL[k]+' 题</span>';
   var bs=document.getElementById('btnsyl');
   if(bs)bs.style.display=(k==='computer')?'':'none';   /* 考纲表只有计算机有 */
-  var tf=document.getElementById('courseNote');
-  if(tf)tf.innerHTML=courseNote(k);
   renderSubj();buildOrder();chips();render();
 }
 function renderSide(){
@@ -1222,7 +1311,32 @@ function sylJump(mid, sample){
   document.getElementById('sylsheet').classList.remove('show');
   render();
 }
-startTimer();markQuestion();
+startTimer();
+(function(){
+  var tb=document.getElementById('timer');
+  if(!tb)return;
+  var _holdT=null,_held=false;
+  tb.onclick=function(){
+    if(SFX)SFX.unlock();
+    if(_held){_held=false;return;}
+    toggleStudy();
+    if(SFX)SFX.tap();
+  };
+  tb.oncontextmenu=function(e){e.preventDefault();};
+  /* 长按 700ms 清零 */
+  ['mousedown','touchstart'].forEach(function(ev){
+    tb.addEventListener(ev,function(){
+      _held=false;
+      _holdT=setTimeout(function(){
+        _held=true;
+        if(confirm('要把总计时清零重新开始吗？')){resetStudy();if(SFX)SFX.sweep();}
+      },700);
+    },{passive:true});
+  });
+  ['mouseup','mouseleave','touchend','touchcancel'].forEach(function(ev){
+    tb.addEventListener(ev,function(){if(_holdT){clearTimeout(_holdT);_holdT=null;}},{passive:true});
+  });
+})();
 document.getElementById('btnsyl').onclick=function(){
   renderSyl();
   document.getElementById('sylsheet').classList.add('show');
@@ -1329,7 +1443,6 @@ document.addEventListener('keydown',function(e){
   else if(e.key==='ArrowLeft'){e.preventDefault();document.getElementById('btnprev').click();}
 });
 renderSubj();document.getElementById('btnsyl').style.display=(SUBJECT==='computer')?'':'none';
-document.getElementById('courseNote').innerHTML=courseNote(SUBJECT);
 buildOrder();chips();
 </script>
 </body>
