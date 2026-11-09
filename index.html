@@ -197,6 +197,17 @@ svg{display:block}
 .bbtn:active{background:#383531}
 .bbtn:focus-visible{outline:2px solid var(--acc-line);outline-offset:2px}
 .bbtn:disabled{opacity:.35;pointer-events:none}
+.bbtn#btnclear:hover{background:var(--bad-soft);border-color:var(--bad-deep);color:var(--bad)}
+.toast{
+  position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));
+  transform:translate(-50%,14px);opacity:0;pointer-events:none;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r-md);
+  padding:10px 18px;font-size:13px;color:var(--ink);z-index:60;
+  box-shadow:0 8px 28px rgba(0,0,0,.45);
+  transition:opacity .22s var(--ease),transform .22s var(--ease);
+  max-width:80vw;text-align:center;
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
 .bbtn.primary{background:var(--acc-soft);border-color:var(--acc-line);color:var(--acc)}
 .bbtn.primary:hover{background:rgba(213,139,104,.2)}
 .bbtn.primary:active{background:rgba(213,139,104,.28)}
@@ -434,6 +445,14 @@ svg{display:block}
   <button class="bbtn" id="btnsheet">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
     <span class="bt">错题本</span>
+  </button>
+  <button class="bbtn" id="btnundone" title="跳到当前筛选里第一道还没做的题">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>
+    <span class="bt">跳未做</span>
+  </button>
+  <button class="bbtn" id="btnclear" title="清空当前科目的答题记录（不可撤销）">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+    <span class="bt">清空</span>
   </button>
 </footer>
 
@@ -1016,6 +1035,51 @@ document.getElementById('goto').addEventListener('keydown',function(e){
   if(e.key==='Enter'){e.preventDefault();doJump();}
   e.stopPropagation();
 });
+
+/* ===== 跳到未做：当前筛选下第一道没答过的题 ===== */
+function firstUndone(){
+  for(var i=0;i<order.length;i++){
+    if(!S.done[key(BANK[order[i]])])return i;
+  }
+  return -1;
+}
+document.getElementById('btnundone').onclick=function(){
+  if(!order.length)return;
+  var i=firstUndone();
+  if(i<0){
+    toast('当前列表已全部做完');return;
+  }
+  idx=i;render();savePos();
+  toast('已跳到第 '+(i+1)+' 题（未做）');
+};
+/* ===== 清空：只清当前科目当前筛选的答题记录 ===== */
+document.getElementById('btnclear').onclick=function(){
+  var pool=order.length?order.map(function(i){return BANK[i];}):BANK;
+  var scope=(filter==='ALL')?'全部':'「'+modsFor().filter(function(a){return a[0]===filter;}).map(function(a){return a[1];})[0]+'」';
+  var n=0;
+  pool.forEach(function(q){if(S.done[key(q)])n++;});
+  if(!n){toast('这里还没有做过的题');return;}
+  if(!confirm('确定清空'+scope+'的 '+n+' 道答题记录？\n\n只清答题记录和错题，题目本身不动。此操作不可撤销。'))return;
+  pool.forEach(function(q){
+    var k=key(q);
+    delete S.done[k];delete S.wrong[k];
+  });
+  if(S.pos)S.pos[filter]=null;
+  save();idx=0;render();chips();renderSide();
+  toast('已清空 '+n+' 道题的记录');
+};
+/* ===== 轻提示 ===== */
+var _toastT=null;
+function toast(msg){
+  var el=document.getElementById('toast');
+  if(!el){
+    el=document.createElement('div');el.id='toast';el.className='toast';
+    document.body.appendChild(el);
+  }
+  el.textContent=msg;el.classList.add('show');
+  if(_toastT)clearTimeout(_toastT);
+  _toastT=setTimeout(function(){el.classList.remove('show');},2200);
+};
 document.getElementById('btnsheet').onclick=sheet;
 document.getElementById('sheetclose').onclick=function(){document.getElementById('sheet').classList.remove('show');};
 document.getElementById('sheet').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
