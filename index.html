@@ -265,23 +265,12 @@ svg{display:block}
 .bbtn.sound.off{color:var(--dim);border-color:var(--line)}
 .bbtn.sound:not(.off){color:var(--acc);border-color:var(--acc-line);background:var(--acc-soft)}
 /* 真题说明条 */
-.ztnote{
-  max-width:960px;margin:14px auto 0;padding:0 24px;
-}
-.ztnote .ztin{
-  background:var(--card);border:1px solid var(--acc-line);border-left:3px solid var(--acc);
-  border-radius:var(--r-md);padding:12px 16px;
-  display:flex;flex-direction:column;gap:6px;
-}
+.ztnote{max-width:960px;margin:14px auto 0;padding:0 24px}
+.ztnote .ztin{background:var(--card);border:1px solid var(--acc-line);border-left:3px solid var(--acc);border-radius:var(--r-md);padding:12px 16px;display:flex;flex-direction:column;gap:6px}
 .ztnote b{font-size:13.5px;color:var(--ink);font-weight:600}
 .ztnote .ztmeta{font-size:12px;color:var(--acc)}
 .ztnote .ztwarn{font-size:11.5px;color:var(--dim);line-height:1.6}
-@media (max-width:560px){
-  .ztnote{padding:0 12px;margin-top:10px}
-  .ztnote .ztin{padding:10px 12px}
-  .ztnote b{font-size:12.5px}
-  .ztnote .ztmeta,.ztnote .ztwarn{font-size:11px}
-}
+@media (max-width:560px){.ztnote{padding:0 12px;margin-top:10px}.ztnote .ztin{padding:10px 12px}.ztnote b{font-size:12.5px}.ztnote .ztmeta,.ztnote .ztwarn{font-size:11px}}
 .toast{
   position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));
   transform:translate(-50%,14px);opacity:0;pointer-events:none;
@@ -651,11 +640,23 @@ svg{display:block}
 .wcnt{flex:0 0 auto;font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:999px;
   padding:1px 8px;white-space:nowrap;font-variant-numeric:tabular-nums}
 .wcnt.hot{color:var(--bad);border-color:var(--bad-deep);background:var(--bad-soft)}
-.bbtn .wbn{display:none;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;
-  min-width:16px;height:16px;padding:0 4px;border-radius:999px;line-height:1;flex:0 0 auto;
-  background:var(--bad-soft);color:var(--bad);border:1px solid var(--bad-deep);
-  font-variant-numeric:tabular-nums}
+/* 错题数徽章：宽屏跟在文字后面，窄屏直接顶掉图标只显示数字 */
+#btnsheet.hasw .bt{display:none}
+.bbtn .wbn{display:none;align-items:center;justify-content:center;flex:0 0 auto;
+  font-size:10.5px;font-weight:700;line-height:1;min-width:16px;height:16px;padding:0 4px;
+  border-radius:999px;background:var(--bad-soft);color:var(--bad);
+  border:1px solid var(--bad-deep);font-variant-numeric:tabular-nums;
+  pointer-events:none}
 .bbtn .wbn.on{display:inline-flex}
+@media (min-width:561px){
+  #btnsheet.hasw .bt{display:inline}
+  #btnsheet .wbn.on{margin-left:2px}
+}
+@media (max-width:430px){
+  /* 手机端：只显示数字徽章（题目要求），图标和文字都让位 */
+  #btnsheet.hasw svg{display:none}
+  #btnsheet .wbn.on{font-size:11.5px;min-width:20px;height:20px;padding:0 5px;border-radius:10px}
+}
 .mkbar.wrun{border-color:var(--bad-deep)}
 .mkbar.wrun .mkflag{background:var(--bad-soft);color:var(--bad)}
 .mkdone.ok{color:var(--ok)}
@@ -672,6 +673,13 @@ svg{display:block}
 .datarow .mkgo:hover{background:#E09A78;border-color:#E09A78}
 .datarow .mkgo.ghost{background:transparent;color:var(--sub);border-color:var(--line)}
 .datarow .mkgo.ghost:hover{background:var(--hover);color:var(--ink);border-color:#4A453F}
+/* 窄屏专用：标题行里的「进度」小按钮（宽屏藏在底栏，见 media） */
+#datatop{display:none;flex:0 0 auto;cursor:pointer;align-items:center;gap:5px;
+  border:1px solid var(--line);background:var(--card);color:var(--sub);
+  border-radius:var(--r-sm);padding:5px 9px;font-size:12px;font-family:inherit;
+  position:relative;transition:background .15s,color .15s,border-color .15s}
+#datatop:hover{background:var(--hover);color:var(--ink)}
+#datatop svg{width:13px;height:13px;flex:0 0 auto}
 .bkrow{display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid var(--line);
   font-size:12px;color:var(--sub)}
 .bkrow:last-child{border-bottom:none}
@@ -681,6 +689,9 @@ svg{display:block}
   border:1px solid var(--acc-line);color:var(--acc);background:transparent;font-family:inherit}
 .bkrow .bkgo:hover{background:var(--acc-soft)}
 @media (max-width:560px){
+  /* 窄屏底栏放不下第 6 个按钮：进度入口挪到标题行，底栏宽度回到 v3 水平 */
+  #btndata{display:none}
+  #datatop{display:inline-flex}
   .wbtop{padding:9px 14px;gap:8px}
   .wbtop .wbgo{padding:6px 10px;font-size:11.5px}
   .wbmodn{flex-basis:88px;font-size:11px}
@@ -691,6 +702,29 @@ svg{display:block}
   .wrow .wmn{max-width:72px}
   .datarow{padding:12px 4px 4px;gap:8px}
   .datarow .mkgo{font-size:12.5px;padding:10px 0}
+}
+@media (max-width:380px){
+  .bar{gap:3px;padding-left:4px;padding-right:4px}
+  .gbar{gap:2px}
+  .bbtn{padding:8px 5px}
+  .bbtn.navbtn{padding:8px 4px}
+  .pos{font-size:10.5px;min-width:0;flex:0 1 auto;white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis}
+  .pos b{font-size:11px}
+  .bar .timer{font-size:10px;padding:4px 4px;min-width:38px}
+  .bbtn.resetbtn{padding:8px 4px}
+}
+/* 320 级小屏：底栏三组塞不下，缩到只留图标 + 极窄题号 */
+@media (max-width:340px){
+  .bar{gap:2px;padding-left:3px;padding-right:3px}
+  .gbar{gap:1px}
+  .bbtn{padding:8px 4px}
+  .bbtn svg{width:14px;height:14px}
+  .bbtn.navbtn{padding:8px 3px}
+  .bbtn.navbtn svg{width:15px;height:15px}
+  .pos{font-size:10px}
+  .pos b{font-size:10.5px}
+  .bar .timer{font-size:9.5px;padding:4px 3px;min-width:34px;letter-spacing:-.02em}
 }
 @media (max-width:360px){
   .wbmodn{flex-basis:74px;font-size:10.5px}
@@ -714,6 +748,10 @@ svg{display:block}
       <h1><span class="mark">◢</span>计算机 · 单招刷题 <span class="h1n">5542 题</span></h1>
       <p class="sub" id="sub">—</p>
     </div>
+    <button id="datatop" title="进度导出 / 导入">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>
+      <span>进度</span>
+    </button>
     <nav class="subj"><div class="subj-in" id="subjbar"></div></nav>
     <div class="prog"><i id="progbar"></i></div>
   </div>
@@ -1265,13 +1303,12 @@ function renderSubj(){
     el.appendChild(b);
   });
 }
-/* 真题科目的说明条：讲清楚这套卷是什么、多少分、为什么只有客观题 */
+/* 真题科目的说明条 */
 function showZTNote(k){
   var el=document.getElementById('ztnote');
   if(!el){
     el=document.createElement('div');
-    el.id='ztnote';
-    el.className='ztnote';
+    el.id='ztnote';el.className='ztnote';
     var hdr=document.querySelector('header.top');
     if(hdr&&hdr.parentNode)hdr.parentNode.insertBefore(el,hdr.nextSibling);
     else document.body.insertBefore(el,document.body.firstChild);
@@ -1788,7 +1825,10 @@ function syncWrongBadge(){
     b.classList.toggle('on',n>0);
   }
   var bs=document.getElementById('btnsheet');
-  if(bs)bs.title=n?('错题本 · '+n+' 道'):'错题本';
+  if(bs){
+    bs.title=n?('错题本 · '+n+' 道'):'错题本';
+    bs.classList.toggle('hasw',n>0);
+  }
 }
 
 /* ---------- 错题本抽屉 ---------- */
@@ -2854,8 +2894,11 @@ function openDataSheet(){
   if(d)d.classList.add('show');
 }
 (function(){
+  var open=function(){if(SFX)SFX.unlock();if(SFX)SFX.tap();openDataSheet();};
   var b=document.getElementById('btndata');
-  if(b)b.onclick=function(){if(SFX)SFX.unlock();if(SFX)SFX.tap();openDataSheet();};
+  if(b)b.onclick=open;
+  var t=document.getElementById('datatop');
+  if(t)t.onclick=open;
   var c=document.getElementById('dataclose');
   if(c)c.onclick=function(){document.getElementById('datasheet').classList.remove('show');};
   var d=document.getElementById('datasheet');
