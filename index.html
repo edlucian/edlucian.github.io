@@ -301,9 +301,31 @@ svg{display:block}
   display:flex;align-items:center;gap:8px;
   padding:12px 16px;border-bottom:1px solid var(--line);flex:0 0 auto;
 }
-.aititle{font-weight:600;font-size:14px;color:var(--ink)}
-.aistat{flex:1;font-size:11.5px;color:var(--dim);text-align:right;padding-right:4px}
+.aititle{flex:0 0 auto;font-weight:600;font-size:14px;color:var(--ink);white-space:nowrap}
+.aimodel{
+  flex:0 1 auto;min-width:0;max-width:200px;
+  height:24px;margin-left:8px;padding:0 20px 0 7px;
+  font-size:11px;font-family:inherit;color:var(--ink);
+  background:var(--card) url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23A7A097' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 5px center/11px;
+  border:1px solid var(--line);border-radius:6px;
+  appearance:none;-webkit-appearance:none;
+  text-overflow:ellipsis;white-space:nowrap;overflow:hidden;
+  cursor:pointer;outline:none;
+}
+.aimodel:hover{border-color:var(--sub)}
+.aimodel:focus{border-color:var(--acc)}
+.aistat{flex:1 1 auto;min-width:0;font-size:11.5px;color:var(--dim);text-align:right;padding-right:4px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:520px){
+  .aihead{gap:6px;padding:10px 12px}
+  .aititle{font-size:13px}
+  .aimodel{max-width:118px;font-size:10.5px;padding:0 17px 0 6px;margin-left:5px}
+  .aistat{display:none}
+  .aibtn{padding:5px 8px;font-size:11.5px}
+}
+
 .aibtn{
+  flex:0 0 auto;white-space:nowrap;
   font-family:inherit;font-size:12px;cursor:pointer;
   background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);
   color:var(--sub);padding:5px 10px;transition:background .15s,color .15s;
@@ -876,6 +898,7 @@ svg{display:block}
   <div class="aiin">
     <div class="aihead">
       <span class="aititle">问 AI</span>
+      <select class="aimodel" id="aimodel" title="选择模型通道"></select>
       <span class="aistat" id="aistat"></span>
       <button class="aibtn" id="aisetup" title="设置 API Key">⚙</button>
       <button class="aibtn" id="aiclear" title="清空对话">清空</button>
@@ -3031,12 +3054,37 @@ function openDataSheet(){
   }
 })();
 
-/* ==================== AI 问答（智谱 GLM-4-Flash）==================== */
+/* ==================== AI 问答（本地网关 / 智谱 双通道）==================== */
 (function(){
-  var API_URL='https://open.bigmodel.cn/api/paas/v4/chat/completions';
-  var MODEL='glm-4-flash';
-  var KEY_LS='dshdz_zhipu_key';
+  var CFG_LS='dshdz_ai_cfg';
+  var ZK_LS='dshdz_zhipu_key';
   var HIST_LS='dshdz_ai_hist';
+
+  /* 默认走本机 our-free-model 网关（127.0.0.1:8326），不经过任何第三方 */
+  var DEF={
+    ch:'local',
+    url:'http://127.0.0.1:8326',
+    key:'vQ4tZjeYgOWxSgJWtIM9g4elIjZ0N5kzRXDFALTQyaA',
+    model:'trae/deepseek-v4.1-flash',
+    effort:'off'
+  };
+
+  var MODELS=[
+    ['trae/deepseek-v4.1-flash','DS-V4.1-Flash'],
+    ['loomy/qwen3.8-flash','Qwen3.8-Flash'],
+    ['trae/qwen3.8-flash','Qwen3.8 (TRAE)'],
+    ['trae/glm-5.3-flash','GLM-5.3-Flash'],
+    ['workbuddy-global/glm-5.3-flash','GLM-5.3F 全球'],
+    ['workbuddy-global/hy3','HY3'],
+    ['workbuddy-global/kimi-k3','Kimi-K3 全球'],
+    ['trae/kimi-k3','Kimi-K3'],
+    ['workbuddy-global/gpt-6.1-sol','GPT-6.1-Sol'],
+    ['workbuddy-global/grok-4.7','Grok-4.7'],
+    ['minimax/MiniMax-M3.1-Flash','MiniMax-M3.1F'],
+    ['raccoon/sn-glm-5-3-flash','GLM-5.3F 商汤'],
+    ['our-free-model/combo:recommended-free','推荐免费组（降级链）'],
+    ['__zhipu__','智谱 GLM-4-Flash（官方直连）']
+  ];
 
   var logEl=document.getElementById('ailog');
   var inputEl=document.getElementById('aiinput');
@@ -3044,25 +3092,40 @@ function openDataSheet(){
   var sheetEl=document.getElementById('aisheet');
   var statEl=document.getElementById('aistat');
   var fabEl=document.getElementById('aifab');
+  var selEl=document.getElementById('aimodel');
   if(!logEl||!inputEl)return;
 
-  var hist=[];       /* {role,content} */
+  var hist=[];
   var busy=false;
+  var cfg=loadCfg();
 
-  function getKey(){
-    try{return localStorage.getItem(KEY_LS)||'';}catch(e){return '';}
+  /* ---------- 配置 ---------- */
+  function loadCfg(){
+    var c={};
+    for(var k in DEF)c[k]=DEF[k];
+    try{
+      var s=localStorage.getItem(CFG_LS);
+      if(s){var o=JSON.parse(s);for(var k2 in o){if(o[k2]!==undefined&&o[k2]!==null)c[k2]=o[k2];}}
+    }catch(e){}
+    return c;
   }
-  function setKey(k){
-    try{localStorage.setItem(KEY_LS,k);}catch(e){}
+  function saveCfg(){
+    try{localStorage.setItem(CFG_LS,JSON.stringify(cfg));}catch(e){}
   }
-  function askKey(){
-    var cur=getKey();
-    var k=prompt('请粘贴你的智谱 API Key\n\n（只存在这台设备的浏览器里，不会上传到 GitHub）\n\n获取地址：https://open.bigmodel.cn/usercenter/apikeys', cur?'(已设置，留空则不修改)':'');
-    if(k===null)return false;
-    if(!k.trim())return !!cur;
-    setKey(k.trim());
-    toast('Key 已保存到本机');
-    return true;
+  function getZpKey(){
+    try{return localStorage.getItem(ZK_LS)||'';}catch(e){return '';}
+  }
+  function setZpKey(k){
+    try{localStorage.setItem(ZK_LS,k);}catch(e){}
+  }
+  function isZhipu(){return cfg.ch==='zhipu';}
+  function endpoint(){
+    return isZhipu()
+      ? 'https://open.bigmodel.cn/api/paas/v4/chat/completions'
+      : cfg.url.replace(/\/+$/,'')+'/v1/chat/completions';
+  }
+  function modelId(){
+    return isZhipu() ? 'glm-4-flash' : cfg.model;
   }
 
   /* ---------- 渲染 ---------- */
@@ -3094,6 +3157,62 @@ function openDataSheet(){
     }catch(e){hist=[];}
   }
 
+  /* ---------- 模型下拉 ---------- */
+  function buildSel(){
+    if(!selEl)return;
+    selEl.innerHTML='';
+    MODELS.forEach(function(m){
+      var o=document.createElement('option');
+      o.value=m[0];o.textContent=m[1];
+      selEl.appendChild(o);
+    });
+    var want=isZhipu()?'__zhipu__':cfg.model;
+    var has=false;
+    for(var i=0;i<selEl.options.length;i++){if(selEl.options[i].value===want)has=true;}
+    if(!has){
+      var o2=document.createElement('option');
+      o2.value=want;o2.textContent=want;
+      selEl.appendChild(o2);
+    }
+    selEl.value=want;
+  }
+  if(selEl){
+    selEl.onchange=function(){
+      var v=selEl.value;
+      if(v==='__zhipu__'){
+        if(!getZpKey()){
+          var k=prompt('智谱 API Key\n\n获取地址：https://open.bigmodel.cn/usercenter/apikeys','');
+          if(k===null){buildSel();return;}
+          if(!k.trim()){buildSel();return;}
+          setZpKey(k.trim());
+        }
+        cfg.ch='zhipu';cfg.model='glm-4-flash';
+      }else{
+        cfg.ch='local';cfg.model=v;
+      }
+      saveCfg();updateTag();statEl.textContent='';
+      toast('已切到 '+selEl.options[selEl.selectedIndex].textContent);
+    };
+  }
+  function updateTag(){
+    if(fabEl)fabEl.title='问 AI · '+(isZhipu()?'智谱':cfg.model);
+  }
+
+  /* ---------- 设置 ---------- */
+  function openSettings(){
+    var box=prompt(
+      'AI 接口设置（每行一项，留空表示不改）\n\n'
+      +'1) 网关地址（当前 '+cfg.url+'）\n'
+      +'2) 网关 Key（当前 '+(cfg.key?cfg.key.slice(0,8)+'…':'未设置')+'）\n\n'
+      +'说明：网关地址是 your-free-model 插件本机转发的 127.0.0.1:8326',
+      cfg.url
+    );
+    if(box===null)return;
+    if(box.trim()&&box.trim()!==cfg.url){cfg.url=box.trim();saveCfg();toast('网关地址已更新');}
+    var k2=prompt('网关 Key（留空不改）','');
+    if(k2&&k2.trim()){cfg.key=k2.trim();saveCfg();toast('网关 Key 已更新');}
+  }
+
   /* ---------- 当前题目上下文 ---------- */
   function currentQuestionCtx(){
     try{
@@ -3102,7 +3221,6 @@ function openDataSheet(){
       if(!q)return '';
       var opts=(q.o||[]).map(function(t,i){return String.fromCharCode(65+i)+'. '+t;}).join('\n');
       var ans=q.a||'';
-      var isJ=(q.t==='判断题');
       return '当前题目：\n'+q.s+'\n'+(opts?opts+'\n':'')
         +'题型：'+(q.t||'')+'\n'
         +'正确答案：'+ans+'\n'
@@ -3110,55 +3228,66 @@ function openDataSheet(){
     }catch(e){return '';}
   }
 
-  /* ---------- 系统提示词 ---------- */
+  /* ---------- 系统提示词（含硬性字数上限）---------- */
   function sysPrompt(){
-    return '你是四川高职单招计算机类考试辅导老师。学生在刷题时向你提问。\n'
-      +'回答要求：\n'
-      +'1. 直接讲清楚，不要客套话，不要说「好的」「很高兴为你解答」\n'
-      +'2. 涉及具体题目时，要说明正确答案为什么对、其他选项为什么错\n'
-      +'3. 讲原理，不要只给结论；必要时给记忆方法\n'
-      +'4. 用简体中文，简洁但完整，一般 150-400 字\n'
-      +'5. 如果学生问的和题目无关，正常回答\n';
+    return '你是四川高职单招计算机类考试辅导老师，学生在刷题时向你提问。\n'
+      +'硬性要求：\n'
+      +'1. 总字数严格控制在 200 字以内（含标点）。超了就是不合格。\n'
+      +'2. 直接给答案，第一句就是结论。禁止「好的」「很高兴为你解答」这类开场。\n'
+      +'3. 讲具体题目时：一句话点明正确项为什么对，再用半句话扫掉关键干扰项。\n'
+      +'4. 讲原理给记忆抓手，不要罗列教科书段落。\n'
+      +'5. 简体中文，可以用短句、分号、序号，不要长篇大论。\n'
+      +'6. 与题目无关的问题正常回答，同样 200 字以内。\n'
+      +'7. 不要使用 Markdown 加粗或标题符号。\n';
   }
 
   /* ---------- 发送 ---------- */
+  async function post(url,headers,body){
+    return fetch(url,{method:'POST',headers:headers,body:JSON.stringify(body)});
+  }
+
   async function send(text){
     if(busy)return;
-    var key=getKey();
-    if(!key){
-      if(!askKey()){toast('没有 Key 无法使用');return;}
-      key=getKey();
-      if(!key)return;
+    if(isZhipu()&&!getZpKey()){
+      var k=prompt('智谱 API Key\n\n获取地址：https://open.bigmodel.cn/usercenter/apikeys','');
+      if(!k||!k.trim()){toast('没有 Key 无法使用');return;}
+      setZpKey(k.trim());
     }
     text=(text||'').trim();
     if(!text)return;
 
-    busy=true;sendEl.disabled=true;fabEl.classList.add('busy');
+    busy=true;sendEl.disabled=true;if(fabEl)fabEl.classList.add('busy');
     inputEl.value='';
     addMsg('user',text);
     hist.push({role:'user',content:text});
     saveHist();
 
-    var bubble=addMsg('assistant','');
+    var holder=addMsg('assistant','');
+    var bubble=holder;
     var acc='';
+    var think='';
     var t0=Date.now();
     statEl.textContent='思考中…';
 
     var ctx=currentQuestionCtx();
-    var msgs=[{role:'system',content:sysPrompt()+(ctx?'\n'+ctx:'')}]
-      .concat(hist.slice(-12));
+    var msgs=[{role:'system',content:sysPrompt()+(ctx?'\n'+ctx:'')}].concat(hist.slice(-12));
+
+    var headers={'Content-Type':'application/json'};
+    var body={model:modelId(),messages:msgs,stream:true,temperature:0.6};
+    if(isZhipu()){
+      headers['Authorization']='Bearer '+getZpKey();
+    }else{
+      headers['Authorization']='Bearer '+(cfg.key||'');
+      if(cfg.effort&&cfg.effort!=='default')body.reasoning_effort=cfg.effort;
+    }
 
     try{
-      var resp=await fetch(API_URL,{
-        method:'POST',
-        headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
-        body:JSON.stringify({model:MODEL,messages:msgs,stream:true,temperature:0.6})
-      });
+      var resp=await post(endpoint(),headers,body);
       if(!resp.ok){
         var errTxt='';
-        try{var ej=await resp.json();errTxt=ej.error&&ej.error.message||ej.message||JSON.stringify(ej);}
+        try{var ej=await resp.json();errTxt=(ej.error&&ej.error.message)||ej.message||JSON.stringify(ej);}
         catch(e){errTxt='HTTP '+resp.status;}
-        throw new Error('接口返回 '+resp.status+'：'+errTxt);
+        throw new Error('接口返回 '+resp.status+'：'+String(errTxt).slice(0,200));
       }
       var reader=resp.body.getReader();
       var dec=new TextDecoder('utf-8');
@@ -3178,7 +3307,9 @@ function openDataSheet(){
           try{
             var j=JSON.parse(payload);
             var d=j.choices&&j.choices[0]&&j.choices[0].delta;
-            if(d&&d.content){
+            if(!d)continue;
+            if(d.reasoning_content){think+=d.reasoning_content;}
+            if(d.content){
               if(!firstTok){firstTok=Date.now()-t0;statEl.textContent='首字 '+firstTok+'ms';}
               acc+=d.content;
               bubble.textContent=acc;
@@ -3187,22 +3318,27 @@ function openDataSheet(){
           }catch(e){}
         }
       }
-      if(!acc){bubble.textContent='（没有返回内容）';}
-      else{
+      if(!acc){
+        bubble.parentNode.removeChild(bubble);
+        addErr('没有返回内容'+(think?'（模型只输出了思考过程）':''));
+      }else{
         hist.push({role:'assistant',content:acc});
         saveHist();
         var total=Date.now()-t0;
-        statEl.textContent=(firstTok?'首字 '+firstTok+'ms · ':'')+'总 '+(total/1000).toFixed(1)+'s';
+        statEl.textContent=(firstTok?'首字 '+firstTok+'ms · ':'')+'总 '+(total/1000).toFixed(1)+'s · '+acc.length+'字';
       }
     }catch(err){
-      bubble.parentNode.removeChild(bubble);
-      addErr(err.message||String(err));
-      statEl.textContent='失败';
-      if(String(err).indexOf('401')>=0||String(err).indexOf('401')>=0){
-        addErr('Key 可能无效，点右上角 ⚙ 重新设置');
+      if(bubble.parentNode)bubble.parentNode.removeChild(bubble);
+      var m=String(err&&err.message||err);
+      if(m.indexOf('Failed to fetch')>=0||m.indexOf('NetworkError')>=0){
+        addErr('连不上本地网关。确认 dsh 里 our-free-model 插件的「本地转发」已开启（127.0.0.1:8326），或在下拉里换成「智谱 GLM-4-Flash（官方直连）」。');
+      }else{
+        addErr(m);
       }
+      statEl.textContent='失败';
+      if(m.indexOf('401')>=0)addErr('Key 可能无效，点 ⚙ 重新设置');
     }finally{
-      busy=false;sendEl.disabled=false;fabEl.classList.remove('busy');
+      busy=false;sendEl.disabled=false;if(fabEl)fabEl.classList.remove('busy');
       inputEl.focus();
     }
   }
@@ -3216,7 +3352,7 @@ function openDataSheet(){
     hist=[];saveHist();logEl.innerHTML='';statEl.textContent='';
     toast('对话已清空');
   };
-  document.getElementById('aisetup').onclick=function(){askKey();};
+  document.getElementById('aisetup').onclick=function(){openSettings();};
 
   sendEl.onclick=function(){send(inputEl.value);};
 
@@ -3225,19 +3361,17 @@ function openDataSheet(){
     e.stopPropagation();
   });
 
-  /* 打开面板：带当前题目作为开场提示 */
+  /* 打开面板 */
   fabEl.onclick=function(){
-    if(SFX)SFX.unlock();
+    if(typeof SFX!=='undefined'&&SFX)SFX.unlock();
     sheetEl.classList.add('show');
-    if(!getKey()){
-      setTimeout(function(){askKey();},120);
-    }
-    /* 首次打开且无历史：给个引导 */
     if(!hist.length&&!logEl.children.length){
       var q=null;
       try{q=BANK[order[idx]];}catch(e){}
-      var greet='你好，我是刷题助手。';
-      if(q)greet+='\n\n当前这道题：'+String(q.s).slice(0,50)+'\n\n想让我讲讲这道题，直接问我，或者点下面的快捷问题。';
+      var greet='我是刷题助手。';
+      if(isZhipu())greet+='\n\n当前走智谱官方接口。';
+      else greet+='\n\n当前走本机网关，模型 '+cfg.model+'。';
+      if(q)greet+='\n\n这道题：'+String(q.s).slice(0,50)+'\n\n想听讲解直接问，也可以点下面的快捷问题。';
       addMsg('assistant',greet);
       var quick=document.createElement('div');
       quick.className='aiquick';
@@ -3260,9 +3394,12 @@ function openDataSheet(){
     });
   }
 
-  /* 暴露给外部（比如题目页加按钮时用） */
-  window.AI={open:function(t){fabEl.onclick();if(t)setTimeout(function(){send(t);},120);},send:send};
+  buildSel();
+  updateTag();
+
+  window.AI={open:function(t){fabEl.onclick();if(t)setTimeout(function(){send(t);},120);},send:send,cfg:cfg};
 })();
+
 </script>
 </body>
 </html>
