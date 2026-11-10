@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1220">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CC时长">
+<title>CC 时长</title>
+<style>
+  :root{
+    --bg:#0a1018; --card:#141f30; --card2:#1a2739;
+    --line:#22304a; --txt:#e8eef7; --dim:#8aa0bd; --dim2:#5f7492;
+    --blue:#4aa8ff; --blue2:#2b7fd4; --green:#3ddc9a; --amber:#ffc84a; --red:#ff5f6d;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+    font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Noto Sans SC",sans-serif;
+    -webkit-font-smoothing:antialiased}
+  body{padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 24px);
+    max-width:520px;margin:0 auto}
+  h1{font-size:19px;margin:0;letter-spacing:.5px}
+  .sub{font-size:12px;color:var(--dim2);margin-top:3px}
+
+  .top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:14px}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--dim2);margin-top:7px;flex:0 0 auto}
+  .dot.on{background:var(--green);box-shadow:0 0 10px rgba(61,220,154,.7)}
+  .dot.bad{background:var(--red);box-shadow:0 0 10px rgba(255,95,109,.7)}
+  .dot.wait{background:var(--amber);box-shadow:0 0 10px rgba(255,200,74,.7)}
+
+  .card{background:linear-gradient(160deg,var(--card),var(--card2));border:1px solid var(--line);
+    border-radius:16px;padding:16px;margin-bottom:12px}
+
+  /* 账号切换 */
+  .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;margin:0 -2px}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:0 0 auto;display:flex;align-items:center;gap:7px;
+    background:#0d1623;border:1px solid var(--line);border-radius:11px;
+    padding:8px 12px;font-size:12.5px;color:var(--dim);cursor:pointer;
+    max-width:190px;transition:border-color .15s,background .15s}
+  .chip.on{background:rgba(74,168,255,.14);border-color:var(--blue2);color:var(--txt)}
+  .chip b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px}
+  .chip small{font-size:11px;color:var(--dim2);font-variant-numeric:tabular-nums}
+  .chip.on small{color:#7cc4ff}
+  .chip.add{justify-content:center;padding:8px 14px;color:var(--blue)}
+  .chip .x{opacity:.5;font-size:14px;padding:0 0 0 2px;line-height:1}
+  .chip .x:active{opacity:1;color:var(--red)}
+
+  .bal{text-align:center;padding:20px 16px 18px}
+  .bal .num{font-size:40px;font-weight:700;letter-spacing:-1px;line-height:1.1;
+    background:linear-gradient(135deg,#7cc4ff,#4aa8ff 55%,#8ef0c4);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .bal .unit{font-size:15px;color:var(--dim);margin-left:4px;font-weight:400}
+  .bal .hours{font-size:12.5px;color:var(--dim2);margin-top:6px;min-height:18px}
+  .bal .lbl{font-size:12px;color:var(--dim2);letter-spacing:2px;margin-bottom:8px}
+
+  .row{display:flex;gap:10px;align-items:center}
+  label{display:block;font-size:12px;color:var(--dim);margin-bottom:6px}
+  input{flex:1;min-width:0;background:#0b1421;border:1px solid var(--line);border-radius:10px;
+    color:var(--txt);padding:10px 12px;font-size:13px;font-family:ui-monospace,Menlo,Consolas,monospace;
+    outline:none;transition:border-color .15s}
+  input:focus{border-color:var(--blue2)}
+  .btn{background:var(--blue2);border:none;color:#fff;border-radius:10px;padding:10px 16px;
+    font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:filter .15s,transform .06s}
+  .btn:active{transform:scale(.97)}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--dim)}
+  .btn.big{width:100%;padding:15px;font-size:15px;border-radius:13px;
+    background:linear-gradient(135deg,#3d8fe6,#2b6fc4)}
+  .btn.sm{padding:7px 13px;font-size:12.5px;border-radius:9px}
+
+  .tasks{margin-top:2px}
+  .task{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px solid rgba(34,48,74,.6)}
+  .task:last-child{border-bottom:none}
+  .task .name{flex:1;min-width:0}
+  .task .name b{font-size:14px;font-weight:600;display:block}
+  .task .name small{font-size:11.5px;color:var(--dim2);font-family:ui-monospace,monospace;
+    display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .task .prog{font-size:12.5px;color:var(--dim);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .task.done .prog,.task.done .name small{color:var(--green)}
+  .task.full{opacity:.45}
+  .task.now{background:rgba(74,168,255,.07);margin:0 -16px;padding-left:16px;padding-right:16px;border-radius:8px}
+
+  .log{background:#080e17;border:1px solid var(--line);border-radius:12px;padding:11px 12px;
+    font:12px/1.65 ui-monospace,Menlo,Consolas,monospace;max-height:260px;overflow-y:auto;
+    color:var(--dim);white-space:pre-wrap;word-break:break-all}
+  .log .ok{color:var(--green)}
+  .log .err{color:var(--red)}
+  .log .warn{color:var(--amber)}
+  .log .t{color:var(--dim2)}
+
+  .hint{font-size:11.5px;color:var(--dim2);line-height:1.7;margin-top:10px}
+  .hint code{background:#0b1421;padding:1px 5px;border-radius:4px;font-size:11px;color:#7cc4ff}
+  .sep{height:1px;background:var(--line);margin:16px 0}
+  .ttl{font-size:12px;color:var(--dim2);letter-spacing:1.5px;margin-bottom:10px;
+    display:flex;justify-content:space-between;align-items:center}
+  .ttl .act{color:var(--blue);letter-spacing:0;cursor:pointer;font-size:12.5px}
+
+  .tabs{display:flex;gap:6px;background:#0b1421;border-radius:10px;padding:4px;margin-bottom:14px}
+  .tabs div{flex:1;text-align:center;padding:8px;border-radius:8px;font-size:13px;
+    color:var(--dim);cursor:pointer;transition:background .15s,color .15s}
+  .tabs div.on{background:var(--blue2);color:#fff;font-weight:600}
+  .pane{display:none}
+  .pane.on{display:block}
+  .field{margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div>
+    <h1>CC 时长</h1>
+    <div class="sub" id="sub">未添加账号</div>
+  </div>
+  <div class="dot" id="dot"></div>
+</div>
+
+<!-- 账号切换 -->
+<div class="card" style="padding:12px 14px">
+  <div class="ttl" style="margin-bottom:9px"><span>账号</span><span class="act" id="openAdd">+ 添加</span></div>
+  <div class="chips" id="chips"></div>
+</div>
+
+<!-- 余额 -->
+<div class="card bal">
+  <div class="lbl">剩余免费加速时长</div>
+  <div><span class="num" id="num">--</span><span class="unit">分钟</span></div>
+  <div class="hours" id="hours">&nbsp;</div>
+</div>
+
+<!-- 任务 -->
+<div class="card">
+  <div class="ttl">
+    <span>任务</span>
+    <span class="act" id="refresh">刷新</span>
+  </div>
+  <div class="tasks" id="tasks">
+    <div class="task"><div class="name"><b style="color:var(--dim2)">先添加一个账号</b></div></div>
+  </div>
+  <div class="sep"></div>
+  <button class="btn big" id="claimAll">一键全领</button>
+  <div class="hint" id="allHint">
+    「观看视频」每领一次要先上报开始信号，再等 10 秒冷却，所以会慢一点。
+  </div>
+</div>
+
+<!-- 添加账号 -->
+<div class="card" id="addCard" style="display:none">
+  <div class="ttl"><span>添加账号</span><span class="act" id="closeAdd">收起</span></div>
+
+  <div class="tabs">
+    <div class="on" data-tab="sms">手机验证码</div>
+    <div data-tab="tok">直接填 token</div>
+  </div>
+
+  <!-- 验证码登录 -->
+  <div class="pane on" id="paneSms">
+    <div class="field">
+      <label>手机号</label>
+      <div class="row">
+        <input id="phone" type="tel" inputmode="numeric" maxlength="11" placeholder="11 位手机号" autocomplete="off">
+      </div>
+    </div>
+    <div class="field">
+      <label>验证码</label>
+      <div class="row">
+        <input id="smsCode" type="tel" inputmode="numeric" maxlength="6" placeholder="6 位验证码" autocomplete="off">
+        <button class="btn ghost sm" id="sendSms" type="button">发验证码</button>
+      </div>
+    </div>
+    <button class="btn big" id="doLogin">登录并添加</button>
+    <div class="hint">
+      验证码会发到这个手机号上。登录成功后 token 自动保存，渠道自动探测。
+    </div>
+  </div>
+
+  <!-- 直接填 token -->
+  <div class="pane" id="paneTok">
+    <div class="field">
+      <label>user-token</label>
+      <div class="row">
+        <input id="tokenIn" type="text" placeholder="32 位 token" autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+    <div class="field">
+      <label>渠道（留空自动探测）</label>
+      <input id="chanIn" list="chans" placeholder="xiaomi / vivo / ..." autocomplete="off" spellcheck="false">
+      <datalist id="chans">
+        <option value="xiaomi"><option value="market_xiaomi">
+        <option value="vivo"><option value="market_vivo">
+        <option value="oppo"><option value="market_oppo">
+        <option value="huawei"><option value="market_huawei">
+      </datalist>
+    </div>
+    <button class="btn big" id="addByToken">添加</button>
+    <div class="hint">
+      token 在 <code>/data/data/cn.ccspeed/shared_prefs/UserManager.xml</code> →
+      <code>userLogin.userToken</code>，要有 root 才能读。
+    </div>
+  </div>
+</div>
+
+<!-- 日志 -->
+<div class="card">
+  <div class="ttl"><span>日志</span><span class="act" id="clearLog">清空</span></div>
+  <div class="log" id="log"><span class="t">—</span></div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  var API = 'https://prd-api.ccspeed.cn/app';
+  var KEY = 'doisqxOOSMttYy8IniQ5D84SxGObltjW';
+  var DEF_CHANNEL = 'xiaomi';
+  var COOLDOWN_MS = 11000;
+
+  var SKEY_ACC = 'cc_accounts_v3';
+  var SKEY_ACT = 'cc_active_v3';
+
+  var $ = function(id){ return document.getElementById(id); };
+  var logBox = $('log'), tasksBox = $('tasks');
+
+  var accounts = [];     // [{token, channel, nickname, userId}]
+  var active = 0;
+  var busy = false, lastData = null, smsTimer = null, smsLeft = 0;
+
+  // ---------- 基础 ----------
+  function pad(n){ return n < 10 ? '0' + n : '' + n; }
+  function hhmm(){ var d = new Date(); return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds()); }
+  function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+
+  function log(msg, cls){
+    var s = document.createElement('span');
+    if (cls) s.className = cls;
+    s.textContent = '[' + hhmm() + '] ' + msg + '\n';
+    logBox.appendChild(s);
+    logBox.scrollTop = logBox.scrollHeight;
+  }
+  function setDot(st){ $('dot').className = 'dot' + (st ? ' ' + st : ''); }
+
+  function fmtHours(min){
+    var h = min / 60;
+    if (h >= 24) return '≈ ' + (Math.round(h*10)/10) + ' 小时（' + (Math.round(h/24*10)/10) + ' 天）';
+    if (h >= 1)  return '≈ ' + (Math.round(h*10)/10) + ' 小时';
+    return '不足 1 小时';
+  }
+
+  // ---------- 存储 ----------
+  function loadStore(){
+    try {
+      accounts = JSON.parse(localStorage.getItem(SKEY_ACC) || '[]') || [];
+    } catch(e){ accounts = []; }
+    if (!Array.isArray(accounts)) accounts = [];
+    var a = parseInt(localStorage.getItem(SKEY_ACT) || '0', 10);
+    active = (isNaN(a) || a < 0 || a >= accounts.length) ? 0 : a;
+  }
+  function saveStore(){
+    localStorage.setItem(SKEY_ACC, JSON.stringify(accounts));
+    localStorage.setItem(SKEY_ACT, String(active));
+  }
+  function cur(){ return accounts[active] || null; }
+
+  function label(a){
+    return a.nickname || (a.userId ? ('用户' + a.userId) : '未命名');
+  }
+
+  // ---------- 请求 ----------
+  function reqFor(acc, path, opts){
+    opts = opts || {};
+    return fetch(API + path, {
+      method: opts.method || 'GET',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'api-key': KEY,
+        'user-token': acc.token,
+        'client-channel-name': acc.channel || DEF_CHANNEL
+      },
+      body: opts.body === undefined ? null : opts.body,
+      credentials: 'omit',
+      cache: 'no-store'
+    }).then(function(r){
+      return r.text().then(function(t){
+        try { return JSON.parse(t); }
+        catch(e){ throw new Error('返回非 JSON：' + t.slice(0,90)); }
+      });
+    });
+  }
+
+  function explain(code, msg){
+    if (code === 100000) return null;
+    if (code === 200001) return '没有登录 — token 空或无效';
+    if (code === 200002) return '接口或 key 不对';
+    if (code === 200003) return '渠道不匹配 或 冷却未到（' + (msg||'') + '）';
+    if (code === 200004) return '服务端参数异常';
+    if (code === 200005) return 'token 失效 — 需重新登录';
+    return (msg || '未知') + ' (' + code + ')';
+  }
+
+  // ---------- 账号 UI ----------
+  function renderChips(){
+    var box = $('chips');
+    box.innerHTML = '';
+
+    accounts.forEach(function(a, i){
+      var el = document.createElement('div');
+      el.className = 'chip' + (i === active ? ' on' : '');
+      el.onclick = function(e){
+        if (e.target.classList.contains('x')) return;
+        switchTo(i);
+      };
+
+      var b = document.createElement('b');
+      b.textContent = label(a);
+
+      var sm = document.createElement('small');
+      sm.textContent = a.channel || '?';
+
+      var x = document.createElement('span');
+      x.className = 'x';
+      x.textContent = '×';
+      x.onclick = function(ev){
+        ev.stopPropagation();
+        if (!confirm('删除账号「' + label(a) + '」？\n（只是从这台设备移除，不影响账号本身）')) return;
+        accounts.splice(i, 1);
+        if (active >= accounts.length) active = Math.max(0, accounts.length - 1);
+        saveStore();
+        renderChips();
+        if (accounts.length) refresh(false);
+        else clearView();
+        log('已删除', 't');
+      };
+
+      el.appendChild(b); el.appendChild(sm); el.appendChild(x);
+      box.appendChild(el);
+    });
+
+    var add = document.createElement('div');
+    add.className = 'chip add';
+    add.textContent = '+ 添加';
+    add.onclick = function(){ $('addCard').style.display = 'block'; $('phone').focus(); };
+    box.appendChild(add);
+
+    if (!accounts.length) {
+      box.innerHTML = '';
+      var e2 = document.createElement('div');
+      e2.className = 'chip add';
+      e2.textContent = '+ 添加第一个账号';
+      e2.onclick = function(){ $('addCard').style.display = 'block'; $('phone').focus(); };
+      box.appendChild(e2);
+    }
+  }
+
+  function clearView(){
+    $('num').textContent = '--';
+    $('hours').innerHTML = '&nbsp;';
+    $('sub').textContent = '未添加账号';
+    setDot('');
+    tasksBox.innerHTML = '<div class="task"><div class="name"><b style="color:var(--dim2)">先添加一个账号</b></div></div>';
+    lastData = null;
+  }
+
+  function switchTo(i){
+    if (busy) { log('正在跑任务，等结束再切', 'warn'); return; }
+    active = i;
+    saveStore();
+    renderChips();
+    clearView();
+    log('切换到 ' + label(accounts[i]), 't');
+    refresh(true);
+  }
+
+  // ---------- 渲染余额/任务 ----------
+  function render(data){
+    lastData = data;
+    var a = cur();
+    if (a) {
+      // 回填账号信息
+      if (data.nickname) a.nickname = data.nickname;
+      if (data.userId) a.userId = String(data.userId);
+      saveStore();
+      renderChips();
+    }
+
+    var min = data.todayRemainFreeSpeedTime || 0;
+    $('num').textContent = min;
+    $('hours').textContent = fmtHours(min);
+
+    var list = data.taskList || [];
+    var claimed = list.reduce(function(s,t){ return s + (t.hasFinishedNum||0); }, 0);
+    $('sub').textContent = (data.nickname || '已连接') +
+      ' · ' + (data.isVip ? '会员' : '普通') + ' · 今日已领 ' + claimed + ' 次';
+    setDot('on');
+
+    if (!list.length) {
+      tasksBox.innerHTML = '<div class="task"><div class="name"><b style="color:var(--dim2)">任务列表为空</b></div></div>';
+      return;
+    }
+
+    tasksBox.innerHTML = '';
+    list.forEach(function(t){
+      var done = (t.hasFinishedNum||0) >= t.maxFinishNum;
+      var el = document.createElement('div');
+      el.className = 'task' + (done ? ' full' : '');
+      el.dataset.taskId = t.taskId;
+
+      var name = document.createElement('div');
+      name.className = 'name';
+      var b = document.createElement('b');
+      b.textContent = t.name || ('任务 ' + t.taskId);
+      var sm = document.createElement('small');
+      sm.textContent = 'taskId=' + t.taskId + ' · ' +
+        (t.rewardTime > 0 ? ('单次 +' + t.rewardTime + ' 分') : '本档已无奖励');
+      name.appendChild(b); name.appendChild(sm);
+
+      var prog = document.createElement('div');
+      prog.className = 'prog' + ((t.hasFinishedNum||0) > 0 ? ' done' : '');
+      prog.textContent = (t.hasFinishedNum||0) + '/' + t.maxFinishNum;
+
+      var btn = document.createElement('button');
+      btn.className = 'btn sm';
+      btn.textContent = done ? '✓' : '领';
+      btn.disabled = done || busy;
+      btn.onclick = function(){ claimOne(t); };
+
+      el.appendChild(name); el.appendChild(prog); el.appendChild(btn);
+      tasksBox.appendChild(el);
+    });
+  }
+
+  function markBusy(on){
+    busy = on;
+    [].forEach.call(tasksBox.querySelectorAll('button'), function(b){ b.disabled = on; });
+    $('claimAll').disabled = on;
+  }
+  function highlight(taskId, on){
+    var el = tasksBox.querySelector('.task[data-task-id="' + taskId + '"]');
+    if (el) el.classList.toggle('now', !!on);
+  }
+
+  // ---------- 拉数据 ----------
+  function refresh(silent){
+    var a = cur();
+    if (!a) { if (!silent) log('先添加账号', 'warn'); return Promise.resolve(null); }
+    if (!silent) log('拉取账号信息…', 't');
+    return reqFor(a, '/user/center/detail', { method:'POST', body:'' })
+      .then(function(j){
+        var e = explain(j.code, j.msg);
+        if (e) { setDot('bad'); log('失败：' + e, 'err'); return null; }
+        render(j.data);
+        log('余额 ' + j.data.todayRemainFreeSpeedTime + ' 分钟', 'ok');
+        return j.data;
+      })
+      .catch(function(err){
+        setDot('bad'); log('网络错误：' + err.message, 'err'); return null;
+      });
+  }
+
+  // ---------- 领取 ----------
+  function claimOnce(taskId, isVideo){
+    var a = cur();
+    if (!a) return Promise.resolve(0);
+    var ch = a.channel || DEF_CHANNEL;
+
+    var pre = Promise.resolve();
+    if (isVideo) {
+      pre = reqFor(a, '/user/center/getCrawlStrasoPWV?taskId=' + taskId +
+                       '&userChannel=' + encodeURIComponent(ch))
+        .then(function(j){
+          if (j.code !== 100000) log('  上报失败 ' + explain(j.code, j.msg), 'warn');
+        })
+        .catch(function(){ log('  上报异常', 'warn'); })
+        .then(function(){ return sleep(COOLDOWN_MS); });
+    }
+
+    return pre.then(function(){
+      return reqFor(a, '/user/center/finishDayTask?taskId=' + taskId +
+                       '&userChannel=' + encodeURIComponent(ch));
+    }).then(function(j){
+      var e = explain(j.code, j.msg);
+      if (e) { log('  失败：' + e, 'err'); return 0; }
+      var got = (j.data && j.data.dayTaskRewordTime) || 0;
+      if (got > 0) log('  +' + got + ' 分钟', 'ok');
+      else log('  返回成功但奖励 0（这档没奖励了）', 'warn');
+      return got;
+    }).catch(function(err){
+      log('  异常：' + err.message, 'err');
+      return 0;
+    });
+  }
+
+  function claimOne(t){
+    if (busy) return;
+    markBusy(true);
+    logBox.innerHTML = '';
+    log('领取「' + t.name + '」', 't');
+    claimOnce(t.taskId, t.type === 3).then(function(got){
+      if (got > 0) log('本次 +' + got + ' 分钟', 'ok');
+      return refresh(true);
+    }).then(function(){ markBusy(false); });
+  }
+
+  function claimAll(){
+    if (busy) return;
+    if (!lastData) { log('先刷新一次', 'warn'); return; }
+    var a = cur();
+    if (!a) { log('先添加账号', 'warn'); return; }
+
+    markBusy(true);
+    logBox.innerHTML = '';
+    log('一键全领  账号=' + label(a) + '  渠道=' + (a.channel || DEF_CHANNEL), 't');
+
+    var queue = (lastData.taskList || []).slice().filter(function(t){
+      return (t.hasFinishedNum||0) < t.maxFinishNum;
+    }).sort(function(x, y){
+      return (y.rewardTime * (y.maxFinishNum - y.hasFinishedNum)) -
+             (x.rewardTime * (x.maxFinishNum - x.hasFinishedNum));
+    });
+
+    if (!queue.length) { log('今天所有任务都已领满', 'warn'); markBusy(false); return; }
+
+    var total = 0, qi = 0;
+
+    function nextTask(){
+      if (qi >= queue.length) {
+        log('— 结束，本轮合计 +' + total + ' 分钟 —', total > 0 ? 'ok' : 'warn');
+        return refresh(true).then(function(){ markBusy(false); });
+      }
+      var t = queue[qi++];
+      var left = t.maxFinishNum - (t.hasFinishedNum||0);
+      var isVideo = t.type === 3;
+
+      log('▸ ' + t.name + '  剩 ' + left + ' 次' +
+          (isVideo ? '（每次等 ' + (COOLDOWN_MS/1000) + ' 秒）' : ''), 't');
+      highlight(t.taskId, true);
+      var n = 0;
+
+      function step(){
+        if (n >= left) { highlight(t.taskId, false); return nextTask(); }
+        n++;
+        log('  [' + n + '/' + left + ']', 't');
+        return claimOnce(t.taskId, isVideo).then(function(got){
+          total += got;
+          if (got === 0 && n >= 2) {
+            log('  连续无收益，跳过', 'warn');
+            highlight(t.taskId, false);
+            return nextTask();
+          }
+          return sleep(isVideo ? 300 : 500).then(step);
+        });
+      }
+      return step();
+    }
+
+    nextTask().catch(function(err){
+      log('中断：' + err.message, 'err');
+      markBusy(false);
+    });
+  }
+
+  // ---------- 渠道探测 ----------
+  function probeChannel(token, onFound){
+    var cands = ['xiaomi','market_xiaomi','vivo','market_vivo','oppo','market_oppo',
+                 'huawei','market_huawei','tencent','market_tencent','360',''];
+    var i = 0;
+    function next(){
+      if (i >= cands.length) return Promise.resolve(null);
+      var c = cands[i++];
+      return fetch(API + '/user/center/detail', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'api-key': KEY,
+          'user-token': token,
+          'client-channel-name': c
+        },
+        body: '', credentials: 'omit', cache: 'no-store'
+      }).then(function(r){ return r.json(); }).then(function(j){
+        if (j.code === 100000) {
+          log('渠道 = ' + (c || '(空)') + ' 可用', 'ok');
+          return c;
+        }
+        return sleep(220).then(next);
+      }).catch(function(){ return sleep(220).then(next); });
+    }
+    return next();
+  }
+
+  function addAccount(token, channel, thenRefresh){
+    token = (token || '').trim();
+    if (!token) { log('token 为空', 'err'); return Promise.resolve(null); }
+
+    // 去重
+    var dup = accounts.findIndex(function(a){ return a.token === token; });
+    if (dup >= 0) {
+      active = dup; saveStore(); renderChips();
+      log('这个账号已经在列表里了', 'warn');
+      return thenRefresh ? refresh(false) : Promise.resolve(accounts[dup]);
+    }
+
+    var doAdd = function(ch){
+      var a = { token: token, channel: ch || DEF_CHANNEL, nickname: '', userId: '' };
+      accounts.push(a);
+      active = accounts.length - 1;
+      saveStore();
+      renderChips();
+      clearView();
+      log('已添加，正在验证…', 't');
+      return thenRefresh ? refresh(false) : Promise.resolve(a);
+    };
+
+    if (channel) return doAdd(channel);
+    return probeChannel(token).then(function(ch){
+      if (ch === null) {
+        log('所有渠道都试过了都不行，先按 xiaomi 存下', 'warn');
+        return doAdd(DEF_CHANNEL);
+      }
+      return doAdd(ch);
+    });
+  }
+
+  // ---------- 短信登录 ----------
+  function startSmsCountdown(){
+    smsLeft = 60;
+    $('sendSms').disabled = true;
+    clearInterval(smsTimer);
+    smsTimer = setInterval(function(){
+      smsLeft--;
+      if (smsLeft <= 0) {
+        clearInterval(smsTimer);
+        $('sendSms').disabled = false;
+        $('sendSms').textContent = '发验证码';
+      } else {
+        $('sendSms').textContent = smsLeft + 's';
+      }
+    }, 1000);
+    $('sendSms').textContent = smsLeft + 's';
+  }
+
+  function sendSms(){
+    var phone = $('phone').value.trim();
+    if (!/^1\d{10}$/.test(phone)) { log('手机号要 11 位，1 开头', 'err'); return; }
+    $('sendSms').disabled = true;
+    log('发送验证码到 ' + phone + ' …', 't');
+
+    fetch(API + '/register/sendRegisterSms', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'api-key': KEY
+      },
+      body: 'phone=' + encodeURIComponent(phone) + '&type=1',
+      credentials: 'omit', cache: 'no-store'
+    }).then(function(r){ return r.json(); }).then(function(j){
+      var e = explain(j.code, j.msg);
+      if (e) {
+        log('发送失败：' + e, 'err');
+        $('sendSms').disabled = false;
+      } else {
+        log('验证码已发送，60 秒内可重发', 'ok');
+        startSmsCountdown();
+        $('smsCode').focus();
+      }
+    }).catch(function(err){
+      log('发送异常：' + err.message, 'err');
+      $('sendSms').disabled = false;
+    });
+  }
+
+  function doLogin(){
+    var phone = $('phone').value.trim();
+    var code = $('smsCode').value.trim();
+    if (!/^1\d{10}$/.test(phone)) { log('手机号不对', 'err'); return; }
+    if (!code) { log('填验证码', 'err'); return; }
+
+    $('doLogin').disabled = true;
+    log('登录中…', 't');
+
+    fetch(API + '/doLoginByCode', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'api-key': KEY
+      },
+      body: 'phone=' + encodeURIComponent(phone) + '&validateCode=' + encodeURIComponent(code),
+      credentials: 'omit', cache: 'no-store'
+    }).then(function(r){ return r.json(); }).then(function(j){
+      var e = explain(j.code, j.msg);
+      if (e) { log('登录失败：' + e, 'err'); $('doLogin').disabled = false; return; }
+      var tk = j.data && j.data.userToken;
+      if (!tk) { log('登录返回没有 userToken', 'err'); $('doLogin').disabled = false; return; }
+      log('登录成功，探测渠道…', 'ok');
+      $('addCard').style.display = 'none';
+      $('phone').value = ''; $('smsCode').value = '';
+      $('doLogin').disabled = false;
+      addAccount(tk, '', true);
+    }).catch(function(err){
+      log('登录异常：' + err.message, 'err');
+      $('doLogin').disabled = false;
+    });
+  }
+
+  // ---------- 事件 ----------
+  $('openAdd').onclick = function(){ $('addCard').style.display = 'block'; $('phone').focus(); };
+  $('closeAdd').onclick = function(){ $('addCard').style.display = 'none'; };
+  $('refresh').onclick = function(){ if (!busy) refresh(false); };
+  $('claimAll').onclick = claimAll;
+  $('clearLog').onclick = function(){ logBox.innerHTML = '<span class="t">—</span>'; };
+  $('sendSms').onclick = sendSms;
+  $('doLogin').onclick = doLogin;
+
+  $('addByToken').onclick = function(){
+    var tk = $('tokenIn').value.trim();
+    var ch = $('chanIn').value.trim();
+    if (!tk) { log('token 为空', 'err'); return; }
+    $('addCard').style.display = 'none';
+    $('tokenIn').value = ''; $('chanIn').value = '';
+    addAccount(tk, ch, true);
+  };
+
+  // tab 切换
+  [].forEach.call(document.querySelectorAll('.tabs div'), function(d){
+    d.onclick = function(){
+      [].forEach.call(document.querySelectorAll('.tabs div'), function(x){ x.classList.remove('on'); });
+      d.classList.add('on');
+      $('paneSms').classList.toggle('on', d.dataset.tab === 'sms');
+      $('paneTok').classList.toggle('on', d.dataset.tab === 'tok');
+    };
+  });
+
+  // ---------- 启动 ----------
+  loadStore();
+  renderChips();
+
+  if (accounts.length) {
+    log('已载入 ' + accounts.length + ' 个账号', 't');
+    refresh(true);
+  } else {
+    clearView();
+    log('点「+ 添加」加账号', 't');
+  }
+})();
+</script>
+</body>
+</html>
