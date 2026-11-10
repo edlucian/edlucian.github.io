@@ -505,6 +505,22 @@ svg{display:block}
 .sheet.show .spanel{transform:translateY(0)}
 /* 隐藏的兼容按钮容器 */
 .hidden-btns{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;pointer-events:none;opacity:0}
+/* 进度面板 · 危险操作 */
+.mkpt.danger-t{color:var(--bad)}
+.dangerbox{
+  border:1px solid var(--bad-deep);border-radius:var(--r-md);
+  background:var(--bad-soft);padding:13px 15px;margin:6px 0 4px;
+  display:flex;flex-direction:column;gap:10px;
+}
+.danger-txt{font-size:12.5px;color:var(--ink);line-height:1.6}
+.danger-txt b{color:var(--bad);font-weight:600}
+.danger-sub{font-size:11.5px;color:var(--dim);display:block;margin-top:3px}
+.dangerbtn{
+  align-self:flex-start;
+  background:var(--bad-soft);border:1px solid var(--bad-deep);color:var(--bad);
+  font-weight:600;
+}
+.dangerbtn:hover{background:rgba(150,87,76,.28);color:var(--ink)}
 /* 打字音设置 */
 .typwrap{padding:14px 18px calc(20px + env(safe-area-inset-bottom));overflow-y:auto}
 .typrow{display:flex;align-items:center;gap:12px;margin-bottom:13px}
@@ -1238,10 +1254,7 @@ svg{display:block}
         <span class="fnlb">打字音</span>
         <span class="fnst" id="fnTypeSt">棉花糖</span>
       </button>
-      <button class="fnitem danger" data-fn="clear">
-        <span class="fnic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></span>
-        <span class="fnlb">清空本科</span>
-      </button>
+
     </div>
     <div class="syncbox" id="syncbox"></div>
   </div>
@@ -3038,10 +3051,29 @@ document.getElementById('btnclear').onclick=function(){
   });
   if(S.pos)S.pos[filter]=null;
   if(WRUN.on||S.wrongRun){WRUN.on=false;S.wrongRun=null;}
-  TQ={};_ansMs=0;                 /* 秒表也归零 */
-  if(SFX)SFX.sweep();
+  TQ={};_ansMs=0;                 /* 秒表也归零 */  if(SFX)SFX.sweep();
+  /* 关键：给被清空的题打墓碑，否则云端旧数据会在下次同步时复活 */
+  try{
+    var clearedKeys=[];
+    pool.forEach(function(q){
+      var k=key(q);
+      clearedKeys.push(k);
+      if(q.ch)q.ch.forEach(function(c2){clearedKeys.push(k+'.'+c2.id);});
+    });
+    if(window.SYNC&&window.SYNC.markCleared)window.SYNC.markCleared(clearedKeys);
+  }catch(e){}
   save();idx=0;buildOrder(false);chips();renderSide();tickTimer();
-  toast('已清空 '+n+' 道题的记录');
+  /* 立刻把清空结果同步到云端，避免用户以为没清干净 */
+  if(window.SYNC&&window.SYNC.cfg&&window.SYNC.cfg.enabled&&window.SYNC.cfg.token){
+    toast('已清空 '+n+' 道，正在同步云端…');
+    setTimeout(function(){
+      window.SYNC.forceSync().then(function(ok){
+        toast(ok?'已清空并同步到云端':'已清空，但云端同步失败');
+      });
+    },300);
+  }else{
+    toast('已清空 '+n+' 道题的记录');
+  }
 };
 /* ===== 音效开关 ===== */
 function syncSfxBtn(){
@@ -3321,6 +3353,15 @@ function renderDataSheet(){
     +'<button class="mkgo" id="dataexp">导出进度</button>'
     +'<button class="mkgo ghost" id="dataimp">导入进度</button>'
     +'</div>';
+  /* ===== 危险操作：清空进度（从功能面板挪来）===== */
+  var clearN=dn;
+  var scopeName=(filter==='ALL')?'全部':'当前筛选';
+  h+='<p class="mkpt danger-t">危险操作</p>';
+  h+='<div class="dangerbox">';
+  h+='<div class="danger-txt">清空'+esc(SUBJ_NAME[SUBJECT])+'·'+esc(scopeName)+'的 <b>'+clearN+'</b> 道答题记录<br>'
+    +'<span class="danger-sub">只清答题记录和错题，题目本身不动。云端同步的记录也会一起清掉。</span></div>';
+  h+='<button class="mkgo dangerbtn" id="dataclear">清空进度</button>';
+  h+='</div>';
   var bks=listBackups();
   h+='<p class="mkpt">自动备份（最多 3 份）</p>';
   if(!bks.length){
@@ -3335,6 +3376,20 @@ function renderDataSheet(){
   el.innerHTML=h;
   var be=document.getElementById('dataexp');
   if(be)be.onclick=function(){if(SFX)SFX.tap();exportProgress();};
+  var dc=document.getElementById('dataclear');
+  if(dc)dc.onclick=function(){
+    var cb=document.getElementById('btnclear');
+    if(cb&&typeof cb.onclick==='function'){
+      var ad=document.getElementById('datasheet');
+      if(ad)ad.classList.remove('show');
+      cb.onclick();
+      setTimeout(function(){
+        renderDataSheet();
+        var d2=document.getElementById('datasheet');
+        if(d2)d2.classList.add('show');
+      },700);
+    }else toast('清空按钮不可用');
+  };
   var bi=document.getElementById('dataimp');
   if(bi)bi.onclick=function(){
     if(SFX)SFX.tap();
@@ -3561,11 +3616,7 @@ function renderTypeSfx(){
       }else toast('同步模块未加载');
       return;
     }
-    if(fn==='clear'){
-      close();
-      if(!fire('btnclear'))toast('清空按钮缺失');
-      return;
-    }
+
   });
 
   btn.onclick=function(){
@@ -4253,9 +4304,51 @@ function renderTypeSfx(){
   function dec(b){return decodeURIComponent(escape(atob(String(b).replace(/\n/g,''))));}
   function usable(){return !!(cfg.enabled&&cfg.token);}
 
+  /* ---------- 墓碑：记录被清空的题，防止云端旧数据复活 ---------- */
+  var TOMB_LS = 'dshdz_sync_tomb_';
+  function tombKey(){ return TOMB_LS + SUBJECT; }
+  function loadTomb(){
+    try{ var s = localStorage.getItem(tombKey()); return s ? JSON.parse(s) : {}; }catch(e){ return {}; }
+  }
+  function saveTomb(o){
+    try{ localStorage.setItem(tombKey(), JSON.stringify(o)); }catch(e){}
+  }
+  function markCleared(keys){
+    var tb = loadTomb(), now = Date.now();
+    keys.forEach(function(k){ tb[k] = now; });
+    saveTomb(tb);
+  }
+  function pruneTomb(tb){
+    var now = Date.now(), limit = 30 * 24 * 3600 * 1000;
+    Object.keys(tb).forEach(function(k){ if(now - tb[k] > limit) delete tb[k]; });
+    return tb;
+  }
+
+    /* ---------- 墓碑：记录被清空的题，防止云端旧数据复活 ---------- */
+  var TOMB_LS = 'dshdz_sync_tomb_';
+  function tombKey(){ return TOMB_LS + SUBJECT; }
+  function loadTomb(){
+    try{ var s = localStorage.getItem(tombKey()); return s ? JSON.parse(s) : {}; }catch(e){ return {}; }
+  }
+  function saveTomb(o){
+    try{ localStorage.setItem(tombKey(), JSON.stringify(o)); }catch(e){}
+  }
+  function markCleared(keys){
+    var tb = loadTomb(), now = Date.now();
+    keys.forEach(function(k){ tb[k] = now; });
+    saveTomb(tb);
+  }
+  function pruneTomb(tb){
+    var now = Date.now(), limit = 30 * 24 * 3600 * 1000;
+    Object.keys(tb).forEach(function(k){ if(now - tb[k] > limit) delete tb[k]; });
+    return tb;
+  }
+
   /* 只同步"做题进度"，不动其它状态 */
   function snapshot(){
+    var tb = pruneTomb(loadTomb());
     return {
+      clearedAt:tb,
       done:S.done||{},
       wrong:S.wrong||{},
       wrongCnt:S.wrongCnt||{},
@@ -4269,11 +4362,21 @@ function renderTypeSfx(){
   /* 合并策略：做题记录以"做过即算"为准；错误次数取较大值；用时取较大值 */
   function merge(remote,local){
     var out={};
-    out.done=Object.assign({},remote.done||{},local.done||{});
+    var tb={};
+    var rt=remote.clearedAt||{},lt=local.clearedAt||{};
+    Object.keys(rt).forEach(function(k){tb[k]=rt[k];});
+    Object.keys(lt).forEach(function(k){tb[k]=Math.max(tb[k]||0,lt[k]);});
+    out.clearedAt=tb;
+    var selfCleared={};
+    var merged=Object.assign({},remote.done||{},local.done||{});
+    Object.keys(tb).forEach(function(k){
+      if(merged[k]!==undefined){delete merged[k];selfCleared[k]=1;}
+    });
+    out.done=merged;
     out.wrong={};out.wrongCnt={};out.time={};
     var keys={};
-    Object.keys(remote.wrong||{}).forEach(function(k){keys[k]=1;});
-    Object.keys(local.wrong||{}).forEach(function(k){keys[k]=1;});
+    Object.keys(remote.wrong||{}).forEach(function(k){if(!selfCleared[k])keys[k]=1;});
+    Object.keys(local.wrong||{}).forEach(function(k){if(!selfCleared[k])keys[k]=1;});
     Object.keys(keys).forEach(function(k){
       var rw=(remote.wrong||{})[k],lw=(local.wrong||{})[k];
       if(rw!=null||lw!=null)out.wrong[k]=(rw!=null||lw!=null)?(rw!=null?rw:lw):undefined;
@@ -4375,6 +4478,7 @@ function renderTypeSfx(){
   /* 把合并结果落回本地 */
   function applyMerged(m){
     var before=Object.keys(S.done||{}).length;
+    if(m.clearedAt)saveTomb(m.clearedAt);
     S.done=m.done||{};
     S.wrong=m.wrong||{};
     S.wrongCnt=m.wrongCnt||{};
@@ -4458,6 +4562,8 @@ function renderTypeSfx(){
 
   window.SYNC={
     cfg:cfg,
+    markCleared:markCleared,
+    forceSync:function(){busy=false;return sync(false);},
     sync:sync,
     setup:setup,
     pull:pull,
