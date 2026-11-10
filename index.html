@@ -118,12 +118,19 @@ svg{display:block}
   .gleft #timer{display:none}
 }
 
+/* 宽屏：题目 + 学习面板 + AI 常驻（三栏） */
 .layout{
-  max-width:960px;margin:0 auto;padding:22px 24px 0;
+  max-width:1560px;margin:0 auto;padding:22px 24px 0;
   display:grid;grid-template-columns:minmax(0,1fr) 264px;gap:20px;
   align-items:start;
 }
 .side{position:sticky;top:20px;display:flex;flex-direction:column;gap:14px}
+
+/* 宽屏才出现的 AI 右栏 */
+.airail{display:none}
+
+
+/* 900-1420 之间：保持原样（两栏 + 浮球） */
 @media (max-width:900px){
   .layout{grid-template-columns:1fr;padding:16px 16px 0}
   .side{display:none}
@@ -421,6 +428,72 @@ svg{display:block}
   .aiin{height:min(80vh,560px)}
   .ailog{font-size:13.5px;padding:12px}
   .aibubble{max-width:94%}
+}
+/* ===== 宽屏 AI 右栏（放最后，确保覆盖上面基础样式）===== */
+@media (min-width:1420px){
+  /* 三栏：题目弹性 + 学习面板固定 + AI 固定宽 */
+  .layout{
+    max-width:1280px;
+    grid-template-columns:minmax(0,1fr) 240px;
+    gap:16px;
+    padding-left:150px;
+    padding-right:480px;
+  }
+  .lrail{
+    left:max(10px, calc((100vw - min(1720px, 100vw - 32px))/2 - 4px));
+    width:126px;
+    top:150px;
+  }
+
+  /* ---- AI 右栏容器 ---- */
+  .airail{
+    display:block;
+    /* 固定在右侧，独立于文档流，输入框永远可见 */
+    position:fixed;
+    top:186px;
+    right:16px;
+    bottom:calc(76px + env(safe-area-inset-bottom));
+    width:430px;
+    background:var(--panel);border:1px solid var(--line);
+    border-radius:var(--r-lg);overflow:hidden;
+    z-index:35;
+  }
+  .aifab{display:none}
+
+  /* ---- 面板本身绝对定位填满容器，脱离 fixed 的文档流影响 ---- */
+  .aisheet,
+  .aisheet.show{
+    position:absolute;inset:0;z-index:auto;
+    display:flex;align-items:stretch;justify-content:stretch;
+    width:100%;height:100%;max-width:none;
+    background:none;-webkit-backdrop-filter:none;backdrop-filter:none;
+  }
+  .aiin{
+    width:100%;max-width:none;height:100%;
+    background:transparent;border:none;border-radius:0;
+    animation:none;box-shadow:none;
+    display:flex;flex-direction:column;min-height:0;overflow:hidden;
+  }
+  .aihead{flex:0 0 auto;padding:10px 12px}
+  .ailog{flex:1 1 auto;min-height:0;overflow-y:auto;padding:12px;font-size:13.5px}
+  .aifoot{flex:0 0 auto;padding:10px 12px calc(10px + env(safe-area-inset-bottom))}
+  .aibubble{max-width:94%}
+  .aiqcard{padding:11px 12px}
+  .aiqstem{font-size:13px}
+  .aiqopts{gap:3px}
+  .aiqopt{font-size:11.5px;padding:3px 6px}
+  .aiqfoot{font-size:11px}
+  .aiintro-txt{font-size:13px}
+  .aiquick button{font-size:11.5px;padding:6px 11px}
+  .aimodel{max-width:150px}
+}
+
+@media (min-width:1420px) and (max-width:1640px){
+  .layout{grid-template-columns:minmax(0,1fr) 216px;gap:12px;padding-left:136px;padding-right:420px}
+  .airail{width:388px;right:12px}
+  .lrail{width:112px;top:146px}
+  .lrail-card{padding:11px 9px 9px}
+  .lrail-time{font-size:23px}
 }
 .toast{
   position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));
@@ -1055,6 +1128,7 @@ svg{display:block}
 <div class="layout">
   <main id="app" style="min-width:0"></main>
   <aside class="side" id="side"></aside>
+  <aside class="airail" id="airail"></aside>
 </div>
 
 <div class="aisheet" id="aisheet">
@@ -4264,6 +4338,38 @@ function renderTypeSfx(){
 
   buildSel();updateTag();
 
+
+  /* ---------- 宽屏：AI 常驻右栏，不用每次点 ---------- */
+  var railEl=document.getElementById('airail');
+  var sheetNode=document.getElementById('aisheet');
+  var CW=1420;   /* 与 CSS 断点一致 */
+  function placeAI(){
+    if(!railEl||!sheetNode)return;
+    var wide=window.innerWidth>=CW;
+    if(wide){
+      if(sheetNode.parentNode!==railEl){
+        railEl.appendChild(sheetNode);
+        sheetNode.classList.add('show');
+        try{ syncCard(true); syncIntro(true); }catch(e){}
+      }
+    }else{
+      if(sheetNode.parentNode===railEl){
+        document.body.insertBefore(sheetNode, fabEl);
+        sheetNode.classList.remove('show');
+      }
+    }
+  }
+  placeAI();
+  var _rzT=null;
+  window.addEventListener('resize',function(){
+    if(_rzT)clearTimeout(_rzT);
+    _rzT=setTimeout(function(){
+      var before=sheetNode.parentNode===railEl;
+      placeAI();
+      var after=sheetNode.parentNode===railEl;
+      if(before!==after)try{ syncCard(true); syncIntro(true); }catch(e){}
+    },180);
+  });
   window.AI={
     open:function(t){fabEl.onclick();if(t)setTimeout(function(){send(t);},120);},
     send:send,
