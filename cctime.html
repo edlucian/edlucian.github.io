@@ -645,28 +645,53 @@
     $('sendSms').disabled = true;
     log('发送验证码到 ' + phone + ' …', 't');
 
-    fetch(API + '/register/sendRegisterSms', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'api-key': KEY
-      },
-      body: 'phone=' + encodeURIComponent(phone) + '&type=1',
-      credentials: 'omit', cache: 'no-store'
-    }).then(function(r){ return r.json(); }).then(function(j){
-      var e = explain(j.code, j.msg);
-      if (e) {
-        log('发送失败：' + e, 'err');
-        $('sendSms').disabled = false;
-      } else {
+    // 服务端限流时会返回 503 且不带 CORS 头，浏览器只报 "Failed to fetch"，
+    // 所以这里自己重试 + 给出明确提示
+    var tries = 0, MAX = 3;
+
+    function attempt(){
+      tries++;
+      return fetch(API + '/register/sendRegisterSms', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'api-key': KEY
+        },
+        body: 'phone=' + encodeURIComponent(phone) + '&type=1',
+        credentials: 'omit', cache: 'no-store'
+      }).then(function(r){
+        if (r.status === 503) {
+          throw { rate: true };
+        }
+        return r.json();
+      }).then(function(j){
+        var e = explain(j.code, j.msg);
+        if (e) {
+          log('发送失败：' + e, 'err');
+          $('sendSms').disabled = false;
+          return;
+        }
         log('验证码已发送，60 秒内可重发', 'ok');
         startSmsCountdown();
         $('smsCode').focus();
-      }
-    }).catch(function(err){
-      log('发送异常：' + err.message, 'err');
-      $('sendSms').disabled = false;
-    });
+      }).catch(function(err){
+        var isRate = err && err.rate;
+        var isFetch = err && (err.name === 'TypeError' || String(err.message||'').indexOf('fetch') >= 0);
+        if ((isRate || isFetch) && tries < MAX) {
+          log('请求太频繁，' + (tries*5) + ' 秒后重试（' + tries + '/' + MAX + '）…', 'warn');
+          return sleep(tries * 5000).then(attempt);
+        }
+        if (isRate || isFetch) {
+          log('发不出去：服务端在限流。等 1~2 分钟再点一次。', 'err');
+          log('（同一个手机号 1 分钟内只能发一次）', 'warn');
+        } else {
+          log('发送异常：' + (err && err.message ? err.message : err), 'err');
+        }
+        $('sendSms').disabled = false;
+      });
+    }
+
+    attempt();
   }
 
   function doLogin(){
