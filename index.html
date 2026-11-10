@@ -1327,7 +1327,12 @@ svg{display:block}
         <span class="fnlb">云端同步</span>
         <span class="fnst" id="fnSyncSt">关</span>
       </button>
-      <button class="fnitem" data-fn="typsfx">
+      <button class="fnitem" data-fn="autonext">
+        <span class="fnic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></span>
+        <span class="fnlb">答对跳题</span>
+        <span class="fnst" id="fnAutoSt">关</span>
+      </button>
+      <button class="fnitem" data-fn="typsfx">      <button class="fnitem" data-fn="typsfx">
         <span class="fnic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19v3"/><path d="M5 16V8a7 7 0 0 1 14 0v8"/><rect x="3" y="16" width="18" height="4" rx="2"/></svg></span>
         <span class="fnlb">打字音</span>
         <span class="fnst" id="fnTypeSt">棉花糖</span>
@@ -1705,6 +1710,7 @@ document.addEventListener('visibilitychange',function(){
   else{var st=studyState();if(st.running)st.since=Date.now();tickTimer();}
 });
 
+var AUTONEXT=false;try{AUTONEXT=localStorage.getItem('dshdz_autonext')==='1';}catch(e){}
 var S=load();
 var filter='ALL',order=[],idx=0;
 var MODLAB={computer:{M1:'计算机基础',M2:'数据库',M3:'操作系统',M4:'网络',M5:'Word',M6:'Excel',X1:'PPT'},zh:{},math:{},en:{}};
@@ -2094,7 +2100,7 @@ function render(){
       if(_ok)markRight(k);else markWrong(k,L);
       if(SFX)_ok?SFX.right():SFX.wrong();
       flushTiming();
-      save();afterAnswer(k,_ok);render();chips();
+      save();afterAnswer(k,_ok);render();chips();autoNextIfRight(_ok);
     };
   });
   /* 子题选项 */
@@ -2115,7 +2121,7 @@ function render(){
       if(_ok2)markRight(ck);else markWrong(ck,L);
       if(SFX)_ok2?SFX.right():SFX.wrong();
       flushTiming();
-      save();afterAnswer(ck,_ok2);render();chips();
+      save();afterAnswer(ck,_ok2);render();chips();autoNextIfRight(_ok2);
     };
   });
   /* 子题多选提交 */
@@ -2140,7 +2146,7 @@ function render(){
     var _ok3=isRight(p,qq.a);
     if(_ok3)markRight(kk);else markWrong(kk,p);
     if(SFX)_ok3?SFX.right():SFX.wrong();
-    delete PEND[kk];flushTiming();save();afterAnswer(kk,_ok3);render();chips();
+    delete PEND[kk];flushTiming();save();afterAnswer(kk,_ok3);render();chips();autoNextIfRight(_ok3);
   };
   /* 填空提交 */
   var fgo=document.getElementById('fillgo');
@@ -2153,7 +2159,7 @@ function render(){
     var _ok4=fillRight(vals,qq.ak);
     if(_ok4)markRight(kk);else markWrong(kk,vals);
     if(SFX)_ok4?SFX.right():SFX.wrong();
-    delete FILLS[kk];flushTiming();save();afterAnswer(kk,_ok4);render();chips();
+    delete FILLS[kk];flushTiming();save();afterAnswer(kk,_ok4);render();chips();autoNextIfRight(_ok4);
   };
   /* 主观题：textarea 边写边存（不判分） */
   app.querySelectorAll('.subjta').forEach(function(ta){
@@ -3084,6 +3090,22 @@ document.getElementById('goto').addEventListener('keydown',function(e){
   e.stopPropagation();
 });
 
+/* ===== 答对自动跳下一道 ===== */
+function autoNextIfRight(ok){
+  if(!AUTONEXT||!ok)return;
+  if(MOCK.on||WRUN.on)return;          /* 模拟卷/错题练习不跳 */
+  if(idx>=order.length-1)return;       /* 最后一道不跳 */
+  setTimeout(function(){
+    idx++;render();savePos();
+    /* 滚到顶部，看清新题 */
+    try{window.scrollTo({top:0,behavior:'smooth'});}catch(e){window.scrollTo(0,0);}
+  },420);                               /* 延迟一点，让"答对了"的反馈先显示 */
+}
+function setAutoNext(v){
+  AUTONEXT=!!v;
+  try{localStorage.setItem('dshdz_autonext',AUTONEXT?'1':'0');}catch(e){}
+}
+
 /* ===== 跳到未做：当前筛选下第一道没答过的题 ===== */
 function firstUndone(){
   for(var i=0;i<order.length;i++){
@@ -3633,6 +3655,8 @@ function renderTypeSfx(){
       }catch(e){}
       st.textContent=done+' / '+total+' 已做';
     }
+    var anSt=document.getElementById('fnAutoSt');
+    if(anSt){anSt.textContent=AUTONEXT?'开':'关';anSt.style.color=AUTONEXT?'var(--ok)':'';}
     var sfxSt=document.getElementById('fnSfxSt');
     if(sfxSt){
       var on=true;
@@ -3686,6 +3710,13 @@ function renderTypeSfx(){
     if(fn==='timer'){
       close();
       if(!fire('btntimerreset'))toast('清零按钮缺失');
+      return;
+    }
+    if(fn==='autonext'){
+      setAutoNext(!AUTONEXT);
+      var st=document.getElementById('fnAutoSt');
+      if(st){st.textContent=AUTONEXT?'开':'关';st.style.color=AUTONEXT?'var(--ok)':'';}
+      toast(AUTONEXT?'答对自动跳下一题：开':'答对自动跳下一题：关');
       return;
     }
     if(fn==='typsfx'){
@@ -3919,7 +3950,7 @@ function renderTypeSfx(){
     }
 
     /* 状态签名：题目 + 是否作答 + 学生答案 + 错误次数，任一变化就重建 */
-    var sig=kk+'|'+(st.done?'1':'0')+'|'+(st.done?st.user:'')+'|'+(st.right?'1':'0')+'|'+(st.wrongCnt||0);
+    var sig=kk+'|'+(st.done?'1':'0')+'|'+(st.done?st.user:'')+'|'+(st.right?'1':'0')+'|'+(st.wrongCnt||0)+'|'+String(q.s||'').slice(0,40)+'|'+String(q.mn||'');
     return {el:wrap,key:kk,sig:sig,q:q,st:st};
   }
 
@@ -4330,6 +4361,7 @@ function renderTypeSfx(){
         try{
           if(sheetEl&&sheetEl.classList.contains('show')){
             syncCard(false); syncIntro(false);
+            try{_checkCard();}catch(e){}
           }else{
             lastQKey=null;   /* 面板关着，下次打开强制重建 */
           }
@@ -4338,6 +4370,35 @@ function renderTypeSfx(){
       };
     }
   }catch(e){}
+
+  /* ---------- 兜底：题目区变化时同步卡片（不依赖 render hook）---------- */
+  var _lastSeenSig=null;
+  function _currentSig(){
+    var q=null;
+    try{ q=curQ(); }catch(e){}
+    if(!q)return '';
+    var st=qState(q);
+    return qKeyOf(q)+'|'+(st.done?'1':'0')+'|'+(st.done?st.user:'')+'|'+String(q.s||'').slice(0,40);
+  }
+  function _checkCard(){
+    var s=_currentSig();
+    if(!s)return;
+    if(s===_lastSeenSig)return;
+    _lastSeenSig=s;
+    try{
+      var changed=syncCard(false);
+      if(changed)syncIntro(false);
+    }catch(e){}
+  }
+  /* 监听主区域 DOM：题目变了就同步 */
+  var _appEl=document.getElementById('app');
+  if(_appEl&&window.MutationObserver){
+    var _mo=new MutationObserver(function(){_checkCard();});
+    _mo.observe(_appEl,{childList:true,subtree:true});
+  }
+  /* 兜底轮询：每 400ms 看一次（MutationObserver 之外的保险） */
+  setInterval(function(){_checkCard();},400);
+  _lastSeenSig=_currentSig();
 
   /* ---------- 恢复历史 ---------- */
   loadHist();
@@ -4362,6 +4423,7 @@ function renderTypeSfx(){
         railEl.appendChild(sheetNode);
         sheetNode.classList.add('show');
         try{ syncCard(true); syncIntro(true); }catch(e){}
+        try{ if(typeof _checkCard==='function')_checkCard(); }catch(e){}
       }
     }else{
       if(sheetNode.parentNode===railEl){
