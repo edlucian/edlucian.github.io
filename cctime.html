@@ -678,12 +678,14 @@
         var isRate = err && err.rate;
         var isFetch = err && (err.name === 'TypeError' || String(err.message||'').indexOf('fetch') >= 0);
         if ((isRate || isFetch) && tries < MAX) {
-          log('请求太频繁，' + (tries*5) + ' 秒后重试（' + tries + '/' + MAX + '）…', 'warn');
-          return sleep(tries * 5000).then(attempt);
+          var waitSec = tries * 10;
+          log('请求被限流，' + waitSec + ' 秒后重试（' + tries + '/' + MAX + '）…', 'warn');
+          return sleep(waitSec * 1000).then(attempt);
         }
         if (isRate || isFetch) {
-          log('发不出去：服务端在限流。等 1~2 分钟再点一次。', 'err');
-          log('（同一个手机号 1 分钟内只能发一次）', 'warn');
+          log('发不出去：服务端在限流这个手机号。', 'err');
+          log('同一个号 5~10 分钟只能发一次。等一会儿再点，别连点。', 'warn');
+          log('或者先在 CC加速器 App 里登录一次，再回来用「直接填 token」。', 'warn');
         } else {
           log('发送异常：' + (err && err.message ? err.message : err), 'err');
         }
