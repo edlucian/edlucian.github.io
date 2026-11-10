@@ -261,7 +261,7 @@ svg{display:block}
 .bbtn:active{background:#383531}
 .bbtn:focus-visible{outline:2px solid var(--acc-line);outline-offset:2px}
 .bbtn:disabled{opacity:.35;pointer-events:none}
-.bbtn#btnclear:hover{background:var(--bad-soft);border-color:var(--bad-deep);color:var(--bad)}
+.bbtn#btnclear:hover,.bbtn#btnclearbar:hover{background:var(--bad-soft);border-color:var(--bad-deep);color:var(--bad)}
 .bbtn.resetbtn{color:var(--sub)}
 .bbtn.resetbtn:hover{background:var(--hover);border-color:#4A453F;color:var(--ink)}
 .bbtn.resetbtn svg{width:14px;height:14px}
@@ -1159,6 +1159,10 @@ svg{display:block}
       <span class="fnbadge" id="fnbadge"></span>
     </button>
     <button class="timer" id="timer" title="点一下开始计时">0:00</button>
+    <button class="bbtn" id="btnclearbar" title="清空当前筛选下的答题记录">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+      <span class="bt">清空</span>
+    </button>
   </div>
 
   <!-- ===== 中间：翻页主控 ===== -->
@@ -3099,6 +3103,13 @@ document.getElementById('btnundone').onclick=function(){
   toast('已跳到第 '+(i+1)+' 题（未做）');
 };
 /* ===== 清空：只清当前科目当前筛选的答题记录 ===== */
+
+/* 底栏清空按钮：转调 btnclear 的完整逻辑（含墓碑+云同步） */
+document.getElementById('btnclearbar').onclick=function(){
+  if(MOCK.on){if(SFX)SFX.tap();toast('模拟卷进行中，交卷后可用');return;}
+  var cb=document.getElementById('btnclear');
+  if(cb&&typeof cb.onclick==='function')cb.onclick();
+};
 document.getElementById('btnclear').onclick=function(){
   if(MOCK.on){if(SFX)SFX.tap();toast('模拟卷进行中，交卷后可用');return;}
   var pool=order.length?order.map(function(i){return BANK[i];}):BANK;
