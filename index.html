@@ -1127,6 +1127,383 @@ svg{display:block}
   .wrow{align-items:flex-start}
   .wrow .redo{padding:4px 9px;font-size:11.5px}
 }
+
+/* ==================== v26 主题层（Apple 深蓝灰 + 低噪声） ==================== */
+:root{
+  --bg:#141821; --panel:#1A2029; --card:#202836; --hover:#283244;
+  --line:#2C3547; --line-soft:#252D3C;
+  --ink:#E8ECF4; --sub:#9AA6BC; --dim:#5F6B80;
+  --acc:#E8925A; --acc-soft:rgba(232,146,90,.13); --acc-line:rgba(232,146,90,.45);
+  --acc2:#6C9FFF; --acc2-soft:rgba(108,159,255,.13);
+  --ok:#7FC79A; --ok-deep:#4E8A66; --ok-soft:rgba(127,199,154,.13);
+  --bad:#E08585; --bad-deep:#A65B5B; --bad-soft:rgba(224,133,133,.13);
+  --r-lg:12px; --r-md:8px; --r-sm:6px;
+  --ease:cubic-bezier(.3,.7,.3,1);
+  --glass:rgba(26,32,41,.82);
+}
+html,body{background:var(--bg)}
+body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+
+/* ---- 顶栏：玻璃单行 52px ---- */
+.top{background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--line-soft)}
+.top-in{max-width:1280px;padding:0 20px;height:52px;display:flex;align-items:center;gap:14px}
+.brand h1{font-size:15px;margin:0;line-height:1.2;white-space:nowrap}
+.brand h1 .mark{color:var(--acc)}
+.brand h1 .h1n{font-size:12px;color:var(--dim);font-weight:500;margin-left:4px}
+.brand .sub{display:none}
+.top .prog{position:absolute;left:0;bottom:-1px;height:2px;width:100%}
+.top .prog i{background:linear-gradient(90deg,var(--acc),#F0B183);height:2px;border-radius:0}
+
+/* 顶栏统计胶囊 */
+.topstats{display:flex;align-items:center;gap:6px;margin-left:auto}
+.tstat{display:flex;align-items:baseline;gap:4px;font-size:11.5px;color:var(--dim);
+  background:var(--card);border:1px solid var(--line-soft);border-radius:var(--r-md);
+  padding:4px 9px;cursor:pointer;transition:border-color .15s,color .15s;white-space:nowrap}
+.tstat b{font-size:12.5px;color:var(--ink);font-variant-numeric:tabular-nums}
+.tstat:hover{border-color:var(--line);color:var(--sub)}
+.tstat.ts-acc b{color:var(--acc)}
+
+/* 科目 tab（renderSubj 输出样式覆盖） */
+.subj{margin:0}
+.subj-in{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;padding:4px 0}
+.subj-in::-webkit-scrollbar{display:none}
+.sbtn{
+  flex:0 0 auto;cursor:pointer;border:none;background:transparent;color:var(--sub);
+  font-family:inherit;font-size:13px;font-weight:500;padding:7px 12px;border-radius:var(--r-md);
+  transition:background .15s,color .15s;white-space:nowrap;position:relative;
+}
+.sbtn:hover{color:var(--ink);background:var(--hover)}
+.sbtn.on{color:var(--ink);background:var(--card);font-weight:600;
+  box-shadow:inset 0 -2px 0 var(--acc)}
+
+/* 顶部右侧按钮 */
+.top-act{display:flex;align-items:center;gap:6px}
+.tbtn{display:flex;align-items:center;gap:5px;cursor:pointer;font-family:inherit;
+  font-size:12.5px;color:var(--sub);background:transparent;border:1px solid var(--line-soft);
+  border-radius:var(--r-md);padding:6px 11px;transition:all .15s;white-space:nowrap}
+.tbtn:hover{color:var(--ink);border-color:var(--line);background:var(--hover)}
+.tbtn svg{width:14px;height:14px}
+.tbtn.tbtn-on{color:var(--acc);border-color:var(--acc-line);background:var(--acc-soft)}
+
+/* 说明条：默认收起（v26 JS 控制），改为悬浮信息条 */
+.wpnote{display:none}
+.wpnote.show{display:block;background:var(--panel);border-bottom:1px solid var(--line-soft)}
+.wpnote .in{max-width:1280px;font-size:12px;color:var(--sub);padding:8px 20px;line-height:1.8}
+.wpnote .k{color:var(--acc)}
+.wpnote .wpn-x{float:right;cursor:pointer;color:var(--dim);border:none;background:none;
+  font-family:inherit;font-size:13px;padding:0 4px}
+
+/* ---- tabs/chips ---- */
+.tabs{background:transparent;border-bottom:1px solid var(--line-soft)}
+.tabs-row{max-width:1280px;padding:0 20px;height:42px;display:flex;align-items:center;gap:8px}
+.tabs-in{max-width:none;flex:1;gap:4px;padding:0;overflow-x:auto;scrollbar-width:none}
+.tab{border-radius:var(--r-md);padding:6px 12px;font-size:13px;color:var(--sub);
+  background:transparent;transition:background .15s,color .15s}
+.tab .n{font-size:10.5px}
+.tab.on{background:var(--card);color:var(--ink);box-shadow:inset 0 -2px 0 var(--acc)}
+.mockbtn{background:transparent;border:1px solid var(--line-soft);color:var(--sub);
+  border-radius:var(--r-md);padding:6px 12px;font-size:12.5px}
+.mockbtn:hover{border-color:var(--line);color:var(--ink);background:var(--hover)}
+.mockbtn .mt{display:inline}
+.mockbtn svg{width:14px;height:14px}
+
+/* ---- 布局：左导航栏 + 题卡 ---- */
+.layout{max-width:1280px;grid-template-columns:228px minmax(0,1fr);gap:22px;padding:20px 20px 0}
+.lnav{position:sticky;top:64px;align-self:start;display:flex;flex-direction:column;gap:12px;
+  transition:margin-left .22s var(--ease),opacity .2s}
+body.lnav-off .lnav{margin-left:-250px;opacity:0;pointer-events:none;height:0;overflow:hidden}
+#app{min-width:0;max-width:900px;margin:0 auto;width:100%}
+
+/* 学习模式折叠钮 */
+.lnavtog{position:fixed;left:8px;top:62px;z-index:25;width:26px;height:26px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  border:1px solid var(--line-soft);background:var(--glass);backdrop-filter:blur(8px);
+  color:var(--dim);border-radius:var(--r-sm);transition:color .15s,border-color .15s}
+.lnavtog:hover{color:var(--ink);border-color:var(--line)}
+body.lnav-off .lnavtog{left:8px}
+.lnavtog svg{width:13px;height:13px;transition:transform .2s}
+body.lnav-off .lnavtog svg{transform:rotate(180deg)}
+
+/* ---- lnav 面板 ---- */
+.lnav .panel{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--r-lg);
+  padding:14px}
+.lnav .pt{font-size:10.5px;font-weight:600;letter-spacing:.1em;color:var(--dim);margin:0 0 10px}
+.lnav-acts{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.lnav-btn{display:flex;align-items:center;gap:7px;cursor:pointer;font-family:inherit;
+  font-size:12.5px;color:var(--sub);background:var(--panel);border:1px solid var(--line-soft);
+  border-radius:var(--r-md);padding:9px 11px;transition:all .15s;text-align:left;width:100%}
+.lnav-btn:hover{color:var(--ink);border-color:var(--line);background:var(--hover)}
+.lnav-btn svg{width:14px;height:14px;flex:0 0 auto;color:var(--dim)}
+.lnav-btn:hover svg{color:var(--acc)}
+.lnav-btn.wide{grid-column:1/-1}
+.lnav-btn.lnav-acc{color:var(--acc);border-color:var(--acc-line);background:var(--acc-soft)}
+.lnav-btn.lnav-acc svg{color:var(--acc)}
+.lnav-btn .lbadge{margin-left:auto;font-size:10.5px;color:var(--dim);
+  font-variant-numeric:tabular-nums}
+.lnav-btn .lbadge.on{color:var(--acc)}
+
+/* 计时卡搬进 lnav：复用旧 id 的新样式 */
+.lnav .lrail-label{justify-content:flex-start;font-size:10.5px;color:var(--dim);
+  letter-spacing:.1em;margin-bottom:8px}
+.lnav .lrail-time{width:100%;text-align:left;font-size:22px;background:transparent;border:none;
+  color:var(--ink);font-variant-numeric:tabular-nums;padding:2px 0;cursor:pointer;font-family:inherit}
+.lnav .lrail-time.running{color:var(--acc)}
+.lnav .lrail-btns{display:flex;gap:6px;margin-top:6px}
+.lnav .lrail-btn{flex:1;font-size:12px;padding:6px 0;border-radius:var(--r-sm);
+  background:var(--panel);border:1px solid var(--line-soft);color:var(--sub);cursor:pointer;font-family:inherit}
+.lnav .lrail-btn:hover{color:var(--ink);border-color:var(--line)}
+.lnav .lrail-btn.sub{color:var(--dim)}
+
+/* 侧栏进度（renderSide 输出样式微调） */
+.ring{width:62px;height:62px;flex:0 0 62px}
+.ring svg{width:62px;height:62px}
+.mrow{display:flex;align-items:center;gap:8px;margin-top:8px}
+.mrow .mn{font-size:12px;color:var(--sub);flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mrow .mbar{flex:0 0 64px;height:4px;background:var(--panel);border-radius:2px;overflow:hidden}
+.mrow .mbar i{display:block;height:100%;background:var(--acc);border-radius:2px}
+.mrow .mc{font-size:10.5px;color:var(--dim);flex:0 0 auto;font-variant-numeric:tabular-nums}
+.mmore{font-size:11px;color:var(--dim);margin-top:10px;cursor:pointer}
+.mmore:hover{color:var(--acc)}
+
+/* ---- 题卡 ---- */
+.qcard{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--r-lg);
+  padding:22px 26px 10px;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.qhead{margin-bottom:18px;gap:10px}
+.qno{font-size:12px;color:var(--dim)}
+.qtag{font-size:11px;padding:3px 9px;border-radius:var(--r-sm);background:var(--panel);
+  border:1px solid var(--line-soft);color:var(--sub)}
+.stem{font-size:16px;line-height:1.7;color:var(--ink);margin:0 0 22px;font-weight:550}
+.qimg{margin:0 0 18px;border-radius:var(--r-md);overflow:hidden;background:var(--panel)}
+.qimg img{max-width:100%;display:block}
+
+.opts{display:flex;flex-direction:column;gap:9px;margin-bottom:18px}
+.opt{border:1px solid var(--line-soft);border-radius:var(--r-md);background:var(--panel);
+  padding:13px 15px;font-size:14.5px;line-height:1.6;transition:border-color .14s,background .14s;position:relative}
+.opt::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:2.5px;border-radius:2px;
+  background:transparent;transition:background .14s}
+.opt:hover{background:var(--hover);border-color:var(--line)}
+.opt:hover::before{background:var(--acc)}
+.opt .k{width:24px;height:24px;flex:0 0 24px;display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:600;color:var(--dim);background:var(--card);
+  border:1px solid var(--line-soft);border-radius:var(--r-sm)}
+.opt.sel{border-color:var(--acc-line);background:var(--acc-soft)}
+.opt.sel .k{color:var(--acc);border-color:var(--acc-line)}
+.opt.sel::before{background:var(--acc)}
+.opt.ok{border-color:var(--ok-deep);background:var(--ok-soft)}
+.opt.ok .k{color:var(--ok);border-color:var(--ok-deep);background:rgba(127,199,154,.12)}
+.opt.ok::before{background:var(--ok)}
+.opt.bad{border-color:var(--bad-deep);background:var(--bad-soft)}
+.opt.bad .k{color:var(--bad);border-color:var(--bad-deep);background:rgba(224,133,133,.12)}
+.opt.bad::before{background:var(--bad)}
+.opt.dim{opacity:.5}
+
+/* 反馈/解析 */
+.feed{border-radius:var(--r-md);padding:11px 14px;font-size:13.5px}
+.feed.ok{background:var(--ok-soft);color:var(--ok);border:1px solid rgba(127,199,154,.25)}
+.feed.bad{background:var(--bad-soft);color:var(--bad);border:1px solid rgba(224,133,133,.25)}
+.feed.ref{background:var(--acc2-soft);color:var(--acc2);border:1px solid rgba(108,159,255,.25)}
+.feed .ans{color:var(--ink);font-weight:600}
+.fb-panel{background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--r-md);
+  padding:13px 15px;margin-top:10px}
+.fb-panel .et{font-size:11px;color:var(--dim);letter-spacing:.1em;margin-bottom:7px}
+.fb-panel .ex{font-size:13.5px;line-height:1.75;color:var(--sub);white-space:pre-wrap}
+
+/* 材料题/填空/主观 */
+.matsub .subcard{background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--r-md);
+  padding:14px 16px;margin-bottom:10px}
+.matsub .substem{font-size:14px;line-height:1.65}
+.fills .fillrow{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.fills .fk{font-size:12px;color:var(--dim);flex:0 0 auto}
+.fillin{flex:1;background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--r-sm);
+  color:var(--ink);font-family:inherit;font-size:14px;padding:8px 12px}
+.fillin:focus{outline:none;border-color:var(--acc-line)}
+.subjbox .subjta{width:100%;background:var(--panel);border:1px solid var(--line-soft);
+  border-radius:var(--r-md);color:var(--ink);font-family:inherit;font-size:14px;line-height:1.7;
+  padding:12px 14px;resize:vertical}
+.subjbox .subjta:focus{outline:none;border-color:var(--acc-line)}
+.subjbox .subjtt{font-size:11.5px;color:var(--dim)}
+
+/* 题卡底部操作行（v26 新增） */
+.qfoot{display:flex;align-items:center;gap:8px;margin:2px -26px -10px;padding:12px 20px;
+  border-top:1px solid var(--line-soft);background:rgba(26,32,41,.5);border-radius:0 0 var(--r-lg) var(--r-lg)}
+.qfoot .qf-sp{flex:1}
+.qfbtn{display:flex;align-items:center;gap:6px;cursor:pointer;font-family:inherit;
+  font-size:12.5px;color:var(--sub);background:transparent;border:1px solid transparent;
+  border-radius:var(--r-md);padding:7px 12px;transition:all .15s;white-space:nowrap}
+.qfbtn:hover{color:var(--ink);background:var(--hover)}
+.qfbtn svg{width:15px;height:15px}
+.qfbtn.fav-on{color:var(--acc)}
+.qfbtn.fav-on svg{fill:var(--acc)}
+.qfbtn.qf-ai{color:var(--acc2)}
+.qfbtn.qf-ai:hover{background:var(--acc2-soft)}
+.qfnav{display:flex;gap:6px}
+.qfnav .qfbtn{border-color:var(--line-soft)}
+.qfnav .qfbtn.primary{color:var(--acc);border-color:var(--acc-line)}
+.qfnav .qfbtn.primary:hover{background:var(--acc-soft)}
+.qfnav .qfbtn:disabled{opacity:.35;cursor:default;pointer-events:none}
+
+/* ---- 底栏 ---- */
+.bar{background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-top:1px solid var(--line-soft);
+  padding:8px max(16px,calc((100vw - 1280px)/2 + 20px)) calc(8px + env(safe-area-inset-bottom))}
+.bbtn{background:transparent;border:1px solid var(--line-soft);color:var(--sub);
+  border-radius:var(--r-md);padding:8px 12px;font-size:12.5px}
+.bbtn:hover{color:var(--ink);border-color:var(--line);background:var(--hover)}
+.bbtn.primary{color:var(--acc);border-color:var(--acc-line);background:var(--acc-soft)}
+.bbtn svg{width:15px;height:15px}
+.timer{background:transparent;border:1px solid var(--line-soft);color:var(--sub);
+  font-variant-numeric:tabular-nums;font-size:13px;border-radius:var(--r-md);padding:8px 12px}
+.timer.running{color:var(--acc);border-color:var(--acc-line)}
+.pos{font-size:13px;color:var(--sub);font-variant-numeric:tabular-nums}
+.pos b{color:var(--ink);font-size:15px}
+.goto{background:var(--panel);border:1px solid var(--line-soft);color:var(--ink);
+  border-radius:var(--r-sm);font-family:inherit;font-size:12.5px;padding:6px 8px;width:64px}
+.gobtn{background:var(--panel);border:1px solid var(--line-soft);color:var(--sub);
+  border-radius:var(--r-sm);padding:6px 10px;font-size:12px;cursor:pointer;font-family:inherit}
+.gobtn:hover{color:var(--ink);border-color:var(--line)}
+
+/* ---- 抽屉（sheet 通用） ---- */
+.sheet{background:rgba(10,13,18,.6);backdrop-filter:blur(4px)}
+.spanel{background:var(--panel);border:1px solid var(--line-soft);border-radius:16px 16px 0 0;
+  box-shadow:0 -12px 40px rgba(0,0,0,.45)}
+@media (min-width:761px){
+  .spanel{border-radius:14px;margin:6vh auto;max-height:88vh;
+    box-shadow:0 24px 70px rgba(0,0,0,.5)}
+}
+.shead h2{font-size:15px}
+.shead .st{font-size:11.5px;color:var(--dim)}
+
+/* ---- AI：全部改为悬浮球+抽屉（废除 ≥1420 常驻栏） ---- */
+.aifab{width:46px;height:46px;right:18px;
+  bottom:calc(78px + env(safe-area-inset-bottom));
+  background:linear-gradient(135deg,var(--acc2),#4C7EE0);color:#fff;
+  box-shadow:0 4px 18px rgba(108,159,255,.35);font-size:14px}
+.aifab:hover{box-shadow:0 6px 24px rgba(108,159,255,.5)}
+.aisheet{background:rgba(10,13,18,.55)}
+.aisheet.show{backdrop-filter:blur(3px)}
+.aiin{background:var(--panel);border:1px solid var(--line-soft);border-radius:14px;
+  box-shadow:0 24px 70px rgba(0,0,0,.5)}
+@media (min-width:761px){
+  .aiin{width:390px;height:min(78vh,620px);margin:0;position:absolute;right:18px;top:50%;
+    transform:translateY(-50%)}
+}
+.aihead{border-bottom:1px solid var(--line-soft);padding:12px 14px}
+.aititle{font-size:14px}
+.ailog{font-size:13.5px}
+.aibubble{border-radius:10px}
+.aibubble.me{background:var(--acc2-soft);color:var(--ink)}
+.aibubble.ai{background:var(--card);color:var(--sub);border:1px solid var(--line-soft)}
+.aiinput{background:var(--card);border:1px solid var(--line-soft);color:var(--ink);
+  border-radius:var(--r-md);font-family:inherit}
+.aiinput:focus{outline:none;border-color:var(--acc2);box-shadow:0 0 0 2px var(--acc2-soft)}
+.aisend{background:var(--acc2);color:#fff;border-radius:var(--r-md)}
+.aimodel{background:var(--card);border:1px solid var(--line-soft);color:var(--sub);
+  border-radius:var(--r-sm);font-size:11px;padding:3px 6px}
+.aibtn{background:transparent;border:1px solid var(--line-soft);color:var(--sub);
+  border-radius:var(--r-sm);font-size:11px;padding:3px 8px}
+.aibtn:hover{color:var(--ink);border-color:var(--line)}
+
+/* AI 浮球与底栏不重叠（右下角，高于底栏） */
+@media (max-width:560px){
+  .aifab{width:44px;height:44px;right:14px;bottom:calc(72px + env(safe-area-inset-bottom));font-size:13px}
+}
+
+/* ---- 统计模式 ---- */
+body.mode-stats .layout,body.mode-stats .tabs,body.mode-stats .lrail{display:none}
+.stpage{max-width:1080px;margin:0 auto;padding:26px 20px 60px}
+.st-h{display:flex;align-items:baseline;gap:12px;margin:0 0 18px}
+.st-h h2{font-size:18px;margin:0;color:var(--ink)}
+.st-h .stsub{font-size:12px;color:var(--dim)}
+.st-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:26px}
+.st-card{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--r-lg);
+  padding:18px;cursor:pointer;transition:border-color .15s,transform .15s}
+.st-card:hover{border-color:var(--acc-line);transform:translateY(-2px)}
+.st-card.on{border-color:var(--acc-line);background:var(--acc-soft)}
+.st-card .stname{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:10px;
+  display:flex;align-items:center;gap:8px}
+.st-card .stname .dot{width:7px;height:7px;border-radius:50%;background:var(--acc)}
+.st-card .strow{display:flex;justify-content:space-between;font-size:12.5px;color:var(--sub);
+  padding:3px 0}
+.st-card .strow b{color:var(--ink);font-variant-numeric:tabular-nums}
+.st-card .strow b.acc{color:var(--acc)}
+.st-card .strow b.bad{color:var(--bad)}
+.st-sec{font-size:12px;color:var(--dim);letter-spacing:.1em;margin:22px 0 10px}
+.st-parts .mrow{padding:6px 0;border-bottom:1px solid var(--line-soft)}
+.st-parts .mrow .mn{font-size:13px}
+.st-parts .mrow .mbar{flex:1;height:5px}
+.st-part-name{font-size:13px;color:var(--ink);width:150px;flex:0 0 150px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.st-empty{font-size:13px;color:var(--dim);padding:24px;text-align:center}
+
+/* ---- 专注模式 ---- */
+body.mode-focus .lnav,body.mode-focus .lnavtog,body.mode-focus .wpnote,
+body.mode-focus .topstats,body.mode-focus .tabs,body.mode-focus .lrail{display:none}
+body.mode-focus .layout{max-width:920px;grid-template-columns:1fr;padding-top:26px}
+body.mode-focus .top{background:transparent;border-bottom-color:transparent}
+body.mode-focus .bar{background:transparent;border-top-color:transparent;
+  backdrop-filter:none;-webkit-backdrop-filter:none}
+body.mode-focus .qcard{border-color:transparent;background:var(--panel);
+  box-shadow:none;padding:28px 30px 12px}
+body.mode-focus .qfoot{border-top-color:var(--line-soft)}
+/* 专注模式下统计页绝不允许残留 */
+body.mode-focus .stpage{display:none}
+/* 专注模式下 AI 抽屉若开着自动收起（JS） */
+
+/* ---- 三种显示模式 ---- */
+/* 焦点/统计模式都隐藏旧 lrail（学习计时已搬进 lnav） */
+body.mode-focus .lrail{display:none}
+.lrail{display:none}   /* v26: 计时统一走 lnav，旧浮卡永久退役 */
+
+/* ---- 模式切换器 ---- */
+.modeseg{display:flex;gap:2px;background:var(--panel);border:1px solid var(--line-soft);
+  border-radius:var(--r-md);padding:2px}
+.modeseg button{border:none;background:transparent;color:var(--dim);cursor:pointer;
+  font-family:inherit;font-size:11.5px;padding:5px 10px;border-radius:var(--r-sm);
+  transition:all .15s;white-space:nowrap}
+.modeseg button:hover{color:var(--ink)}
+.modeseg button.on{background:var(--card);color:var(--acc);font-weight:600}
+
+/* ---- 数学显示层 ---- */
+.mathx sup{font-size:.72em;vertical-align:super;line-height:0}
+.mathx sub{font-size:.72em;vertical-align:sub;line-height:0}
+
+/* ---- 响应式 ---- */
+@media (max-width:1199px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .lnav{display:none}
+  .lnavtog{display:none}
+}
+@media (max-width:900px){
+  .topstats .tstat{display:none}
+  .topstats .tstat.ts-always{display:flex}
+}
+@media (max-width:760px){
+  .top-in{height:48px;padding:0 14px;gap:10px}
+  .brand h1{font-size:14px}
+  .top-act .tbtn span{display:none}
+  .top-act .tbtn{padding:6px 8px}
+  .tabs-row{padding:0 14px;height:40px}
+  .layout{padding:14px 14px 0}
+  .qcard{padding:16px 16px 8px}
+  .stem{font-size:15.5px}
+  .qfoot{margin:0 -16px -8px;padding:10px 14px}
+  .qfbtn span{display:none}
+  .qfbtn svg{width:17px;height:17px}
+  .qfnav .qfbtn span{display:inline}
+  .bar{padding:7px 12px calc(7px + env(safe-area-inset-bottom))}
+  .stpage{padding:20px 14px 60px}
+}
+@media (max-width:430px){
+  .brand h1 .h1n{display:none}
+  .modeseg button{padding:5px 7px;font-size:11px}
+}
+/* reduced motion 保持全局 */
+@media (prefers-reduced-motion:reduce){
+  .lnav,.lnavtog,.qcard,.opt,.sbtn,.tab{transition:none}
+}
+
 </style>
 
 </head>
@@ -1138,17 +1515,32 @@ svg{display:block}
       <h1><span class="mark">◢</span>微畔 · 中职计算机 <span class="h1n">5783 题</span></h1>
       <p class="sub" id="sub">—</p>
     </div>
-    <button id="datatop" title="进度导出 / 导入">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>
-      <span>进度</span>
-    </button>
     <nav class="subj"><div class="subj-in" id="subjbar"></div></nav>
+    <div class="topstats">
+      <span class="tstat" id="tstat-total"><b>—</b>题</span>
+      <span class="tstat" id="tstat-done"><b>—</b>已完成</span>
+      <span class="tstat ts-acc" id="tstat-rate" title="正确率 · 点看统计"><b>—</b>正确率</span>
+    </div>
+    <div class="top-act">
+      <div class="modeseg" id="modeseg">
+        <button data-mode="focus" title="专注模式（快捷键 1）">专注</button>
+        <button data-mode="study" title="学习模式（快捷键 2）" class="on">学习</button>
+        <button data-mode="stats" title="统计模式（快捷键 3）">统计</button>
+      </div>
+      <button class="tbtn" id="btnwpnote" title="题库说明">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01"/><path d="M12 12v4"/></svg>
+      </button>
+      <button class="tbtn" id="btndatatop2" title="进度导出 / 导入">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>
+        <span>进度</span>
+      </button>
+    </div>
     <div class="prog"><i id="progbar"></i></div>
   </div>
 </header>
 
 <div class="wpnote" id="wpnote" style="display:none">
-  <div class="in">
+  <div class="in"><button class="wpn-x" id="wpnx" title="收起">✕</button>
     <span><b>微畔题库</b> · 中职计算机</span>
     <span class="sep">|</span>
     <span>共 <span class="k" id="wpnoteN">5783</span> 题</span>
@@ -1189,9 +1581,67 @@ svg{display:block}
   </div>
 </aside>
 
+<button class="lnavtog" id="lnavtog" title="收起 / 展开侧栏">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+</button>
+
+<aside class="lrail" id="lrail" aria-label="学习计时" style="display:none"></aside><!-- 旧锚点置空，内容移入 lnav -->
+
 <div class="layout">
+  <aside class="lnav" id="lnav">
+    <div class="panel">
+      <p class="pt">练习</p>
+      <div class="lnav-acts">
+        <button class="lnav-btn lnav-acc" id="ln-order" title="按当前筛选顺序刷题">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>
+          顺序练习
+        </button>
+        <button class="lnav-btn" id="ln-wrong">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          错题重练
+          <span class="lbadge" id="ln-wrongn">0</span>
+        </button>
+        <button class="lnav-btn" id="ln-fav">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+          收藏练习
+          <span class="lbadge" id="ln-favn">0</span>
+        </button>
+        <button class="lnav-btn" id="ln-typ">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M9 7h6M9 11h4"/></svg>
+          专项练习
+        </button>
+        <button class="lnav-btn wide" id="ln-tree">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+          章节目录
+        </button>
+      </div>
+    </div>
+    <div class="panel">
+      <p class="pt">计时</p>
+      <div class="lrail-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      </div>
+      <button class="lrail-time" id="timerRail" title="点一下开始计时">0:00</button>
+      <div class="lrail-btns">
+        <button class="lrail-btn" id="railToggle">开始</button>
+        <button class="lrail-btn sub" id="railReset">清零</button>
+      </div>
+    </div>
+    <div id="side"></div>
+    <div class="panel">
+      <div class="lnav-acts">
+        <button class="lnav-btn" id="ln-clear" title="清空当前筛选下的答题记录">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+          清空记录
+        </button>
+        <button class="lnav-btn" id="ln-timerreset" title="学习计时清零">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          计时清零
+        </button>
+      </div>
+    </div>
+  </aside>
   <main id="app" style="min-width:0"></main>
-  <aside class="side" id="side"></aside>
   <aside class="airail" id="airail"></aside>
 </div>
 
@@ -1257,6 +1707,7 @@ svg{display:block}
     <button type="button" id="btnsfx"></button>
     <button type="button" id="btntimerreset"></button>
     <button type="button" id="btnclear"></button>
+    <button type="button" id="datatop"></button>
   </div>
 </footer>
 
@@ -4993,6 +5444,330 @@ function renderTypeSfx(){
   if(usable()&&cfg.auto)setTimeout(function(){sync(true);},2500);
 })();
 
+
+
+/* ==================== v26 UI 层（新增，不动旧逻辑） ==================== */
+(function(){
+'use strict';
+
+/* ---------- 0. 兼容：顶栏新按钮 → 旧 onclick ---------- */
+function fwd(newId, oldId){
+  var n=document.getElementById(newId), o=document.getElementById(oldId);
+  if(n&&o)n.addEventListener('click',function(){ if(typeof o.onclick==='function')o.onclick(); else o.click(); });
+}
+['btndatatop2','datatop'].forEach(function(x){ try{fwd(x,'datatop');}catch(e){} });
+
+/* ---------- 1. 收藏功能（S.fav，老数据自动兼容） ---------- */
+function favMap(){ if(!S.fav)S.fav={}; return S.fav; }
+window.favToggle=function(k){
+  var m=favMap();
+  if(m[k]){ delete m[k]; save(); return false; }
+  m[k]=Date.now(); save(); return true;
+};
+window.favHas=function(k){ return !!(S.fav&&S.fav[k]); };
+window.favList=function(){
+  var m=favMap(),out=[];
+  Object.keys(m).forEach(function(k){
+    var q=bankIndex()[k];
+    if(q)out.push(q);
+  });
+  return out;
+};
+
+/* ---------- 2. 侧栏动作绑定（全部转发到旧函数） ---------- */
+function on(id,fn){ var el=document.getElementById(id); if(el)el.addEventListener('click',fn); }
+on('ln-order',function(){
+  if(WRUN.on)wrunExit();
+  filter='ALL';buildOrder();chips();
+  toast('顺序练习');
+});
+on('ln-wrong',function(){ if(typeof wrunStart==='function')wrunStart(); });
+on('ln-fav',function(){ favRun(); });
+on('ln-typ',function(){ if(typeof openTypeSfxSheet==='function')openTypeSfxSheet(); else { var t=document.getElementById('typsheet'); if(t)t.classList.add('show'); } });
+on('ln-tree',function(){ if(typeof renderWPTree==='function')renderWPTree(); var t=document.getElementById('wptree'); if(t)t.classList.add('show'); });
+on('ln-clear',function(){ var b=document.getElementById('btnclearbar'); if(b){ if(typeof b.onclick==='function')b.onclick(); } });
+on('ln-timerreset',function(){ if(typeof resetStudy==='function')resetStudy(); });
+on('lnavtog',function(){
+  document.body.classList.toggle('lnav-off');
+  try{localStorage.setItem('dshdz_lnav',document.body.classList.contains('lnav-off')?'0':'1');}catch(e){}
+});
+try{ if(localStorage.getItem('dshdz_lnav')==='0')document.body.classList.add('lnav-off'); }catch(e){}
+
+/* ---------- 3. 收藏练习（复用错题练习的 order 机制，独立 WRUN 通道） ---------- */
+var FAVRUN={on:false};
+window.favRun=function(){
+  if(MOCK.on){toast('模拟卷进行中，先退出');return;}
+  var list=favList();
+  if(!list.length){toast('还没有收藏的题 · 题卡底部 ☆ 可收藏');return;}
+  if(WRUN.on)wrunExit();
+  var ix={},i;
+  for(i=0;i<BANK.length;i++)ix[key(BANK[i])]=i;
+  order=[];
+  list.forEach(function(q){ if(ix[key(q)]!=null)order.push(ix[key(q)]); });
+  FAVRUN.on=true;idx=0;
+  filter='ALL';chips();render();
+  toast('收藏练习 · '+order.length+' 道');
+};
+/* render/update 期间若在收藏练习，退出方式=点顺序练习 */
+
+/* ---------- 4. 顶栏统计胶囊 + 徽标（挂在 update 后） ---------- */
+try{
+  var _origUpdate=window.update;
+  window.update=function(){
+    var r=_origUpdate?_origUpdate.apply(this,arguments):undefined;
+    try{
+      var all=stats('ALL');
+      var a=document.getElementById('tstat-total'),b=document.getElementById('tstat-done'),c=document.getElementById('tstat-rate');
+      if(a)a.innerHTML='<b>'+all.total+'</b>题';
+      if(b)b.innerHTML='<b>'+all.done+'</b>已完成';
+      if(c)c.innerHTML='<b>'+(all.done?all.rate+'%':'—')+'</b>正确率';
+      var wn=document.getElementById('ln-wrongn');
+      if(wn){var n=Object.keys(S.wrong||{}).length;wn.textContent=n;wn.className='lbadge'+(n?' on':'');}
+      var fn=document.getElementById('ln-favn');
+      if(fn){var f=Object.keys(S.fav||{}).length;fn.textContent=f;fn.className='lbadge'+(f?' on':'');}
+    }catch(e){}
+    return r;
+  };
+}catch(e){}
+
+/* ---------- 5. 题卡底部操作行 + 收藏按钮（挂 render 后） ---------- */
+function curQ26(){
+  /* curQ 是 AI 模块私有函数，走 window.AI 拿；拿不到就自己算 */
+  try{ if(window.AI&&window.AI.curQ){var q=window.AI.curQ(); if(q)return q;} }catch(e){}
+  try{
+    if(typeof BANK!=='undefined'&&BANK&&BANK.length&&typeof order!=='undefined'&&order&&order.length)
+      return BANK[order[idx]]||null;
+  }catch(e){}
+  return null;
+}
+window.curQ26=curQ26;
+try{
+  var _origRender=window.render;
+  window.render=function(){
+    _origRender.apply(this,arguments);
+    try{
+      var card=document.querySelector('#app .qcard');
+      if(!card||card.querySelector('.qfoot'))return;
+      var q=curQ26(); if(!q)return;
+      var k=key(q);
+      var isFav=favHas(k);
+      var foot=document.createElement('div');
+      foot.className='qfoot';
+      foot.innerHTML=
+        '<button class="qfbtn'+(isFav?' fav-on':'')+'" id="qf-fav" title="收藏本题">'
+        +'<svg viewBox="0 0 24 24" '+(isFav?'fill="currentColor"':'fill="none"')+' stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>'
+        +'<span>'+(isFav?'已收藏':'收藏')+'</span></button>'
+        +'<button class="qfbtn qf-ai" id="qf-ai" title="AI 讲解这道题">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 4.6L18.5 9.5 13.9 11.4 12 16l-1.9-4.6L5.5 9.5l4.6-1.9z"/><path d="M19 15l.9 2.1 2.1.9-2.1.9L19 21l-.9-2.1-2.1-.9 2.1-.9z"/></svg>'
+        +'<span>AI 讲解</span></button>'
+        +'<span class="qf-sp"></span>'
+        +'<span class="qfnav">'
+        +'<button class="qfbtn" id="qf-prev">‹ 上一题</button>'
+        +'<button class="qfbtn primary" id="qf-next">下一题 ›</button>'
+        +'</span>';
+      card.appendChild(foot);
+      document.getElementById('qf-fav').onclick=function(){
+        var on=favToggle(k);
+        this.classList.toggle('fav-on',on);
+        this.querySelector('svg').setAttribute('fill',on?'currentColor':'none');
+        this.querySelector('span').textContent=on?'已收藏':'收藏';
+        toast(on?'已收藏':'已取消收藏');
+        var fn=document.getElementById('ln-favn');
+        if(fn){var f=Object.keys(S.fav||{}).length;fn.textContent=f;fn.className='lbadge'+(f?' on':'');}
+      };
+      document.getElementById('qf-ai').onclick=function(){
+        if(window.AI&&window.AI.open)window.AI.open();
+      };
+      document.getElementById('qf-prev').onclick=function(){document.getElementById('btnprev').click();};
+      document.getElementById('qf-next').onclick=function(){document.getElementById('btnnext').click();};
+      /* 同步底栏 prev/next 禁用态到题卡 */
+      var bp=document.getElementById('btnprev'),bn=document.getElementById('btnnext');
+      var qp=document.getElementById('qf-prev'),qn=document.getElementById('qf-next');
+      if(bp&&qp)qp.disabled=bp.disabled;
+      if(bn&&qn)qn.disabled=bn.disabled;
+    }catch(e){}
+  };
+}catch(e){}
+
+/* ---------- 6. 说明条：ⓘ 弹出 ---------- */
+(function(){
+  var w=document.getElementById('wpnote'),b=document.getElementById('btnwpnote'),x=document.getElementById('wpnx');
+  if(!w||!b)return;
+  w.classList.remove('show'); w.style.display='none';
+  b.addEventListener('click',function(){
+    w.classList.add('show'); w.style.display='';
+  });
+  if(x)x.addEventListener('click',function(){ w.classList.remove('show'); w.style.display='none'; });
+  w.addEventListener('click',function(e){ if(e.target===w){w.classList.remove('show');w.style.display='none';} });
+})();
+
+/* ---------- 7. 三种显示模式 ---------- */
+var MODE_KEY='dshdz_mode';
+function setMode(m){
+  document.body.classList.remove('mode-focus','mode-study','mode-stats');
+  document.body.classList.add('mode-'+m);
+  document.querySelectorAll('#modeseg button').forEach(function(b){
+    b.classList.toggle('on',b.dataset.mode===m);
+  });
+  try{localStorage.setItem(MODE_KEY,m);}catch(e){}
+  if(m==='stats')renderStatsPage();
+}
+window.setMode=setMode;
+document.querySelectorAll('#modeseg button').forEach(function(b){
+  b.addEventListener('click',function(){setMode(b.dataset.mode);});
+});
+document.addEventListener('keydown',function(e){
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
+  if(e.key==='1')setMode('focus');
+  else if(e.key==='2')setMode('study');
+  else if(e.key==='3')setMode('stats');
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'&&document.body.classList.contains('mode-focus'))setMode('study');
+});
+try{ var _m=localStorage.getItem(MODE_KEY); if(_m&&_m!=='study')setMode(_m); }catch(e){}
+
+/* ---------- 8. 统计模式页 ---------- */
+function renderStatsPage(){
+  var old=document.querySelector('.stpage'); if(old)old.remove();
+  var pg=document.createElement('div');
+  pg.className='stpage';
+  var SUBJ_ROW=[['weipan','微畔·中职计算机'],['computer','计算机'],['zh','语文'],['math','数学'],['en','英语'],['zhenti','真题']];
+  var cur=SUBJECT;
+  var h='<div class="st-h"><h2>学习统计</h2><span class="stsub">点卡片切换科目</span></div>';
+  h+='<div class="st-grid">';
+  SUBJ_ROW.forEach(function(r){
+    var k=r[0],name=r[1];
+    var total=SUBJ_TOTAL[k]||0,done=0,right=0,wrongN=0;
+    try{
+      var raw=localStorage.getItem('dshdz_v3_'+k+'_v2')||localStorage.getItem('dshdz_v3_'+k);
+      if(raw){var d=JSON.parse(raw)||{};
+        var dn=Object.keys(d.done||{}).length;
+        var wg=Object.keys(d.wrong||{}).length;
+        done=dn;wrongN=wg;
+        /* 正确率：粗算 done-wrong 与 done 之比（与主逻辑同源的近似仅用于总览） */
+      }
+    }catch(e){}
+    var rate=done?Math.round((done-wrongN)*100/Math.max(1,done)):null;
+    h+='<div class="st-card'+(k===cur?' on':'')+'" data-sj="'+k+'">'
+      +'<div class="stname"><span class="dot"></span>'+esc(name)+'</div>'
+      +'<div class="strow"><span>总题量</span><b>'+total+'</b></div>'
+      +'<div class="strow"><span>已完成</span><b>'+done+'</b></div>'
+      +'<div class="strow"><span>正确率</span><b class="acc">'+(rate==null?'—':rate+'%')+'</b></div>'
+      +'<div class="strow"><span>待消灭错题</span><b class="'+(wrongN?'bad':'')+'">'+wrongN+'</b></div>'
+      +'</div>';
+  });
+  h+='</div>';
+  /* 当前科目分类进度 */
+  h+='<div class="st-sec">'+esc(SUBJ_NAME[cur]||cur)+' · 分类进度</div>';
+  h+='<div class="st-parts">';
+  try{
+    if(cur==='weipan'){
+      wpPartsList().forEach(function(pn){
+        var st=wpPartStat(pn);
+        h+='<div class="mrow"><span class="st-part-name" title="'+esc(pn)+'">'+esc(pn)+'</span>'
+          +'<span class="mbar"><i style="width:'+st.pct+'%"></i></span>'
+          +'<span class="mc">'+st.done+'/'+st.total+'</span></div>';
+      });
+    }else{
+      var mods=modsFor();
+      var any=false;
+      mods.forEach(function(a){
+        if(a[0]==='ALL')return;
+        var st=stats(a[0]);
+        if(!st.total)return;
+        any=true;
+        h+='<div class="mrow"><span class="st-part-name" title="'+esc(a[1])+'">'+esc(a[1])+'</span>'
+          +'<span class="mbar"><i style="width:'+st.pct+'%"></i></span>'
+          +'<span class="mc">'+st.done+'/'+st.total+'</span></div>';
+      });
+      if(!any)h+='<div class="st-empty">该科目暂无模块统计</div>';
+    }
+  }catch(e){ h+='<div class="st-empty">统计加载失败</div>'; }
+  h+='</div>';
+  pg.innerHTML=h;
+  pg.querySelectorAll('.st-card').forEach(function(c){
+    c.addEventListener('click',function(){
+      var k=c.dataset.sj;
+      if(k!==SUBJECT){ setMode('study'); switchTo?switchTo(k):setSubject(k); }
+      else setMode('study');
+    });
+  });
+  document.body.appendChild(pg);
+}
+
+/* ---------- 9. AI 浮球优化：保留原绑定，仅确保任何宽度都是抽屉 ---------- */
+/* placeAI 的宽屏常驻逻辑由 CSS 覆盖（.airail 恒 display:none），无需改 JS。 */
+
+/* ---------- 10. 数学显示层（math 科目纯显示替换） ---------- */
+var _MX=[[/([a-zA-Z])(\d)(?![\d\w])/g,function(m,a,d){
+  /* x2 → x² 等：仅单字母后跟单数字，且不是 bx1 这类 id 形态（mathx 上下文由调用方限定） */
+  var mp={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+  return a+(mp[d]||d);
+}]];
+window.mathJX=function(s){
+  if(!s)return s;
+  try{
+    return s.replace(/([a-zA-Z])2(?=[^\d]|$)/g,function(m,a){return a+'²';})
+            .replace(/([a-zA-Z])3(?=[^\d]|$)/g,function(m,a){return a+'³';});
+  }catch(e){return s;}
+};
+
+/* ---------- 11. esc 后处理：math 科目把题干/选项包一层 mathJX ---------- */
+try{
+  var _origEsc=window.esc;
+  window.esc=function(s){
+    var out=_origEsc?_origEsc.apply(this,arguments):s;
+    try{
+      if(typeof out==='string'&&typeof SUBJECT!=='undefined'&&SUBJECT==='math'
+        &&out.length<4000&&!/[<>]/.test(out)){
+        out=out.replace(/([a-zA-Z])2(?=[^\d<]|$)/g,'$1<sup>2</sup>')
+               .replace(/([a-zA-Z])3(?=[^\d<]|$)/g,'$1<sup>3</sup>');
+      }
+    }catch(e){}
+    return out;
+  };
+}catch(e){}
+
+/* ---------- 12. 首屏补挂：hook 挂上后立即补一次 render，保证首题就有 qfoot ---------- */
+try{ if(typeof window.render==='function')window.render(); }catch(e){}
+
+/* ---------- 13. AI 抽屉默认收起 + 专注模式自动收起 + 退役宽屏右栏 ---------- */
+try{
+  /* 退役 ≥1420 宽屏常驻 AI 右栏：先把 aisheet 搬回 body（可能已被 placeAI 塞进 airail），
+     再移除 airail；railEl=null 后 placeAI() 直接 return，AI 任何宽度都走悬浮球+抽屉 */
+  var _airail=document.getElementById('airail');
+  var _ais0=document.getElementById('aisheet');
+  if(_ais0&&_airail&&_ais0.parentNode===_airail&&document.body){
+    document.body.insertBefore(_ais0,document.getElementById('aifab')||document.body.firstChild);
+  }
+  if(_airail&&_airail.parentNode)_airail.parentNode.removeChild(_airail);
+  var _ais=document.getElementById('aisheet');
+  if(_ais)_ais.classList.remove('show');
+  var _origSetMode=window.setMode;
+  window.setMode=function(m){
+    if(m==='focus'){
+      var s=document.getElementById('aisheet');
+      if(s)s.classList.remove('show');
+    }
+    /* 离开 stats 时清掉统计页 DOM */
+    if(m!=='stats'){
+      var old=document.querySelector('.stpage'); if(old)old.remove();
+    }
+    if(_origSetMode)_origSetMode.apply(this,arguments);
+  };
+}catch(e){}
+
+/* ---------- 14. 顶栏模式切换器在窄屏收成图标（防挤） ---------- */
+try{
+  if(window.innerWidth<560){
+    document.querySelectorAll('#modeseg button').forEach(function(b){
+      b.textContent=b.dataset.mode==='focus'?'专':b.dataset.mode==='study'?'学':'统';
+    });
+  }
+}catch(e){}
+
+})();
 
 </script>
 </body>
