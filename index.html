@@ -170,9 +170,10 @@ body.mode-focus .hero,body.mode-stats .hero{display:none}
    ============================================================ */
 .top{
   position:sticky;top:0;z-index:50;
-  background:var(--glass);
-  backdrop-filter:blur(18px) saturate(1.4);
-  -webkit-backdrop-filter:blur(18px) saturate(1.4);
+  /* 不再用 backdrop-filter：sticky 元素在每次滚动时都要重算整块模糊，
+     实测是本页最主要的掉帧来源（尤其低配/集显）。改用不透明底色，
+     视觉上几乎没差别，但滚动时不再有任何模糊合成开销。 */
+  background:#191613;
   border-bottom:1px solid var(--line-soft);
 }
 .top::after{
@@ -308,7 +309,7 @@ body.lnav-off .lnav{margin-left:-260px;opacity:0;pointer-events:none;height:0;ov
 .lnavtog{
   position:fixed;left:8px;top:66px;z-index:25;width:26px;height:26px;
   display:flex;align-items:center;justify-content:center;cursor:pointer;
-  border:1px solid var(--line-soft);background:var(--glass);backdrop-filter:blur(8px);
+  border:1px solid var(--line-soft);background:#191613;
   color:var(--dim);border-radius:var(--r-sm);transition:color .18s,border-color .18s;
 }
 .lnavtog:hover{color:var(--ink);border-color:var(--line-bright)}
@@ -385,8 +386,10 @@ body.lnav-off .lnavtog svg{transform:rotate(180deg)}
   background:var(--card);border:1px solid var(--line-soft);border-radius:var(--r-lg);
   padding:26px 30px 12px;box-shadow:var(--shadow-card);
   position:relative;overflow:hidden;
-  animation:rise .3s var(--ease);
+  /* rise 动画改由 .qcard.anim 触发（只在换题时加），
+     否则每次答题判分重绘都会重播一次入场动画 → 视觉上就是"抖一下" */
 }
+.qcard.anim{animation:rise .3s var(--ease)}
 /* 题卡顶部微光 */
 .qcard::before{
   content:'';position:absolute;top:0;left:0;right:0;height:1px;
@@ -450,8 +453,12 @@ body.lnav-off .lnavtog svg{transform:rotate(180deg)}
 /* ============================================================
    反馈与解析
    ============================================================ */
-.after{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .3s var(--ease),opacity .22s ease .06s}
-.after.show{grid-template-rows:1fr;opacity:1}
+/* 原实现用 grid-template-rows:0fr→1fr 做展开动画，
+   这会让浏览器在动画的每一帧都对整棵子树做一次布局（reflow），
+   而且这 0.3 秒正好卡在你点完选项的那一下 —— 表现为明显的"顿一下/掉帧"。
+   改成只动 opacity + transform（合成层属性，不触发布局），观感一致但便宜得多。 */
+.after{opacity:0;transform:translateY(-4px);transition:opacity .18s ease,transform .18s ease;will-change:auto}
+.after.show{opacity:1;transform:none}
 .after>div{overflow:hidden}
 .feedwrap{padding:2px 0 22px}
 .feed{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:600;margin-bottom:14px}
@@ -501,9 +508,8 @@ body.lnav-off .lnavtog svg{transform:rotate(180deg)}
    ============================================================ */
 .bar{
   position:fixed;left:0;right:0;bottom:0;z-index:40;
-  background:var(--glass);
-  backdrop-filter:blur(18px) saturate(1.4);
-  -webkit-backdrop-filter:blur(18px) saturate(1.4);
+  /* 同 .top：fixed 底栏的 blur 会在每次滚动/重绘时整块重算，去掉 */
+  background:#191613;
   border-top:1px solid var(--line-soft);
   padding:9px max(20px,calc((100vw - 1280px)/2 + 24px)) calc(9px + env(safe-area-inset-bottom));
   display:flex;align-items:center;justify-content:space-between;gap:10px;
@@ -588,7 +594,10 @@ body.lnav-off .lnavtog svg{transform:rotate(180deg)}
    ============================================================ */
 .sheet{
   position:fixed;inset:0;z-index:45;display:flex;align-items:flex-end;justify-content:center;
-  background:rgba(6,7,10,.65);backdrop-filter:blur(4px);
+  /* 遮罩原本带 backdrop-filter:blur(4px)：7 个抽屉都常驻 DOM，
+     打开任意一个都要对整屏做一次模糊合成，低配机器上就是明显的卡顿。
+     底色加深一点代替模糊，观感几乎一致。 */
+  background:rgba(6,7,10,.78);
   opacity:0;pointer-events:none;transition:opacity .25s ease;
 }
 .sheet.show{opacity:1;pointer-events:auto}
@@ -2366,6 +2375,7 @@ function childBlock(q){
   }
   return h+'</div>';
 }
+var _lastRenderedKey=null;
 function render(){
   var app=document.getElementById('app');
   markQuestion();
@@ -2374,9 +2384,13 @@ function render(){
   if(!order.length){app.innerHTML='<div class="empty">'+ICONS.empty+'<p>这个模块没题</p></div>';update();return;}
   if(idx<0)idx=0;if(idx>=order.length)idx=order.length-1;
   var q=BANK[order[idx]],k=key(q);
+  /* 只有"换了一道题"才播入场动画；同一题答题判分重绘不播，
+     否则每答一次都抖一下，看起来就像卡顿 */
+  var _playAnim=(_lastRenderedKey!==k);
+  _lastRenderedKey=k;
   var answered=!!S.done[k],userSel=S.done[k]||'';
   var canRetry=!!(WRUN.on&&answered&&S.wrong&&S.wrong[k]!=null);  /* 错题练习：答错可再答 */
-  var h=(MOCK.on?mockBar():'')+(WRUN.on?wrunBar():'')+'<article class="qcard">';
+  var h=(MOCK.on?mockBar():'')+(WRUN.on?wrunBar():'')+'<article class="qcard'+(_playAnim?' anim':'')+'">';
   var tag=esc(TYPELAB[q.t]||'单选');
   if(q.dup)tag+=' · 重复练习';
   if(isSubjNoRef(q))tag+=' · 不判分';
