@@ -4580,14 +4580,29 @@ function renderTypeSfx(){
     e.stopPropagation();
   });
 
-  fabEl.onclick=function(){
+  var _aiOpening=false;
+  function openAI(){
+    if(_aiOpening)return;          /* 同一帧内防重复（onclick 与 addEventListener 双保险会各触发一次） */
+    _aiOpening=true;setTimeout(function(){_aiOpening=false;},0);
     if(typeof SFX!=='undefined'&&SFX)SFX.unlock();
+    /* 兜底：万一面板被别的逻辑搬出了文档（历史 bug：宽屏右栏已被删除，
+       窗口跨 1420px 时面板会被塞进一个不在文档里的容器），先拽回 body */
+    if(!sheetEl.isConnected&&document.body){
+      document.body.insertBefore(sheetEl, fabEl||document.body.firstChild);
+    }
     sheetEl.classList.add('show');
     syncCard(true);
     syncIntro(true);
     logEl.scrollTop=0;
     setTimeout(function(){inputEl.focus();},180);
-  };
+  }
+  /* 同时挂 onclick 和 addEventListener：外部脚本若覆盖 onclick，addEventListener
+     那份仍然在，按钮不会因为一次赋值就彻底失效。openAI 内部有重入保护。 */
+  fabEl.onclick=openAI;
+  fabEl.addEventListener('click',function(e){
+    if(e&&e.__aiHandled)return;
+    openAI();
+  });
 
   /* ---------- 跟着题目走：挂 render ---------- */
   try{
@@ -4648,40 +4663,25 @@ function renderTypeSfx(){
   buildSel();updateTag();
 
 
-  /* ---------- 宽屏：AI 常驻右栏，不用每次点 ---------- */
-  var railEl=document.getElementById('airail');
+  /* ---------- 任何宽度都走「悬浮球 + 抽屉」----------
+     旧实现会在 ≥1420px 时把 aisheet 塞进 .airail 右栏并把面板设成常驻。
+     但后续补丁（本文件后面的 #13）把 .airail 整个从 DOM 里删掉了，
+     而这里还留着 railEl 引用 + resize 监听：只要窗口宽度跨过 1420
+     （最大化、拖拽拉伸、浏览器缩放、副屏拔插都会触发），
+     sheetNode 就被 appendChild 到一个已经不在文档里的节点上，
+     面板从页面消失，之后点 AI 按钮只是给它加 .show，
+     而它根本不在文档里 —— 表现就是「AI 按钮点了没反应」。
+     直接删掉右栏逻辑，只保留把面板放回 body 的兜底。 */
   var sheetNode=document.getElementById('aisheet');
-  var CW=1420;   /* 与 CSS 断点一致 */
-  function placeAI(){
-    if(!railEl||!sheetNode)return;
-    var wide=window.innerWidth>=CW;
-    if(wide){
-      if(sheetNode.parentNode!==railEl){
-        railEl.appendChild(sheetNode);
-        sheetNode.classList.add('show');
-        try{ syncCard(true); syncIntro(true); }catch(e){}
-        try{ if(typeof _checkCard==='function')_checkCard(); }catch(e){}
-      }
-    }else{
-      if(sheetNode.parentNode===railEl){
-        document.body.insertBefore(sheetNode, fabEl);
-        sheetNode.classList.remove('show');
-      }
+  function ensureSheetInBody(){
+    if(!sheetNode)return;
+    if(!sheetNode.isConnected){
+      document.body.insertBefore(sheetNode, fabEl||document.body.firstChild);
     }
   }
-  placeAI();
-  var _rzT=null;
-  window.addEventListener('resize',function(){
-    if(_rzT)clearTimeout(_rzT);
-    _rzT=setTimeout(function(){
-      var before=sheetNode.parentNode===railEl;
-      placeAI();
-      var after=sheetNode.parentNode===railEl;
-      if(before!==after)try{ syncCard(true); syncIntro(true); }catch(e){}
-    },180);
-  });
+  ensureSheetInBody();
   window.AI={
-    open:function(t){fabEl.onclick();if(t)setTimeout(function(){send(t);},120);},
+    open:function(t){openAI();if(t)setTimeout(function(){send(t);},120);},
     send:send,
     cfg:cfg,
     curQ:curQ,
