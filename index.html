@@ -1328,7 +1328,7 @@ body.lnav-off .lnavtog svg{transform:rotate(180deg)}
 /* 题卡底部操作行（v26 新增） */
 .qfoot{display:flex;align-items:center;gap:10px;margin:10px -26px 14px;padding:14px 22px;
   border-top:1px solid var(--line-soft);background:rgba(26,32,41,.5);border-radius:var(--r-md)}
-.qfoot .qfnav{margin-left:auto}
+.qfoot .qfnav{margin-left:auto;position:relative;z-index:1}
 .qfoot .qfbtn{font-size:13.5px;padding:9px 16px}
 .qfoot .qfnav .qfbtn.primary{font-weight:600}
 .qfoot .qf-sp{flex:1}
@@ -1459,6 +1459,24 @@ body.mode-focus .stpage{display:none}
 body.mode-focus .lrail{display:none}
 .lrail{display:none}   /* v26: 计时统一走 lnav，旧浮卡永久退役 */
 
+
+/* ==================== v28：宽屏三栏残留清剿 ==================== */
+@media (min-width:1420px){
+  /* 旧三栏的 padding 与 240px 侧栏全作废：v26 起一律 lnav+主区两栏 */
+  .layout{
+    max-width:1280px;
+    grid-template-columns:228px minmax(0,1fr);
+    gap:22px;
+    padding:20px 20px 0 !important;
+    padding-left:20px !important;
+    padding-right:20px !important;
+  }
+  /* airail 宿主已被 JS 移除，这里再保险：任何残留都不可见 */
+  .airail{display:none !important}
+  /* 旧 lrail 浮卡位置修正作废（lrail 本身 v26 已 display:none） */
+  .lrail{display:none !important}
+}
+
 /* ---- 模式切换器 ---- */
 .modeseg{display:flex;gap:2px;background:var(--panel);border:1px solid var(--line-soft);
   border-radius:var(--r-md);padding:2px}
@@ -1515,7 +1533,7 @@ body.mode-focus .lrail{display:none}
 <header class="top">
   <div class="top-in">
     <div class="brand">
-      <h1><span class="mark">◢</span>微畔 · 中职计算机 <span class="h1n">5783 题</span></h1>
+      <h1><span class="mark">◢</span>微畔 · 中职计算机 <span class="h1n">5783 题 · v28</span></h1>
       <p class="sub" id="sub">—</p>
     </div>
     <nav class="subj"><div class="subj-in" id="subjbar"></div></nav>
@@ -2558,7 +2576,7 @@ function setSubject(k){
   SUBJECT=k;S=load();filter='ALL';idx=0;PEND={};FILLS={};BANK=BANKS[k];
   _ixBank=null;_ixSubj=null;
   var h1=document.querySelector('.brand h1');
-  if(h1)h1.innerHTML='<span class="mark">◢</span>'+SUBJ_NAME[k]+' · 单招刷题 <span class="h1n">'+SUBJ_TOTAL[k]+' 题</span>';
+  if(h1)h1.innerHTML='<span class="mark">◢</span>'+SUBJ_NAME[k]+' · 单招刷题 <span class="h1n">'+SUBJ_TOTAL[k]+' 题 · v28</span>';
   var bs=document.getElementById('btnsyl');
   if(bs)bs.style.display=(k==='computer')?'':'none';   /* 考纲表只有计算机有 */
   var bt=document.getElementById('btnwptree');
