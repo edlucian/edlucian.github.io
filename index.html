@@ -1326,8 +1326,11 @@ body.lnav-off .lnavtog svg{transform:rotate(180deg)}
 .subjbox .subjtt{font-size:11.5px;color:var(--dim)}
 
 /* 题卡底部操作行（v26 新增） */
-.qfoot{display:flex;align-items:center;gap:8px;margin:2px -26px -10px;padding:12px 20px;
-  border-top:1px solid var(--line-soft);background:rgba(26,32,41,.5);border-radius:0 0 var(--r-lg) var(--r-lg)}
+.qfoot{display:flex;align-items:center;gap:10px;margin:10px -26px 14px;padding:14px 22px;
+  border-top:1px solid var(--line-soft);background:rgba(26,32,41,.5);border-radius:var(--r-md)}
+.qfoot .qfnav{margin-left:auto}
+.qfoot .qfbtn{font-size:13.5px;padding:9px 16px}
+.qfoot .qfnav .qfbtn.primary{font-weight:600}
 .qfoot .qf-sp{flex:1}
 .qfbtn{display:flex;align-items:center;gap:6px;cursor:pointer;font-family:inherit;
   font-size:12.5px;color:var(--sub);background:transparent;border:1px solid transparent;
@@ -1381,10 +1384,10 @@ body.lnav-off .lnavtog svg{transform:rotate(180deg)}
   background:linear-gradient(135deg,var(--acc2),#4C7EE0);color:#fff;
   box-shadow:0 4px 18px rgba(108,159,255,.35);font-size:14px}
 .aifab:hover{box-shadow:0 6px 24px rgba(108,159,255,.5)}
-.aisheet{background:rgba(10,13,18,.55)}
-.aisheet.show{backdrop-filter:blur(3px)}
+.aisheet{background:transparent}
+.aisheet.show{backdrop-filter:none;background:rgba(10,13,18,.18)}
 .aiin{background:var(--panel);border:1px solid var(--line-soft);border-radius:14px;
-  box-shadow:0 24px 70px rgba(0,0,0,.5)}
+  box-shadow:-8px 0 28px rgba(0,0,0,.22)}
 @media (min-width:761px){
   .aiin{width:390px;height:min(78vh,620px);margin:0;position:absolute;right:18px;top:50%;
     transform:translateY(-50%)}
@@ -2242,7 +2245,7 @@ document.addEventListener('visibilitychange',function(){
   else{var st=studyState();if(st.running)st.since=Date.now();tickTimer();}
 });
 
-var AUTONEXT=false;try{AUTONEXT=localStorage.getItem('dshdz_autonext')==='1';}catch(e){}
+var AUTONEXT=true;try{var _an=localStorage.getItem('dshdz_autonext');if(_an!==null)AUTONEXT=(_an==='1');}catch(e){}
 var S=load();
 var filter='ALL',order=[],idx=0;
 var MODLAB={weipan:{"W001":"基础·计算机概述","W002":"基础·进制转换","W003":"基础·数据和字符的表示","W004":"基础·计算机组成和原理","W005":"基础·硬件系统","W006":"基础·总线","W007":"基础·常见接口","W008":"基础·计算机新技术","W009":"基础·中英文录入和键盘","W010":"基础·汉字输入法","W011":"系统·操作系统","W012":"系统·Windows系统基础操作","W013":"系统·认识Windows操作系统界面","W014":"系统·用户管理","W015":"系统·磁盘的使用","W016":"系统·资源管理","W017":"系统·常用命令","W018":"系统·补·Windows  桌面基本操作","W019":"系统·补·Windows  资源管理器的基本操作","W020":"系统·补·文件和文件夹操作","W021":"系统·补·Windows  系统设置","W022":"数据库·数据库概述","W023":"数据库·Access2010的数据库及对象","W024":"数据库·Access数据库","W025":"数据库·数据库表","W026":"数据库·数据库表操作","W027":"数据库·主键和索引","W028":"数据库·字段属性","W029":"数据库·补·数据库表设计","W030":"数据库·补·设置字段属性","W031":"数据库·排序和筛选","W032":"数据库·格式设置","W033":"数据库·浏览和操作数据","W034":"数据库·查询分类与方法","W035":"数据库·查询","W036":"数据库·数据库语句","W037":"数据库·SQL语法","W038":"办公·Word2010基本操作","W039":"办公·格式设置","W040":"办公·图文混排","W041":"办公·Word表格设置","W042":"办公·页面格式设置","W043":"办公·文档修改与目录设置","W044":"办公·补·文档管理","W045":"办公·文档修订","W046":"办公·目录设置","W047":"办公·Excel2010的基本操作","W048":"办公·工作表的操作","W049":"办公·单元格的基本操作","W050":"办公·公式与函数","W051":"办公·分析和管理数据","W052":"办公·图表","W053":"办公·保护与打印","W054":"办公·补·工作簿的操作","W055":"办公·补·Excel数据的录入","W056":"办公·PowerPoint2010的基本操作","W057":"办公·幻灯片的操作","W058":"办公·幻灯片的设计","W059":"办公·幻灯片的交互","W060":"办公·打包和输出","W061":"办公·补·演示文稿的操作","W062":"办公·补·幻灯片对象的插入","W063":"网络·计算机网络概述","W064":"网络·网络架构","W065":"网络·组建局域网","W066":"网络·IP地 址","W067":"网络·虚拟局域网","W068":"网络·管理局域网","W069":"网络·浏览器和搜索引擎","W070":"网络·常见网络服务及其配置","W071":"网络·网页和网站","W072":"网络·计算机病毒","W073":"网络·网络安全技术","W074":"网络·局域网传输介质和网络设备的使用","W075":"网络·浏览器和搜索引擎","W076":"网络·相关网络服务配置","W077":"网络·防火墙的安装和使用","W078":"网络·HTML和CSS应用","W079":"模拟·训练卷 / 单招真题卷","W080":"模拟·阶段测试 / 对口综合 / 月考","W081":"基础·教材课后习题","W082":"系统·教材课后习题","W083":"综合·第一章第一节：JC11","W084":"综合·第一章第二节：JC12","W085":"综合·第一章第三节：JC13","W086":"综合·第二章第一节：JC21","W087":"综合·第二章第二节：JC22","W088":"综合·第二章第三节：JC23","W089":"综合·第二章第四节：JC24","W090":"综合·第二章第五节：JC25","W091":"综合·第一章第一节：Wi11","W092":"综合·第二章第一节：Wi21","W093":"综合·第二章第二节：Wi22","W094":"综合·第二章第三节：Wi23","W095":"综合·第二章第四节：Wi24","W096":"综合·第二章第五节：Wi25","W097":"综合·第一章第一节：Wo11","W098":"综合·第一章第二节：Wo12","W099":"综合·第一章第三节：Wo13","W100":"综合·第一章第四节：Wo14","W101":"综合·第一章第五节：Wo15","W102":"综合·第一章第六节：Wo16","W103":"综合·第二章第一节：Ex21","W104":"综合·第二章第二节：Ex22","W105":"综合·第二章第三节：Ex23","W106":"综合·第二章第四节：Ex24","W107":"综合·第二章第五节：Ex25","W108":"综合·第二章第六节：Ex26","W109":"综合·第二章第七节：Ex27","W110":"综合·第三章第一节：Pt31","W111":"综合·第三章第二节：Pt32","W112":"综合·第三章第三节：Pt33","W113":"综合·第三章第四节：Pt34","W114":"综合·第三章第五节：Pt35","W115":"综合·第一章第一节：SJK11","W116":"综合·第二章第一节：SJK21","W117":"综合·第三章第一节：SJK31","W118":"综合·第三章第二节：SJK32","W119":"综合·第三章第三节：SJK33","W120":"综合·第三章第四节：SJK34","W121":"综合·第四章第一节：SJK41","W122":"综合·第四章第二节：SJK42","W123":"综合·第五章第一节：SJK51","W124":"综合·第六章第一节：SJK61","W125":"综合·第一部分：YHW1","W126":"综合·第二部分：YHW2","W127":"综合·第三部分：YHW3","W128":"综合·第四部分：YHW4","W129":"综合·第五部分：YHW5"},computer:{M1:'计算机基础',M2:'数据库',M3:'操作系统',M4:'网络',M5:'Word',M6:'Excel',X1:'PPT'},zh:{},math:{},en:{}};
@@ -5553,6 +5556,7 @@ try{
       var isFav=favHas(k);
       var foot=document.createElement('div');
       foot.className='qfoot';
+      foot.dataset.v27='1';
       foot.innerHTML=
         '<button class="qfbtn'+(isFav?' fav-on':'')+'" id="qf-fav" title="收藏本题">'
         +'<svg viewBox="0 0 24 24" '+(isFav?'fill="currentColor"':'fill="none"')+' stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>'
@@ -5565,7 +5569,12 @@ try{
         +'<button class="qfbtn" id="qf-prev">‹ 上一题</button>'
         +'<button class="qfbtn primary" id="qf-next">下一题 ›</button>'
         +'</span>';
-      card.appendChild(foot);
+      var afterEl=card.querySelector('.after');
+      if(afterEl&&afterEl.parentNode===card){
+        afterEl.parentNode.insertBefore(foot,afterEl.nextSibling);
+      }else{
+        card.appendChild(foot);
+      }
       document.getElementById('qf-fav').onclick=function(){
         var on=favToggle(k);
         this.classList.toggle('fav-on',on);
@@ -5767,6 +5776,45 @@ try{
   }
 }catch(e){}
 
+})();
+
+
+/* ==================== v27 交互补丁 ==================== */
+(function(){
+'use strict';
+/* 空格/→ 下一题，← 上一题（输入框聚焦时忽略） */
+document.addEventListener('keydown',function(e){
+  var t=e.target&&e.target.tagName;
+  if(t==='INPUT'||t==='TEXTAREA'||t==='SELECT')return;
+  if(e.key===' '){
+    e.preventDefault();
+    var sheetOpen=document.querySelector('.sheet.show,.aisheet.show');
+    if(sheetOpen)return;                          /* 有抽屉开着时不跳 */
+    var bn=document.getElementById('btnnext');
+    if(bn&&!bn.disabled)bn.click();
+  }
+});
+/* AI 抽屉：点遮罩空白收起 + Esc 收起 */
+(function(){
+  var s=document.getElementById('aisheet');
+  if(!s)return;
+  s.addEventListener('click',function(e){
+    if(e.target===s){                              /* 只点在遮罩上（.aiin 之外） */
+      s.classList.remove('show');
+      e.stopPropagation();
+    }
+  });
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'&&s.classList.contains('show')){
+      s.classList.remove('show');
+    }
+  });
+})();
+/* 自动跳题状态同步：功能面板的「答对跳题」开关文案跟随（默认已开） */
+try{
+  var st=document.getElementById('fnAutoSt');
+  if(st&&typeof AUTONEXT!=='undefined')st.textContent=AUTONEXT?'开':'关';
+}catch(e){}
 })();
 
 </script>
